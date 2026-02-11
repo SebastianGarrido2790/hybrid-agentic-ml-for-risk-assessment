@@ -1,0 +1,31 @@
+[project]
+name = "acras"
+version = "0.1.0"
+description = "Agentic Credit Risk Assessment System"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "streamlit>=1.31.0",
+    "pandas>=2.2.0",
+    "scikit-learn>=1.4.0",
+    "numpy>=1.26.0",
+    "pydantic>=2.6.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "plotly>=5.18.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
