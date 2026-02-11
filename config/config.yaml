@@ -4,7 +4,7 @@ artifacts_root: artifacts
 
 data_ingestion:
   root_dir: artifacts/data_ingestion
-  # In a real scenario, source_URL could be a URL or an S3 bucket path
-  # For now, we simulate download/generation
-  local_data_file: artifacts/data_ingestion/data.csv
+  source_data_dir: data/raw
+  financial_data_file: financial_statements_training.csv # Starting with training set for now
+  pd_data_file: pd_training.csv
   unzip_dir: artifacts/data_ingestion

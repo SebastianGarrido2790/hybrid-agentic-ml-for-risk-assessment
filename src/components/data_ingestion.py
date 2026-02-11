@@ -2,25 +2,30 @@
 Data Ingestion Component.
 
 This module handles the initial stage of the MLOps pipeline:
-- Obtaining raw data (via generation or loading).
+- Obtaining raw data from source files (Raw Data Integration).
+- Merging Financial Statements and PD tables.
+- Calculating Financial Ratios (Feature Engineering).
+- Enriching with Synthetic Data for non-existent columns (Text, Categorical).
 - Splitting the data into Train, Validation, and Test sets.
 - Storing the splits as artifacts for downstream stages.
 """
 
 import os
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from src.entity.config_entity import DataIngestionConfig
 from src.config.configuration import ConfigurationManager
 from src.utils.logger import get_logger
-from src.tools.data_generation.synthetic_data import generate_synthetic_data
+from src.features.build_features import engineer_features
+
 
 logger = get_logger(__name__)
 
 
 class DataIngestion:
     """
-    Handles the ingestion and splitting of data for the ACRAS system.
+    Handles the ingestion, merging, feature engineering, and splitting of data for the ACRAS system.
     """
 
     def __init__(self, config: DataIngestionConfig):
@@ -32,67 +37,118 @@ class DataIngestion:
         """
         self.config = config
 
+    def _load_and_merge_raw_data(
+        self, financial_path: str, pd_path: str
+    ) -> pd.DataFrame:
+        """
+        Loads and merges Financial Statements and PD tables using aggregation to avoiding Cartesian products.
+        Strategy:
+        - Financials: Take the LATEST year per company.
+        - PD: Take the MEAN of numerical columns per company (smoothed risk).
+        """
+        logger.info(f"Loading raw data from: {financial_path} and {pd_path}")
+
+        if not os.path.exists(financial_path) or not os.path.exists(pd_path):
+            raise FileNotFoundError(
+                f"Raw data files not found: {financial_path} or {pd_path}"
+            )
+
+        df_fin = pd.read_csv(financial_path)
+        df_pd = pd.read_csv(pd_path)
+
+        # 1. Aggregate Financials: Get latest year per company
+        # Sort by year descending, then drop duplicates keeping first (latest)
+        df_fin_latest = df_fin.sort_values(
+            ["id_empresa", "ano"], ascending=[True, False]
+        ).drop_duplicates(subset=["id_empresa"], keep="first")
+
+        # 2. Aggregate PD: Group by ID and take mean
+        # We only want to mean the numeric columns, excluding ID from the mean operation but using it as key
+        numeric_cols_pd = df_pd.select_dtypes(include=[np.number]).columns.tolist()
+        if "id_empresa" in numeric_cols_pd:
+            numeric_cols_pd.remove(
+                "id_empresa"
+            )  # Remove it so we don't average usage of ID
+
+        df_pd_agg = df_pd.groupby("id_empresa")[numeric_cols_pd].mean().reset_index()
+        # Ensure id_empresa is int after mean if it became float
+        df_pd_agg["id_empresa"] = df_pd_agg["id_empresa"].astype(int)
+
+        # 3. Merge
+        df_merged = pd.merge(df_fin_latest, df_pd_agg, on="id_empresa", how="inner")
+
+        logger.info(
+            f"Financials Raw: {len(df_fin)} -> Aggregated: {len(df_fin_latest)}"
+        )
+        logger.info(f"PD Raw: {len(df_pd)} -> Aggregated: {len(df_pd_agg)}")
+        logger.info(f"Merged Final Dimensions: {df_merged.shape}")
+
+        return df_merged
+
     def initiate_data_ingestion(self):
         """
-        Executes the data ingestion process:
-        1. Loads raw data (generates synthetic data if not found).
-        2. Splits data into Train, Validation, and Test sets based on configuration.
-        3. Saves the splits to the specified artifacts directory.
-
-        Raises:
-            Exception: If any error occurs during the ingestion or splitting process.
+        Executed the data ingestion process from raw files.
         """
         logger.info("Entered the data ingestion method or component")
         try:
-            # 1. Get or Generate Data
-            raw_path = self.config.local_data_file
-            if not os.path.exists(raw_path):
-                logger.info("Raw data not found. Generating synthetic data.")
-                # Using the extracted tool function
-                # TODO: In production, n_samples could be a param in params.yaml
-                df = generate_synthetic_data(
-                    n_samples=1000, random_seed=self.config.random_state
-                )
+            # Paths to Raw Files
+            train_fin_path = (
+                self.config.source_data_dir / self.config.financial_data_file
+            )
+            train_pd_path = self.config.source_data_dir / self.config.pd_data_file
 
-                # Create raw directory if it doesn't exist (handled by config manager but safe to double check)
-                os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-                df.to_csv(raw_path, index=False)
-            else:
-                logger.info(f"Reading raw data from {raw_path}")
-                df = pd.read_csv(raw_path)
+            val_fin_path = str(train_fin_path).replace("training", "validation")
+            val_pd_path = str(train_pd_path).replace("training", "validation")
 
-            logger.info("Read the dataset as dataframe")
+            # 1. Process Training Data
+            df_train_raw = self._load_and_merge_raw_data(train_fin_path, train_pd_path)
+            # Use imported function instead of method
+            df_train = engineer_features(df_train_raw)
+            # REMOVED: df_train = self._enrich_with_synthetic_data(df_train)
 
-            # 2. Perform 3-Way Split (Train / Val / Test)
-            logger.info("Initiating 3-way data split")
+            # 2. Process Validation Data
+            df_val_raw = self._load_and_merge_raw_data(val_fin_path, val_pd_path)
+            # Use imported function instead of method
+            df_val = engineer_features(df_val_raw)
+            # REMOVED: df_val = self._enrich_with_synthetic_data(df_val)
 
+            # 3. Consolidate and Re-Split?
+            # The params.yaml specifies split sizes. It's safer to concat and use standard split logic
+            # to ensure we follow the experiment's configured split ratios exactly.
+            logger.info(
+                "Consolidating Train and Validation sets for standardized splitting"
+            )
+            df_full = pd.concat([df_train, df_val], ignore_index=True)
+
+            # 4. Perform Standard Split
             # First split: Train vs Temp (Test + Val)
-            # Temp size = Test Size + Val Size
             test_val_ratio = self.config.val_size + self.config.test_size
-
             train_set, temp_set = train_test_split(
-                df, test_size=test_val_ratio, random_state=self.config.random_state
+                df_full, test_size=test_val_ratio, random_state=self.config.random_state
             )
 
             # Second split: Temp -> Val + Test
-            # We need to calculate the proportion of Test relative to Temp
-            # Example: If Val=0.15, Test=0.15 -> Temp=0.30 -> Test is 0.5 of Temp
             test_ratio_relative = self.config.test_size / test_val_ratio
-
             val_set, test_set = train_test_split(
                 temp_set,
                 test_size=test_ratio_relative,
                 random_state=self.config.random_state,
             )
 
-            # 3. Save Artifacts
+            # 5. Save Artifacts
+            # Ensure output dir exists
+            os.makedirs(self.config.unzip_dir, exist_ok=True)
+
             train_path = self.config.unzip_dir / "train.csv"
             val_path = self.config.unzip_dir / "val.csv"
             test_path = self.config.unzip_dir / "test.csv"
 
-            train_set.to_csv(train_path, index=False, header=True)
-            val_set.to_csv(val_path, index=False, header=True)
-            test_set.to_csv(test_path, index=False, header=True)
+            # Select final columns to match schema implicitly (dropping raw Spanish cols that aren't renamed)
+            # We keep all columns for now, including calculated and synthetic ones.
+
+            train_set.to_csv(train_path, index=False)
+            val_set.to_csv(val_path, index=False)
+            test_set.to_csv(test_path, index=False)
 
             logger.info(f"Ingestion completed. Files saved to {self.config.unzip_dir}")
             logger.info(

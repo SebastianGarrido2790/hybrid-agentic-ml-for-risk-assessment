@@ -9,21 +9,19 @@ The component implements a robust 3-way split strategy to ensure unbiased model 
 ```mermaid
 sequenceDiagram
     participant CM as Configuration Manager
-    participant DG as Data Generator Tool
     participant DI as Data Ingestion Component
+    participant FE as Feature Engineer
     participant AR as Artifacts Root
 
     DI->>CM: Request DataIngestionConfig
     CM-->>DI: typed config (paths, ratios, seed)
     
-    DI->>DI: Check for raw_data/data.csv
-    alt Not Found
-        DI->>DG: Call generate_synthetic_data()
-        DG-->>DI: DataFrame (1,000 samples)
-        DI->>AR: Save Data.csv
-    else Found
-        DI->>AR: Read existing Data.csv
-    end
+    DI->>DI: Load Raw Data (Financials + PD)
+    DI->>DI: Aggregate (Latest Financials, Mean PD)
+    DI->>DI: Merge to 1:1 Company Mapping
+    
+    DI->>FE: Call engineer_features(df)
+    FE-->>DI: Enriched DataFrame (Ratios + Translation)
 
     DI->>DI: Perform 3-Way split (Train/Val/Test)
     DI->>AR: Save train.csv (70%)

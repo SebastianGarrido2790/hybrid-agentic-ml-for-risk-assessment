@@ -18,21 +18,26 @@ graph TD
     end
 
     subgraph "Core Pipeline (dvc.yaml)"
-        stage_01[Stage 01: Data Ingestion]
+        stage_01[Stage 01: Data Ingestion & Engineering]
         stage_02[Stage 02: Data Validation]
         stage_03[Stage 03: Data Transformation]
         stage_04[Stage 04: Model Training]
     end
 
-    subgraph "Artifacts & Data"
-        raw_data[(Raw Data)]
+    subgraph "Data Sources"
+        fs[(Financial Statements)]
+        pd[(PD Records)]
+    end
+
+    subgraph "Artifacts"
         split_data[(Split Data: Train/Val/Test)]
         model_artifacts[(Model Artifacts)]
     end
 
     params --> stage_01
     config --> stage_01
-    raw_data --> stage_01
+    fs --> stage_01
+    pd --> stage_01
     stage_01 --> split_data
     
     %% Future Stages

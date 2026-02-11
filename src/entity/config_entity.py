@@ -12,7 +12,9 @@ from pathlib import Path
 @dataclass(frozen=True)
 class DataIngestionConfig:
     root_dir: Path
-    local_data_file: Path
+    source_data_dir: Path
+    financial_data_file: str
+    pd_data_file: str
     unzip_dir: Path
     test_size: float
     val_size: float

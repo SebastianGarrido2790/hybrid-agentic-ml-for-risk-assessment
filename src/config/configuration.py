@@ -32,7 +32,9 @@ class ConfigurationManager:
 
         data_ingestion_config = DataIngestionConfig(
             root_dir=Path(config.root_dir),
-            local_data_file=Path(config.local_data_file),
+            source_data_dir=Path(config.source_data_dir),
+            financial_data_file=config.financial_data_file,
+            pd_data_file=config.pd_data_file,
             unzip_dir=Path(config.unzip_dir),
             test_size=params.test_size,
             val_size=params.val_size,
