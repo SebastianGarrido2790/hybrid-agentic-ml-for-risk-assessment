@@ -51,3 +51,9 @@ All artifacts are stored in `artifacts/data_ingestion/`:
 *   `train.csv`: Training set used by the `Model Training` stage.
 *   `val.csv`: Validation set used for hyperparameter tuning.
 *   `test.csv`: Hold-out test set for final performance reporting.
+
+## Why this is "Robust MLOps"
+1.  **Strict Type Safety**: Use of `DataIngestionConfig` (dataclasses) and `ConfigBox` prevents "stringly-typed" errors and ensures parameters are validated at runtime.
+2.  **Configuration Decoupling**: Hardcoded paths are forbidden. The component is agnostic of the environment, relying entirely on `config.yaml` and `params.yaml`.
+3.  **Reproducible Splits**: By anchoring the `random_state` in the global `params.yaml`, the system guarantees that the same data partitions are generated every time, regardless of when or where the code runs.
+4.  **3-Way Split Best Practices**: Separating a `Validation` set from the `Test` set prevents "data leakage" during hyperparameter optimization, ensuring the final metrics reflect true generalization performance.
