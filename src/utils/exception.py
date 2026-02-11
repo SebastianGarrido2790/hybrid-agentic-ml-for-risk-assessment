@@ -27,8 +27,8 @@ def error_message_detail(error: Exception | str, error_detail: ModuleType) -> st
     """
     _, _, exc_tb = error_detail.exc_info()
 
-    # Handle case where traceback might be None
-    if exc_tb is not None:
+    # Safety check to prevent crashes in edge cases where the traceback might be incomplete.
+    if exc_tb is not None and exc_tb.tb_frame is not None:
         file_name = exc_tb.tb_frame.f_code.co_filename
         line_number = exc_tb.tb_lineno
     else:

@@ -1,0 +1,10 @@
+# Defines system-level paths (ONLY immutable structure).
+
+artifacts_root: artifacts
+
+data_ingestion:
+  root_dir: artifacts/data_ingestion
+  # In a real scenario, source_URL could be a URL or an S3 bucket path
+  # For now, we simulate download/generation
+  local_data_file: artifacts/data_ingestion/data.csv
+  unzip_dir: artifacts/data_ingestion

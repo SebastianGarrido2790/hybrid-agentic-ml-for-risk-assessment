@@ -88,3 +88,9 @@ target/
 
 # Virtual environment
 .venv/
+
+# Project specific ignores
+artifacts/
+logs/
+data/raw/*
+!data/raw/.gitkeep

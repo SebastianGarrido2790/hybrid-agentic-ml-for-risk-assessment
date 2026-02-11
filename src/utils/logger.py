@@ -14,6 +14,7 @@ from logging.handlers import RotatingFileHandler
 
 from src.utils.paths import LOGS_DIR
 
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOGS_DIR / "runs.log"
 
 
@@ -34,7 +35,7 @@ def get_logger(
         headline (Optional[str]): Optional headline for visual separation (e.g., script name).
 
     Returns:
-        logging.Logger: Configured logger instance.
+        logging.Logger: Configured logger instance (using RichHandler if available).
     """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
@@ -54,8 +55,14 @@ def get_logger(
         )
         file_handler.setFormatter(formatter)
 
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
+        try:
+            from rich.logging import RichHandler
+
+            console_handler = RichHandler(rich_tracebacks=True, markup=True)
+            console_handler.setFormatter(logging.Formatter("%(message)s"))
+        except ImportError:
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(formatter)
 
         logger.addHandler(file_handler)
         logger.addHandler(console_handler)
@@ -73,3 +80,12 @@ def get_logger(
                 f.write(headline_text)
 
     return logger
+
+
+def log_spacer() -> None:
+    """
+    Appends a raw newline to the log file to provide visual spacing
+    without the log formatter prefix (timestamp/levelname).
+    """
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write("\n")
