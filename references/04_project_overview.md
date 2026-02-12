@@ -61,32 +61,7 @@ Define a LangChain structure with the following specific roles (adaptable to my 
 
     • It should trigger the LangChain process and display the final generated report/analysis to the user.
 
-## 4. Design Requirements & Standards
-
-Adhering to MLOps best practices ensures the system is production-ready and sustainable.
-
-* **Reliability:**
-    * **Graceful Degradation:** If the ML service is unreachable, the Agent must report the outage rather than hallucinating a score.
-    * **Type Safety:** Strict Pydantic models enforce data contracts between Agents and APIs, preventing invalid inputs.
-
-
-* **Scalability:**
-    * **Async Processing:** The FastAPI backend utilizes asynchronous endpoints to handle multiple concurrent agent requests without blocking.
-    * **Statelessness:** The model service is stateless, allowing for horizontal scaling (adding more container instances) under load.
-
-
-* **Maintainability:**
-    * **Modularity:** The ML model (`.pkl`) is decoupled from the API logic. Updating the model requires only a file swap and a service restart, not a code rewrite.
-    * **Documentation:** Automatic OpenAPI (Swagger) documentation ensures agents and developers always understand the API contract.
-
-
-* **Adaptability:**
-    * **Tool Abstraction:** New tools (e.g., a "Legal Risk Analyzer") can be added to the Agent's toolkit without altering the core orchestration logic.
-    * **Model Agnostic:** The architecture supports swapping the underlying algorithm (e.g., from Random Forest to XGBoost) without affecting the upstream agent workflow.
-
-
-
-## 5. Project Lifecycle (CRISP-DM + MLOps)
+## 4. Project Lifecycle (CRISP-DM + MLOps)
 
 We combine the industry-standard **CRISP-DM** (Cross-Industry Standard Process for Data Mining) for model development with modern **MLOps** for deployment and maintenance.
 
@@ -97,7 +72,68 @@ We combine the industry-standard **CRISP-DM** (Cross-Industry Standard Process f
 5. **Agent Integration:** Configure LangChain agents to utilize the deployed tool.
 6. **Monitoring & Feedback:** Track agent decisions and model drift to inform retraining cycles.
 
-## 6. Technology Stack
+## 5. Task List: Agentic Credit Risk Assessment System (ACRAS)
+
+### Phase 1: Environment & Project Foundation
+- Initialize project structure (`src/`, `tests/`, `configs/`, `notebooks/`)
+- Set up `uv` for lightning-fast dependency management (`pyproject.toml`)
+- Configure logging and environment variables (`.env` + `pydantic-settings`)
+- Initialize a local Git repository
+- Initialize DVC (Data Version Control)
+
+### Phase 2: ML Model Engineering (The "Brawn" - Deterministic Tools)
+- Implement Data Ingestion & Splitting (`stage_01_ingestion.py`)
+- Implement Data Transformation & Preprocessing (`stage_02_transformation.py`)
+- Train Baseline Model (Random Forest/XGBoost) with fixed random seeds (`stage_03_train.py`)
+- Evaluate Model & Serialize (`.pkl`) with MLflow tracking (`stage_04_evaluation.py`)
+- Register Model version in local MLflow registry
+
+### Phase 3: MLOps Backend API (FastAPI)
+- Define strict Pydantic Schemas for Input/Output (Data Contracts)
+- Create FastAPI application factory with custom exception handlers
+- Implement `/predict` endpoint to serve the serialized model
+- Implement health check, Prometheus metrics, and logging middleware
+- Dockerize the API service for containerized deployment
+
+### Phase 4: Agentic Reasoning Engine (The "Brain" - LangChain)
+- Create`agent_tools.py`: Wrap FastAPI `/predict` as a structured LangChain Tool
+- Create`financial_analyst_tool.py`: Implement deterministic rule-based financial ratios logic
+- Implement `orchestrator.py`: Define the Agent State Graph (LangGraph) and routing logic
+- Setup prompts: Design versioned System Prompts for Data Scientist and Analyst personas
+
+### Phase 5: User Interface (Streamlit)
+- Design main dashboard layout with sidebar for configuration
+- Implement Input Form (Company ID and Financial Data)
+- Connect UI to the Orchestrator with real-time status updates
+- Render Markdown Executive Report with "Chain of Thought" (CoT) expanders
+
+### Phase 6: Integration & Verification
+- Execute End-to-End Test: Streamlit → Agent → FastAPI → ML Model
+- Perform "LLM-as-a-Judge" evaluation for agent reasoning accuracy
+- Verify latency constraints (<30s for full reasoning cycle)
+- Finalize Documentation (README, Architecture Diagram, API Docs, PDF Report)
+
+## 6. Design Requirements & Standards
+
+Adhering to MLOps best practices ensures the system is production-ready and sustainable.
+
+* **Reliability:**
+    * **Graceful Degradation:** If the ML service is unreachable, the Agent must report the outage rather than hallucinating a score.
+    * **Type Safety:** Strict Pydantic models enforce data contracts between Agents and APIs, preventing invalid inputs.
+
+* **Scalability:**
+    * **Async Processing:** The FastAPI backend utilizes asynchronous endpoints to handle multiple concurrent agent requests without blocking.
+    * **Statelessness:** The model service is stateless, allowing for horizontal scaling (adding more container instances) under load.
+
+* **Maintainability:**
+    * **Modularity:** The ML model (`.pkl`) is decoupled from the API logic. Updating the model requires only a file swap and a service restart, not a code rewrite.
+    * **Documentation:** Automatic OpenAPI (Swagger) documentation ensures agents and developers always understand the API contract.
+
+* **Adaptability:**
+    * **Tool Abstraction:** New tools (e.g., a "Legal Risk Analyzer") can be added to the Agent's toolkit without altering the core orchestration logic.
+    * **Model Agnostic:** The architecture supports swapping the underlying algorithm (e.g., from Random Forest to XGBoost) without affecting the upstream agent workflow.
+
+## 7. Technology Stack
 
 * **Language:** Python 3.10+
 * **Orchestration Framework:** LangChain (for Agentic workflows)
@@ -106,7 +142,7 @@ We combine the industry-standard **CRISP-DM** (Cross-Industry Standard Process f
 * **Machine Learning:** Scikit-learn (model training), Pandas (data manipulation)
 * **Package Management:** `uv` (fast Python package installer)
 
-## 7. Project Analogy: The "AI Orchestra"
+## 8. Project Analogy: The "AI Orchestra"
 
 To visualize how the system works, imagine an **Orchestra**:
 
