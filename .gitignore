@@ -92,5 +92,6 @@ target/
 # Project specific ignores
 artifacts/
 logs/
+mlruns/
 data/raw/*
 !data/raw/.gitkeep

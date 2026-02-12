@@ -12,54 +12,38 @@ load_dotenv()
 ENV = os.getenv("ENV", "local").lower()  # e.g., "local", "staging", "production"
 
 # --- Project Root ---
-# Automatically finds the top-level directory (the one containing 'src/')
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-# --- Data Directories ---
+# --- Artifacts (MLOps Pipeline Outputs) ---
+ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
+DATA_INGESTION_DIR = ARTIFACTS_DIR / "data_ingestion"
+DATA_VALIDATION_DIR = ARTIFACTS_DIR / "data_validation"
+DATA_TRANSFORMATION_DIR = ARTIFACTS_DIR / "data_transformation"
+MODEL_TRAINER_DIR = ARTIFACTS_DIR / "model_trainer"
+MODEL_EVALUATION_DIR = ARTIFACTS_DIR / "model_evaluation"
+
+# Transformed data paths
+TRAIN_PATH = DATA_TRANSFORMATION_DIR / "train.csv"
+TEST_PATH = DATA_TRANSFORMATION_DIR / "test.csv"
+VAL_PATH = DATA_TRANSFORMATION_DIR / "val.csv"
+
+# Trained model path
+MODEL_PATH = MODEL_TRAINER_DIR / "acras_rf_model.joblib"
+
+# --- Traditional Raw Data (Inputs) ---
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
-PROCESSED_DATA_DIR = DATA_DIR / "processed"
-INTERIM_DATA_DIR = DATA_DIR / "interim"
-EXTERNAL_DATA_DIR = DATA_DIR / "external"
-RAW_PATH = RAW_DATA_DIR / "dummy_placeholder.csv"
-FIN_TRAIN_PATH = RAW_DATA_DIR / "financial_statements_training.csv"
-FIN_VAL_PATH = RAW_DATA_DIR / "financial_statements_validation.csv"
-PD_TRAIN_PATH = RAW_DATA_DIR / "pd_training.csv"
-PD_VAL_PATH = RAW_DATA_DIR / "pd_validation.csv"
 
-# --- Train and Test Data Paths ---
-TRAIN_PATH = PROCESSED_DATA_DIR / "train.parquet"
-TEST_PATH = PROCESSED_DATA_DIR / "test.parquet"
-VAL_PATH = PROCESSED_DATA_DIR / "val.parquet"
-
-# --- Model, Reports, Evaluation, and Artifacts ---
-MODELS_DIR = PROJECT_ROOT / "models"
-BASELINE_MODEL_DIR = MODELS_DIR / "baseline"
-ADVANCED_DIR = MODELS_DIR / "advanced"
-REPORTS_DIR = PROJECT_ROOT / "reports"
-FIGURES_DIR = REPORTS_DIR / "figures"
-EVAL_DIR = ADVANCED_DIR / "evaluation"
-EVAL_FIG_DIR = FIGURES_DIR / "evaluation"
-
-# --- Logs and MLflow ---
-# Use system-specific log directory if running in production
+# --- Logs ---
 LOGS_DIR = PROJECT_ROOT / "logs"
-
 MLRUNS_DIR = PROJECT_ROOT / "mlruns"
 
-# --- Ensure directories exist (for reproducibility) ---
+# --- Ensure core directories exist ---
 for path in [
+    ARTIFACTS_DIR,
+    DATA_DIR,
     RAW_DATA_DIR,
-    PROCESSED_DATA_DIR,
-    INTERIM_DATA_DIR,
-    EXTERNAL_DATA_DIR,
-    MODELS_DIR,
-    REPORTS_DIR,
-    FIGURES_DIR,
     LOGS_DIR,
-    BASELINE_MODEL_DIR,
-    ADVANCED_DIR,
-    EVAL_DIR,
-    EVAL_FIG_DIR,
+    MLRUNS_DIR,
 ]:
     path.mkdir(parents=True, exist_ok=True)

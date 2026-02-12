@@ -23,6 +23,7 @@ graph TD
         stage_02[Stage 02: Data Validation]
         stage_03[Stage 03: Data Transformation]
         stage_04[Stage 04: Model Training]
+        stage_05[Stage 05: Model Evaluation]
     end
 
     subgraph "Data Sources"
@@ -30,11 +31,13 @@ graph TD
         pd[(PD Records CSV)]
     end
 
-    subgraph "Artifacts"
+    subgraph "Artifacts & Metrics"
         split_data[(Split Data: Train/Val/Test)]
         val_status[(Validation Status)]
         preprocessor[(Preprocessor .pkl)]
-        model_artifact[(Model .pkl)]
+        model_artifact[(Model .joblib)]
+        metrics_file[(metrics.json)]
+        roc_plot[(roc_auc_curve.png)]
     end
 
     params --> stage_01
@@ -53,6 +56,10 @@ graph TD
     
     stage_03 --> stage_04
     stage_04 --> model_artifact
+    
+    model_artifact --> stage_05
+    stage_05 --> metrics_file
+    stage_05 --> roc_plot
 ```
 
 ## Pipeline Stages Breakdown
@@ -62,7 +69,8 @@ graph TD
 | **01: Ingestion** | `stage_01_data_ingestion.py` | Load raw CSVs, Merge, Feature Engineering, Splitting. | `train.csv`, `val.csv`, `test.csv` |
 | **02: Validation** | `stage_02_data_validation.py` | Schema enforcement and integrity check. | `status.txt` |
 | **03: Transformation** | `stage_03_data_transformation.py` | Robust scaling and missing value imputation. | `preprocessor.pkl` |
-| **04: Training** | `stage_04_model_trainer.py` | Baseline Random Forest fitting and serialization. | `model.pkl` |
+| **04: Training** | `stage_04_model_trainer.py` | Baseline Random Forest fitting and serialization. | `acras_rf_model.joblib` |
+| **05: Evaluation** | `stage_05_model_evaluation.py` | Metric calculation, ROC Plotting, and MLflow logging. | `metrics.json` |
 
 ## Strategy: The Dual-Entry Pattern
 To balance production stability with developer velocity, ACRAS implements a **Dual-Entry Orchestration Strategy**:

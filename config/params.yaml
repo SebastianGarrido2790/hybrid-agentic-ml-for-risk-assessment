@@ -10,3 +10,6 @@ model_params:
   min_samples_leaf: 5
   class_weight: balanced
   n_jobs: -1
+
+mlflow:
+  uri: "http://127.0.0.1:5000"

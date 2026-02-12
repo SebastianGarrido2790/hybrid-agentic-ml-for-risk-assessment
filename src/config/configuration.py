@@ -16,8 +16,10 @@ from src.entity.config_entity import (
     DataValidationConfig,
     DataTransformationConfig,
     ModelTrainerConfig,
+    ModelEvaluationConfig,
 )
 from pathlib import Path
+from src.utils.mlflow_config import get_mlflow_uri
 
 
 class ConfigurationManager:
@@ -99,3 +101,25 @@ class ConfigurationManager:
         )
 
         return model_trainer_config
+
+    def get_model_evaluation_config(self) -> ModelEvaluationConfig:
+        config = self.config.model_evaluation
+        params = self.params.model_params
+        target_column = self.schema.target_column
+
+        create_directories([config.root_dir])
+
+        model_evaluation_config = ModelEvaluationConfig(
+            root_dir=Path(config.root_dir),
+            test_data_path=Path(config.test_data_path),
+            model_path=Path(config.model_path),
+            all_params=params,
+            metric_file_name=Path(config.metric_file_name),
+            target_column=target_column,
+            mlflow_uri=get_mlflow_uri(),
+            experiment_name=config.experiment_name,
+            registered_model_name=config.registered_model_name,
+            mlflow_model_name=config.mlflow_model_name,
+        )
+
+        return model_evaluation_config

@@ -87,7 +87,7 @@ We combine the industry-standard **CRISP-DM** (Cross-Industry Standard Process f
 - Implement Data Transformation & Preprocessing (`stage_03_data_transformation.py`)
 - Train Baseline Model (Random Forest/XGBoost) with fixed random seeds (`stage_04_model_trainer.py`)
 - Evaluate Model & Serialize (`.pkl`) with MLflow tracking (`stage_05_model_evaluation.py`)
-- Register Model version in local MLflow registry
+- Register Model version in local MLflow registry (`stage_06_model_pusher.py`)
 
 ### Phase 3: MLOps Backend API (FastAPI)
 - Define strict Pydantic Schemas for Input/Output (Data Contracts)

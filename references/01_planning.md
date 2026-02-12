@@ -1,6 +1,6 @@
 ## Project Planning & Architecture
 
-This Agentic Data Science project is a sophisticated architectural design that bridges the gap between traditional MLOps (deterministic, model-centric) and Agentic AI (probabilistic, reasoning-centric).
+This Agentic Data Science project is a sophisticated architectural design that bridges the gap between traditional MLOps (deterministic, model-centric) and Agentic AI (probabilistic, reasoning-centric). By wrapping predictive models as tools for these agents, businesses can generate comprehensive, automated financial reports that combine quantitative data with qualitative insights.
 
 ### 1. What exactly am I going to build?
 

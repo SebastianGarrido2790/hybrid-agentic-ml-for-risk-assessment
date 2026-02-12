@@ -60,4 +60,23 @@ stages:
           - model_params.n_jobs
           - data_split.random_state
     outs:
-      - artifacts/model_trainer/model.joblib
+      - artifacts/model_trainer/acras_rf_model.joblib
+
+  model_evaluation:
+    cmd: python src/pipeline/stage_05_model_evaluation.py
+    deps:
+      - src/pipeline/stage_05_model_evaluation.py
+      - config/config.yaml
+      - src/components/model_evaluation.py
+      - artifacts/data_transformation/test.csv
+      - artifacts/model_trainer/acras_rf_model.joblib
+    params:
+      - config/params.yaml:
+          - model_params.n_estimators
+          - model_params.min_samples_leaf
+          - model_params.class_weight
+          - model_params.n_jobs
+          - data_split.random_state
+    metrics:
+      - artifacts/model_evaluation/metrics.json:
+          cache: false

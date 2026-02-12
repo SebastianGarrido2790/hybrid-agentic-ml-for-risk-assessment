@@ -5,8 +5,8 @@ stages:
     deps:
     - path: config/config.yaml
       hash: md5
-      md5: 2440eaa975f5d9a2c398a6ac0d25274a
-      size: 833
+      md5: 4a416f913c6dcc92c0dd2368d2f0aebf
+      size: 1065
     - path: data/raw/financial_statements_training.csv
       hash: md5
       md5: 351cc83adff1c8b67ff5ce8f8df92139
@@ -66,8 +66,8 @@ stages:
       size: 29708
     - path: config/config.yaml
       hash: md5
-      md5: 2440eaa975f5d9a2c398a6ac0d25274a
-      size: 833
+      md5: 4a416f913c6dcc92c0dd2368d2f0aebf
+      size: 1065
     - path: src/components/data_transformation.py
       hash: md5
       md5: 3414e9d36b7cbc557f3721c27664a1c9
@@ -102,8 +102,8 @@ stages:
       size: 137479
     - path: config/config.yaml
       hash: md5
-      md5: 2440eaa975f5d9a2c398a6ac0d25274a
-      size: 833
+      md5: 4a416f913c6dcc92c0dd2368d2f0aebf
+      size: 1065
     - path: config/schema.yaml
       hash: md5
       md5: f72d47385232fd6ec2fa314d1ec32c3f
@@ -130,8 +130,8 @@ stages:
       size: 29763
     - path: config/config.yaml
       hash: md5
-      md5: 2440eaa975f5d9a2c398a6ac0d25274a
-      size: 833
+      md5: 4a416f913c6dcc92c0dd2368d2f0aebf
+      size: 1065
     - path: src/components/model_trainer.py
       hash: md5
       md5: 05b61c8c7fe808c5bf70b59eb10307f3
@@ -152,3 +152,38 @@ stages:
       hash: md5
       md5: da23672a65f48bdf5c24eea116feba87
       size: 238009
+  model_evaluation:
+    cmd: python src/pipeline/stage_05_model_evaluation.py
+    deps:
+    - path: artifacts/data_transformation/test.csv
+      hash: md5
+      md5: 34590b141354726f45779100e1522c29
+      size: 29724
+    - path: artifacts/model_trainer/model.joblib
+      hash: md5
+      md5: da23672a65f48bdf5c24eea116feba87
+      size: 238009
+    - path: config/config.yaml
+      hash: md5
+      md5: 4a416f913c6dcc92c0dd2368d2f0aebf
+      size: 1065
+    - path: src/components/model_evaluation.py
+      hash: md5
+      md5: d88ee9fc31830873296a4e035b1ba554
+      size: 3391
+    - path: src/pipeline/stage_05_model_evaluation.py
+      hash: md5
+      md5: 5641e6c4d0b2436825044682a5362095
+      size: 986
+    params:
+      config/params.yaml:
+        data_split.random_state: 42
+        model_params.class_weight: balanced
+        model_params.min_samples_leaf: 5
+        model_params.n_estimators: 300
+        model_params.n_jobs: -1
+    outs:
+    - path: artifacts/model_evaluation/metrics.json
+      hash: md5
+      md5: 47f94f4d7b2efc7a614635de573171bc
+      size: 111
