@@ -1,0 +1,27 @@
+columns:
+  id_empresa: int64
+  ano: int64
+  ingresos: float64
+  ebitda: float64
+  activos_totales: float64
+  pasivos_totales: float64
+  patrimonio: float64
+  caja: float64
+  gastos_intereses: float64
+  cuentas_cobrar: float64
+  inventario: float64
+  cuentas_pagar: float64
+  sector_risk_score: float64
+  years_operating: int64
+  ratio_mora: float64
+  ratio_utilizacion: float64
+  revenue_growth: float64
+  margen_beneficio: float64
+  score_buro: float64
+  target: int64
+  default_probability: float64
+  ebitda_margin: float64
+  debt_to_equity: float64
+  current_ratio: float64
+
+target_column: target

@@ -5,11 +5,22 @@ artifacts_root: artifacts
 data_ingestion:
   root_dir: artifacts/data_ingestion
   source_data_dir: data/raw
-  financial_data_file: financial_statements_training.csv # Starting with training set for now
+  financial_data_file: financial_statements_training.csv
   pd_data_file: pd_training.csv
   unzip_dir: artifacts/data_ingestion
+
+data_validation:
+  root_dir: artifacts/data_validation
+  unzip_data_dir: artifacts/data_ingestion
+  STATUS_FILE: artifacts/data_validation/status.txt
 
 data_transformation:
   root_dir: artifacts/data_transformation
   data_path: artifacts/data_ingestion
   preprocessor_path: artifacts/data_transformation/preprocessor.pkl
+
+model_trainer:
+  root_dir: artifacts/model_trainer
+  train_data_path: artifacts/data_transformation/train.csv
+  val_data_path: artifacts/data_transformation/val.csv
+  model_name: model.joblib

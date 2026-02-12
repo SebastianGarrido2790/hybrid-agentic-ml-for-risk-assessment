@@ -82,10 +82,11 @@ We combine the industry-standard **CRISP-DM** (Cross-Industry Standard Process f
 - Initialize DVC (Data Version Control)
 
 ### Phase 2: ML Model Engineering (The "Brawn" - Deterministic Tools)
-- Implement Data Ingestion & Splitting (`stage_01_ingestion.py`)
-- Implement Data Transformation & Preprocessing (`stage_02_transformation.py`)
-- Train Baseline Model (Random Forest/XGBoost) with fixed random seeds (`stage_03_train.py`)
-- Evaluate Model & Serialize (`.pkl`) with MLflow tracking (`stage_04_evaluation.py`)
+- Implement Data Ingestion & Splitting (`stage_01_data_ingestion.py`)
+- Implement Data Validation (`stage_02_data_validation.py`)
+- Implement Data Transformation & Preprocessing (`stage_03_data_transformation.py`)
+- Train Baseline Model (Random Forest/XGBoost) with fixed random seeds (`stage_04_model_trainer.py`)
+- Evaluate Model & Serialize (`.pkl`) with MLflow tracking (`stage_05_model_evaluation.py`)
 - Register Model version in local MLflow registry
 
 ### Phase 3: MLOps Backend API (FastAPI)

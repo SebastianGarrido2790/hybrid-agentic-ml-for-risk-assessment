@@ -1,4 +1,4 @@
-Project-Name
+Hybrid Agentic ML for Risk Assessment
 ├── LICENSE.txt                <- Project's license (Open-source if one is chosen)
 ├── README.md                  <- The top-level README for developers using this project
 ├── .env                       <- Environment variables
@@ -8,7 +8,7 @@ Project-Name
 ├── main.py                    <- Pipeline Orchestrator (Script mode)
 ├── Dockerfile                 <- Production container definition
 │
-├── config/                    <- Configuration files
+├── config/                    <- Centralize all configuration files ("source of truth")
 │   ├── config.yaml            <- System paths (artifacts/data)
 │   └── params.yaml            <- Hyperparameters (K-neighbors, Chunk size)
 │
@@ -16,10 +16,6 @@ Project-Name
 │
 ├── .github/
 │   └── workflows/             <- CI/CD (main.yaml)
-│
-├── config/
-│   ├── config.yaml            <- System paths (artifacts/data)
-│   └── params.yaml            <- Hyperparameters (K-neighbors, Chunk size)
 │
 ├── data/
 │   ├── external               <- Data from third party sources

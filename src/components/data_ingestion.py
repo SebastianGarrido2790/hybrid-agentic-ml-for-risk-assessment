@@ -13,9 +13,11 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+import sys
 from src.entity.config_entity import DataIngestionConfig
 from src.config.configuration import ConfigurationManager
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 from src.features.build_features import engineer_features
 
 
@@ -153,7 +155,7 @@ class DataIngestion:
 
         except Exception as e:
             logger.error(f"Error in data ingestion: {str(e)}")
-            raise e
+            raise CustomException(e, sys)
 
 
 if __name__ == "__main__":
@@ -163,4 +165,4 @@ if __name__ == "__main__":
         data_ingestion = DataIngestion(config=data_ingestion_config)
         data_ingestion.initiate_data_ingestion()
     except Exception as e:
-        logger.error(e)
+        logger.error(CustomException(e, sys))

@@ -24,7 +24,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         columns={
             "riesgo_sector": "sector_risk_score",
             "anos_operando": "years_operating",
-            "crecimiento_ingresos": "revenue_growth",
+            "crecimiento_ventas": "revenue_growth",
             "default_12m": "target",
             "pd_verdadera": "default_probability",
         }

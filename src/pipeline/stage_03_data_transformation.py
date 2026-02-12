@@ -1,13 +1,15 @@
 """
-Stage 02: Data Transformation Pipeline.
+Stage 03: Data Transformation Pipeline.
 
 This module coordinates the data transformation process, interfacing between the
 ConfigurationManager and the DataTransformation component.
 """
 
+import sys
 from src.config.configuration import ConfigurationManager
 from src.components.data_transformation import DataTransformation
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 
 STAGE_NAME = "Data Transformation stage"
 logger = get_logger(__name__)
@@ -38,5 +40,5 @@ if __name__ == "__main__":
         obj.main()
         logger.info(f"✅ {STAGE_NAME} completed ✅")
     except Exception as e:
-        logger.exception(e)
+        logger.error(CustomException(e, sys))
         raise e

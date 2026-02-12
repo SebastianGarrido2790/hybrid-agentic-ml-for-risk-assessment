@@ -22,7 +22,28 @@ class DataIngestionConfig:
 
 
 @dataclass(frozen=True)
+class DataValidationConfig:
+    root_dir: Path
+    STATUS_FILE: str
+    unzip_data_dir: Path
+    all_schema: dict
+
+
+@dataclass(frozen=True)
 class DataTransformationConfig:
     root_dir: Path
     data_path: Path
     preprocessor_path: Path
+
+
+@dataclass(frozen=True)
+class ModelTrainerConfig:
+    root_dir: Path
+    train_data_path: Path
+    val_data_path: Path
+    model_name: str
+    n_estimators: int
+    min_samples_leaf: int
+    class_weight: str
+    n_jobs: int
+    random_state: int

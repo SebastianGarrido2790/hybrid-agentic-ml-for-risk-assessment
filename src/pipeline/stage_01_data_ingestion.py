@@ -5,9 +5,11 @@ This module coordinates the data ingestion process, interfacing between the
 ConfigurationManager and the DataIngestion component.
 """
 
+import sys
 from src.config.configuration import ConfigurationManager
 from src.components.data_ingestion import DataIngestion
 from src.utils.logger import get_logger
+from src.utils.exception import CustomException
 
 STAGE_NAME = "Data Ingestion stage"
 logger = get_logger(__name__)
@@ -38,5 +40,5 @@ if __name__ == "__main__":
         obj.main()
         logger.info(f"✅ {STAGE_NAME} completed ✅")
     except Exception as e:
-        logger.exception(e)
+        logger.error(CustomException(e, sys))
         raise e
