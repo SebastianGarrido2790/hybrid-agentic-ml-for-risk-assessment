@@ -5,7 +5,6 @@ This module handles the initial stage of the MLOps pipeline:
 - Obtaining raw data from source files (Raw Data Integration).
 - Merging Financial Statements and PD tables.
 - Calculating Financial Ratios (Feature Engineering).
-- Enriching with Synthetic Data for non-existent columns (Text, Categorical).
 - Splitting the data into Train, Validation, and Test sets.
 - Storing the splits as artifacts for downstream stages.
 """
@@ -104,13 +103,11 @@ class DataIngestion:
             df_train_raw = self._load_and_merge_raw_data(train_fin_path, train_pd_path)
             # Use imported function instead of method
             df_train = engineer_features(df_train_raw)
-            # REMOVED: df_train = self._enrich_with_synthetic_data(df_train)
 
             # 2. Process Validation Data
             df_val_raw = self._load_and_merge_raw_data(val_fin_path, val_pd_path)
             # Use imported function instead of method
             df_val = engineer_features(df_val_raw)
-            # REMOVED: df_val = self._enrich_with_synthetic_data(df_val)
 
             # 3. Consolidate and Re-Split?
             # The params.yaml specifies split sizes. It's safer to concat and use standard split logic
@@ -142,9 +139,8 @@ class DataIngestion:
             train_path = self.config.unzip_dir / "train.csv"
             val_path = self.config.unzip_dir / "val.csv"
             test_path = self.config.unzip_dir / "test.csv"
-
             # Select final columns to match schema implicitly (dropping raw Spanish cols that aren't renamed)
-            # We keep all columns for now, including calculated and synthetic ones.
+            # We keep all columns for now, including calculated ones.
 
             train_set.to_csv(train_path, index=False)
             val_set.to_csv(val_path, index=False)

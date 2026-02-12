@@ -11,7 +11,10 @@ providing a robust and reproducible interface for all downstream pipeline compon
 
 from src.constants import CONFIG_FILE_PATH, PARAMS_FILE_PATH
 from src.utils.common import read_yaml, create_directories
-from src.entity.config_entity import DataIngestionConfig
+from src.entity.config_entity import (
+    DataIngestionConfig,
+    DataTransformationConfig,
+)
 from pathlib import Path
 
 
@@ -42,3 +45,16 @@ class ConfigurationManager:
         )
 
         return data_ingestion_config
+
+    def get_data_transformation_config(self) -> DataTransformationConfig:
+        config = self.config.data_transformation
+
+        create_directories([config.root_dir])
+
+        data_transformation_config = DataTransformationConfig(
+            root_dir=Path(config.root_dir),
+            data_path=Path(config.data_path),
+            preprocessor_path=Path(config.preprocessor_path),
+        )
+
+        return data_transformation_config

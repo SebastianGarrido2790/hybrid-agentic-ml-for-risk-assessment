@@ -13,7 +13,21 @@ stages:
       - data_split.val_size
       - data_split.random_state
     outs:
-      - artifacts/data_ingestion/data.csv
       - artifacts/data_ingestion/train.csv
       - artifacts/data_ingestion/val.csv
       - artifacts/data_ingestion/test.csv
+
+  data_transformation:
+    cmd: python src/pipeline/stage_02_data_transformation.py
+    deps:
+      - src/pipeline/stage_02_data_transformation.py
+      - config/config.yaml
+      - src/components/data_transformation.py
+      - artifacts/data_ingestion/train.csv
+      - artifacts/data_ingestion/val.csv
+      - artifacts/data_ingestion/test.csv
+    outs:
+      - artifacts/data_transformation/train.csv
+      - artifacts/data_transformation/val.csv
+      - artifacts/data_transformation/test.csv
+      - artifacts/data_transformation/preprocessor.pkl

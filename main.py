@@ -9,6 +9,7 @@ Usage:
 """
 
 from src.pipeline.stage_01_data_ingestion import DataIngestionTrainingPipeline
+from src.pipeline.stage_02_data_transformation import DataTransformationTrainingPipeline
 from src.utils.logger import get_logger, log_spacer
 
 logger = get_logger(__name__, headline="main.py")
@@ -27,4 +28,14 @@ if __name__ == "__main__":
 
     log_spacer()
 
-    # Future stages will be added here (e.g., Data Validation, Transformation, etc.)
+    # Stage 02: Data Transformation
+    STAGE_NAME = "Data Transformation stage"
+    try:
+        logger.info(f"🚀 {STAGE_NAME} started 🚀")
+        data_transformation = DataTransformationTrainingPipeline()
+        data_transformation.main()
+        logger.info(f"✅ {STAGE_NAME} completed ✅")
+    except Exception as e:
+        logger.exception(e)
+        raise e
+    log_spacer()

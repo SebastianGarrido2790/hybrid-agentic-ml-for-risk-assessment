@@ -5,39 +5,75 @@ stages:
     deps:
     - path: config/config.yaml
       hash: md5
-      md5: 20fac195a57291fbaaa398a54c715840
-      size: 355
+      md5: ce9dcbc56e60663a6e20789cb8cb6a33
+      size: 515
     - path: src/components/data_ingestion.py
       hash: md5
-      md5: 3de7065a6b56255c6d75d1d5cc02fb5c
-      size: 4548
+      md5: 42c2756800c184bb3cca3d4c2858d9de
+      size: 6893
     - path: src/pipeline/stage_01_data_ingestion.py
       hash: md5
       md5: 2640f845f321705167aaaf4ed4c6a291
       size: 1196
-    - path: src/tools/data_generation/synthetic_data.py
-      hash: md5
-      md5: d149f6e9684a56444ebf88acf5ff1602
-      size: 1975
     params:
       params.yaml:
         data_split.random_state: 42
         data_split.test_size: 0.15
         data_split.val_size: 0.15
     outs:
-    - path: artifacts/data_ingestion/data.csv
-      hash: md5
-      md5: d44456d3e1511feb741ac03bb77d0f63
-      size: 104941
     - path: artifacts/data_ingestion/test.csv
       hash: md5
-      md5: 6a5d5ca3d25f82fe95e966eef5aa0bf1
-      size: 15849
+      md5: c68f68ca6d50a1da342558485e308281
+      size: 29677
     - path: artifacts/data_ingestion/train.csv
       hash: md5
-      md5: 1741924158f62937414d1ed55352d4be
-      size: 73496
+      md5: b739d7977c627cad336f60fd630817fd
+      size: 137483
     - path: artifacts/data_ingestion/val.csv
       hash: md5
-      md5: f9183550800e1c8066e8a719418803fc
-      size: 15836
+      md5: cb9f854e04c087a4d903ca26e8526633
+      size: 29712
+  data_transformation:
+    cmd: python src/pipeline/stage_02_data_transformation.py
+    deps:
+    - path: artifacts/data_ingestion/test.csv
+      hash: md5
+      md5: c68f68ca6d50a1da342558485e308281
+      size: 29677
+    - path: artifacts/data_ingestion/train.csv
+      hash: md5
+      md5: b739d7977c627cad336f60fd630817fd
+      size: 137483
+    - path: artifacts/data_ingestion/val.csv
+      hash: md5
+      md5: cb9f854e04c087a4d903ca26e8526633
+      size: 29712
+    - path: config/config.yaml
+      hash: md5
+      md5: ce9dcbc56e60663a6e20789cb8cb6a33
+      size: 515
+    - path: src/components/data_transformation.py
+      hash: md5
+      md5: 229a7434e768d148bb6af2466787a6d4
+      size: 4761
+    - path: src/pipeline/stage_02_data_transformation.py
+      hash: md5
+      md5: 9435bd514d51ebdf0cd3ddba4c6aa352
+      size: 1297
+    outs:
+    - path: artifacts/data_transformation/preprocessor.pkl
+      hash: md5
+      md5: 82f6799a5a65aec13bbd3b809a3dadd3
+      size: 2201
+    - path: artifacts/data_transformation/test.csv
+      hash: md5
+      md5: e61bb695f44c1c2ec44d90c239e19a88
+      size: 31928
+    - path: artifacts/data_transformation/train.csv
+      hash: md5
+      md5: b8eaf6cf1c450b42dd0a319808055c59
+      size: 148126
+    - path: artifacts/data_transformation/val.csv
+      hash: md5
+      md5: f4dcf55ee298f6705e01f8a6f60506e4
+      size: 31981

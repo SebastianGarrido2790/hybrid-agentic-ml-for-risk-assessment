@@ -19,3 +19,10 @@ class DataIngestionConfig:
     test_size: float
     val_size: float
     random_state: int
+
+
+@dataclass(frozen=True)
+class DataTransformationConfig:
+    root_dir: Path
+    data_path: Path
+    preprocessor_path: Path
