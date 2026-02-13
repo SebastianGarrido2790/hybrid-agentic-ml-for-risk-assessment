@@ -56,9 +56,9 @@ class ModelEvaluation:
             tuple: (accuracy, precision, recall, f1)
         """
         accuracy = accuracy_score(actual, pred)
-        precision = precision_score(actual, pred)
-        recall = recall_score(actual, pred)
-        f1 = f1_score(actual, pred)
+        precision = precision_score(actual, pred, zero_division=0)
+        recall = recall_score(actual, pred, zero_division=0)
+        f1 = f1_score(actual, pred, zero_division=0)
         return accuracy, precision, recall, f1
 
     def save_roc_plot(self, actual, prob, plot_path):
@@ -150,14 +150,23 @@ class ModelEvaluation:
             y_prob = None
             if hasattr(model, "predict_proba"):
                 y_prob = model.predict_proba(test_x)[:, 1]
-                try:
-                    roc_auc = roc_auc_score(test_y, y_prob)
-                except ValueError:
+                # Check for single-class data to avoid ROC-AUC failure
+                if len(test_y[self.config.target_column].unique()) > 1:
+                    try:
+                        roc_auc = roc_auc_score(test_y, y_prob)
+                    except Exception as e:
+                        logger.warning(f"ROC-AUC calculation failed: {e}")
+                        roc_auc = 0.5
+                else:
                     logger.warning(
-                        "ROC-AUC score could not be calculated (imbalanced class)."
+                        "ROC-AUC score could not be calculated (only one class present in test data). Returning 0.5"
                     )
-                    roc_auc = 0.0
+                    roc_auc = 0.5
             else:
+                roc_auc = 0.5
+
+            # Ensure roc_auc is a valid number for JSON
+            if pd.isna(roc_auc):
                 roc_auc = 0.5
 
             (accuracy, precision, recall, f1) = self.eval_metrics(
@@ -165,11 +174,11 @@ class ModelEvaluation:
             )
 
             scores = {
-                "accuracy": accuracy,
-                "precision": precision,
-                "recall": recall,
-                "f1_score": f1,
-                "roc_auc": roc_auc,
+                "accuracy": float(accuracy),
+                "precision": float(precision),
+                "recall": float(recall),
+                "f1_score": float(f1),
+                "roc_auc": float(roc_auc),
             }
             save_json(path=Path(self.config.metric_file_name), data=scores)
 
