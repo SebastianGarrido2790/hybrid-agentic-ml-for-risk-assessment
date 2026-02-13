@@ -1,11 +1,27 @@
+"""
+Synthetic Data Generator Tool.
+
+This module generates synthetic financial data for distressed companies (defaults)
+to address class imbalance. It combines the original raw data with generated
+samples and saves the result to data/processed, keeping the raw data untouched.
+"""
+
 import pandas as pd
 import numpy as np
 import os
+import sys
+from src.utils.exception import CustomException
 
 
 def generate_synthetic_data(n_samples=50):
     """
     Generates synthetic data for distressed companies (defaults).
+
+    Args:
+        n_samples (int): Number of synthetic samples to generate.
+
+    Returns:
+        tuple: (financials_df, pd_table_df)
     """
     np.random.seed(42)
 
@@ -82,20 +98,47 @@ def generate_synthetic_data(n_samples=50):
 
 
 if __name__ == "__main__":
-    # Check paths - assuming run from project root
-    fin_path = "data/raw/financial_statements_training.csv"
-    pd_path = "data/raw/pd_training.csv"
+    try:
+        # Paths
+        raw_fin_path = "data/raw/financial_statements_training.csv"
+        raw_pd_path = "data/raw/pd_training.csv"
+        processed_dir = "data/processed"
+        os.makedirs(processed_dir, exist_ok=True)
 
-    if os.path.exists(fin_path) and os.path.exists(pd_path):
-        print("Generating synthetic data...")
-        syn_fin, syn_pd = generate_synthetic_data(50)
+        proc_fin_path = os.path.join(processed_dir, "financial_statements_training.csv")
+        proc_pd_path = os.path.join(processed_dir, "pd_training.csv")
 
-        print(f"Appending to {fin_path} and {pd_path}...")
+        if os.path.exists(raw_fin_path) and os.path.exists(raw_pd_path):
+            print(f"Loading original raw data from {raw_fin_path}...")
+            df_fin_raw = pd.read_csv(raw_fin_path)
+            df_pd_raw = pd.read_csv(raw_pd_path)
 
-        # Append mode (header=False if file exists)
-        syn_fin.to_csv(fin_path, mode="a", header=False, index=False)
-        syn_pd.to_csv(pd_path, mode="a", header=False, index=False)
+            print("Generating synthetic data...")
+            syn_fin, syn_pd = generate_synthetic_data(50)
 
-        print("Success! Added 50 positive samples.")
-    else:
-        print("Error: Raw data files not found. Are you running from project root?")
+            print("Combining original and synthetic data...")
+            df_fin_combined = pd.concat([df_fin_raw, syn_fin], ignore_index=True)
+            df_pd_combined = pd.concat([df_pd_raw, syn_pd], ignore_index=True)
+
+            print(f"Saving augmented data to {processed_dir}...")
+            df_fin_combined.to_csv(proc_fin_path, index=False)
+            df_pd_combined.to_csv(proc_pd_path, index=False)
+
+            # Also copy validation data to processed to maintain consistent source path for ingestion
+            val_fin_raw = "data/raw/financial_statements_validation.csv"
+            val_pd_raw = "data/raw/pd_validation.csv"
+            if os.path.exists(val_fin_raw):
+                pd.read_csv(val_fin_raw).to_csv(
+                    os.path.join(processed_dir, "financial_statements_validation.csv"),
+                    index=False,
+                )
+            if os.path.exists(val_pd_raw):
+                pd.read_csv(val_pd_raw).to_csv(
+                    os.path.join(processed_dir, "pd_validation.csv"), index=False
+                )
+
+            print("Success! Augmented dataset created in data/processed.")
+        else:
+            print("Error: Raw data files not found in data/raw.")
+    except Exception as e:
+        raise CustomException(e, sys)

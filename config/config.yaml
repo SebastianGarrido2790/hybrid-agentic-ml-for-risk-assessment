@@ -4,7 +4,7 @@ artifacts_root: artifacts
 
 data_ingestion:
   root_dir: artifacts/data_ingestion
-  source_data_dir: data/raw
+  source_data_dir: data/processed
   financial_data_file: financial_statements_training.csv
   pd_data_file: pd_training.csv
   unzip_dir: artifacts/data_ingestion

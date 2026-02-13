@@ -45,7 +45,9 @@ The synthetic samples were generated with the following properties:
 
 ### 1. Augmentation
 *   **50 synthetic positive samples** were generated.
-*   These samples were appended to `data/raw/financial_statements_training.csv` and `data/raw/pd_training.csv`.
+*   The **original raw data** from `data/raw` is kept untouched to maintain data integrity.
+*   The augmented dataset (Original + Synthetic) is saved in **`data/processed/`**.
+*   **Configuration Update:** In `config/config.yaml`, the `data_ingestion` stage was updated to use `data/processed` as its `source_data_dir`.
 *   **New Total Positives:** ~52 samples.
 *   **New Class Balance:** ~10% Positive / 90% Negative (up from <0.5%).
 
