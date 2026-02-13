@@ -19,6 +19,7 @@ class DataIngestionConfig:
     test_size: float
     val_size: float
     random_state: int
+    target_column: str
 
 
 @dataclass(frozen=True)

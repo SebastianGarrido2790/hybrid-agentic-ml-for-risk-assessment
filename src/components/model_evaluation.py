@@ -134,11 +134,20 @@ class ModelEvaluation:
             mlflow_uri = self.config.mlflow_uri
             if mlflow_uri and mlflow_uri.strip() and not mlflow_uri.startswith("file:"):
                 mlflow.set_registry_uri(mlflow_uri)
+                mlflow.set_tracking_uri(mlflow_uri)
             else:
                 mlflow.set_tracking_uri("file:./mlruns")
 
-            # Set experiment
-            mlflow.set_experiment(self.config.experiment_name)
+            # Robust Experiment Setup
+            try:
+                mlflow.set_experiment(self.config.experiment_name)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to set experiment on remote server: {e}. Falling back to local './mlruns'."
+                )
+                mlflow.set_registry_uri(None)
+                mlflow.set_tracking_uri("file:./mlruns")
+                mlflow.set_experiment(self.config.experiment_name)
 
             tracking_uri = mlflow.get_tracking_uri()
             tracking_url_type_store = urlparse(tracking_uri).scheme

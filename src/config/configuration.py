@@ -50,6 +50,7 @@ class ConfigurationManager:
             test_size=params.test_size,
             val_size=params.val_size,
             random_state=params.random_state,
+            target_column=self.schema.target_column,
         )
 
         return data_ingestion_config

@@ -119,20 +119,65 @@ class DataIngestion:
             )
             df_full = pd.concat([df_train, df_val], ignore_index=True)
 
-            # 4. Perform Standard Split
-            # First split: Train vs Temp (Test + Val)
+            # 4. Perform Split with Stratification Logic
             test_val_ratio = self.config.val_size + self.config.test_size
-            train_set, temp_set = train_test_split(
-                df_full, test_size=test_val_ratio, random_state=self.config.random_state
+            strat_col = (
+                df_full[self.config.target_column]
+                if self.config.target_column in df_full.columns
+                else None
             )
 
-            # Second split: Temp -> Val + Test
-            test_ratio_relative = self.config.test_size / test_val_ratio
-            val_set, test_set = train_test_split(
-                temp_set,
-                test_size=test_ratio_relative,
-                random_state=self.config.random_state,
+            # --- First Split: Train vs Temp (Test + Val) ---
+            try:
+                # Attempt stratified split
+                train_set, temp_set = train_test_split(
+                    df_full,
+                    test_size=test_val_ratio,
+                    random_state=self.config.random_state,
+                    stratify=strat_col,
+                )
+                logger.info("First split (Train/Temp) stratified successfully.")
+            except ValueError as e:
+                # Fallback to random if class count is too small (e.g., < 2 samples)
+                logger.warning(
+                    f"Stratified split failed for Train/Temp (likely too few positive samples): {e}. Falling back to random split."
+                )
+                train_set, temp_set = train_test_split(
+                    df_full,
+                    test_size=test_val_ratio,
+                    random_state=self.config.random_state,
+                    stratify=None,
+                )
+
+            # --- Second Split: Temp -> Val + Test ---
+            # Recalculate strat_col for temp_set
+            strat_col_temp = (
+                temp_set[self.config.target_column]
+                if self.config.target_column in temp_set.columns
+                else None
             )
+            test_ratio_relative = self.config.test_size / test_val_ratio
+
+            try:
+                # Attempt stratified split
+                val_set, test_set = train_test_split(
+                    temp_set,
+                    test_size=test_ratio_relative,
+                    random_state=self.config.random_state,
+                    stratify=strat_col_temp,
+                )
+                logger.info("Second split (Val/Test) stratified successfully.")
+            except ValueError as e:
+                # Fallback to random
+                logger.warning(
+                    f"Stratified split failed for Val/Test (likely only 1 positive sample left): {e}. Falling back to random split."
+                )
+                val_set, test_set = train_test_split(
+                    temp_set,
+                    test_size=test_ratio_relative,
+                    random_state=self.config.random_state,
+                    stratify=None,
+                )
 
             # 5. Save Artifacts
             # Ensure output dir exists
