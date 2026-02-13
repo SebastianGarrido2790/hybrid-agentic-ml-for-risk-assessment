@@ -138,7 +138,7 @@ class ModelEvaluation:
             else:
                 mlflow.set_tracking_uri("file:./mlruns")
 
-            # Robust Experiment Setup
+            # Experiment Setup
             try:
                 mlflow.set_experiment(self.config.experiment_name)
             except Exception as e:
