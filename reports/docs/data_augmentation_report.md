@@ -60,8 +60,14 @@ With the augmented data, the Random Forest model achieved:
 *   **Recall:** ~0.875 (Correctly identifying 7/8 defaults).
 *   **ROC-AUC:** ~0.99 (Excellent discrimination between synthetic defaults and real non-defaults).
 
-> **Note:** The high performance is expected as the synthetic data has clear "distressed" signals. In a production environment, real defaulted data should be collected to validate these findings.
+### 4. Distribution Analysis
+To verify the success of the augmentation process, we utilized the `src/tools/count_positives.py` utility. This tool performs a comparative analysis between the original raw data and the augmented processed data, ensuring that the target class distribution reaches the required threshold for robust training.
+
+**Verification Process:**
+1.  **Raw Data Scan:** Merges `data/raw/financial_statements_training.csv` and `data/raw/pd_training.csv` to establish the baseline (approx. 0.44% positive ratio).
+2.  **Processed Data Scan:** Merges the augmented files in `data/processed/` to confirm the injection of synthetic samples (approx. 10.40% positive ratio).
+3.  **Cross-Validation:** Ensures that `id_empresa` values for synthetic samples (ID >= 1000) are correctly mapped to a `default_12m` target of 1.
 
 ## Artifacts
 *   **Generator Script:** `src/tools/synthetic_data_generator.py`
-*   **Analysis Tool:** `count_positives.py`
+*   **Analysis Tool:** `src/tools/count_positives.py`
