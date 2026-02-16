@@ -13,3 +13,6 @@ model_params:
 
 mlflow:
   uri: "http://127.0.0.1:5000"
+
+registration_params:
+  min_roc_auc: 0.60

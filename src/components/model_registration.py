@@ -4,6 +4,11 @@ Model Registration Stage.
 This component is responsible for registering the trained model into the MLflow Model Registry.
 It ensures that the model meets specific criteria (e.g., accuracy thresholds) before being
 staged for production. It handles versioning and tracking of the model artifacts.
+
+Requirements:
+    - MLflow running (e.g. uv run mlflow server --host 127.0.0.1 --port 5000)
+    - Trained model saved to artifacts/model_trainer/acras_rf_model.joblib
+    - Metrics file available for validation (e.g. artifacts/model_evaluation/metrics.json)
 """
 
 import json
@@ -41,8 +46,8 @@ class ModelRegistration:
 
             logger.info(f"Model Metrics - Accuracy: {accuracy}, ROC AUC: {roc_auc}")
 
-            # Define a threshold (Example: ROC AUC > 0.6)
-            THRESHOLD = 0.6
+            # Define a threshold from params
+            THRESHOLD = self.config.min_roc_auc
 
             if roc_auc < THRESHOLD:
                 logger.warning(
@@ -50,7 +55,9 @@ class ModelRegistration:
                 )
                 return
 
-            logger.info("Model passed threshold. Proceeding with registration.")
+            logger.info(
+                f"Model passed threshold ({THRESHOLD}). Proceeding with registration."
+            )
 
             with mlflow.start_run(run_name="Model_Registration_Stage"):
                 mlflow.log_metrics(metrics)

@@ -128,6 +128,7 @@ class ConfigurationManager:
 
     def get_model_registration_config(self) -> ModelRegistrationConfig:
         config = self.config.model_registration
+        params = self.params.registration_params
 
         create_directories([config.root_dir])
 
@@ -137,6 +138,7 @@ class ConfigurationManager:
             metric_file_name=Path(config.metric_file_name),
             model_name=config.model_name,
             mlflow_uri=get_mlflow_uri(),
+            min_roc_auc=params.min_roc_auc,
         )
 
         return model_registration_config

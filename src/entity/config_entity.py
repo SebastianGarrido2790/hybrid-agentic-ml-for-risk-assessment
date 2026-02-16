@@ -71,3 +71,4 @@ class ModelRegistrationConfig:
     metric_file_name: Path
     model_name: str
     mlflow_uri: str
+    min_roc_auc: float
