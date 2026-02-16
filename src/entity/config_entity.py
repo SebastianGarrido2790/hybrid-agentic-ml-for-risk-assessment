@@ -62,3 +62,12 @@ class ModelEvaluationConfig:
     experiment_name: str
     registered_model_name: str
     mlflow_model_name: str
+
+
+@dataclass(frozen=True)
+class ModelRegistrationConfig:
+    root_dir: Path
+    model_path: Path
+    metric_file_name: Path
+    model_name: str
+    mlflow_uri: str

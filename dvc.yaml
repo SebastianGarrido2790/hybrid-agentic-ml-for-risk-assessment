@@ -80,3 +80,12 @@ stages:
     metrics:
       - artifacts/model_evaluation/metrics.json:
           cache: false
+
+  model_registration:
+    cmd: python src/pipeline/stage_06_model_registration.py
+    deps:
+      - src/pipeline/stage_06_model_registration.py
+      - src/components/model_registration.py
+      - config/config.yaml
+      - artifacts/model_trainer/acras_rf_model.joblib
+      - artifacts/model_evaluation/metrics.json

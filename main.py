@@ -81,3 +81,20 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(CustomException(e, sys))
         raise e
+
+    log_spacer()
+
+    # Stage 06: Model Registration
+    STAGE_NAME = "Model Registration stage"
+    try:
+        from src.pipeline.stage_06_model_registration import (
+            ModelRegistrationTrainingPipeline,
+        )
+
+        logger.info(f"🚀 {STAGE_NAME} started 🚀")
+        model_registration = ModelRegistrationTrainingPipeline()
+        model_registration.main()
+        logger.info(f"✅ {STAGE_NAME} completed ✅")
+    except Exception as e:
+        logger.error(CustomException(e, sys))
+        raise e

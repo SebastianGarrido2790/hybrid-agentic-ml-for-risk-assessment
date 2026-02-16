@@ -17,6 +17,7 @@ from src.entity.config_entity import (
     DataTransformationConfig,
     ModelTrainerConfig,
     ModelEvaluationConfig,
+    ModelRegistrationConfig,
 )
 from pathlib import Path
 from src.utils.mlflow_config import get_mlflow_uri
@@ -124,3 +125,18 @@ class ConfigurationManager:
         )
 
         return model_evaluation_config
+
+    def get_model_registration_config(self) -> ModelRegistrationConfig:
+        config = self.config.model_registration
+
+        create_directories([config.root_dir])
+
+        model_registration_config = ModelRegistrationConfig(
+            root_dir=Path(config.root_dir),
+            model_path=Path(config.model_path),
+            metric_file_name=Path(config.metric_file_name),
+            model_name=config.model_name,
+            mlflow_uri=get_mlflow_uri(),
+        )
+
+        return model_registration_config
