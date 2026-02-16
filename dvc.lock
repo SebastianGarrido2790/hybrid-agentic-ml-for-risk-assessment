@@ -5,8 +5,8 @@ stages:
     deps:
     - path: config/config.yaml
       hash: md5
-      md5: 7adfddfdb442542bba30c21684c6a4a3
-      size: 1224
+      md5: e149f5d1c5a3d871065093dc62b1d0b7
+      size: 1450
     - path: data/raw/financial_statements_training.csv
       hash: md5
       md5: 34a5ddff5dac93845498cc83717b25d3
@@ -66,8 +66,8 @@ stages:
       size: 32324
     - path: config/config.yaml
       hash: md5
-      md5: 7adfddfdb442542bba30c21684c6a4a3
-      size: 1224
+      md5: e149f5d1c5a3d871065093dc62b1d0b7
+      size: 1450
     - path: src/components/data_transformation.py
       hash: md5
       md5: 3414e9d36b7cbc557f3721c27664a1c9
@@ -102,8 +102,8 @@ stages:
       size: 150639
     - path: config/config.yaml
       hash: md5
-      md5: 7adfddfdb442542bba30c21684c6a4a3
-      size: 1224
+      md5: e149f5d1c5a3d871065093dc62b1d0b7
+      size: 1450
     - path: config/schema.yaml
       hash: md5
       md5: f72d47385232fd6ec2fa314d1ec32c3f
@@ -130,8 +130,8 @@ stages:
       size: 32453
     - path: config/config.yaml
       hash: md5
-      md5: 7adfddfdb442542bba30c21684c6a4a3
-      size: 1224
+      md5: e149f5d1c5a3d871065093dc62b1d0b7
+      size: 1450
     - path: src/components/model_trainer.py
       hash: md5
       md5: 05b61c8c7fe808c5bf70b59eb10307f3
@@ -165,8 +165,8 @@ stages:
       size: 274809
     - path: config/config.yaml
       hash: md5
-      md5: 7adfddfdb442542bba30c21684c6a4a3
-      size: 1224
+      md5: e149f5d1c5a3d871065093dc62b1d0b7
+      size: 1450
     - path: src/components/model_evaluation.py
       hash: md5
       md5: 20b05e4e5f8fd17810a86e18526498db
@@ -187,3 +187,26 @@ stages:
       hash: md5
       md5: 13490a93569b016c4fb419b46e217704
       size: 158
+  model_registration:
+    cmd: python src/pipeline/stage_06_model_registration.py
+    deps:
+    - path: artifacts/model_evaluation/metrics.json
+      hash: md5
+      md5: 13490a93569b016c4fb419b46e217704
+      size: 158
+    - path: artifacts/model_trainer/acras_rf_model.joblib
+      hash: md5
+      md5: 896e1218bdd6ce8acd4181775db1c134
+      size: 274809
+    - path: config/config.yaml
+      hash: md5
+      md5: e149f5d1c5a3d871065093dc62b1d0b7
+      size: 1450
+    - path: src/components/model_registration.py
+      hash: md5
+      md5: eae919528db95c2eb4cbd3ecd28d51f9
+      size: 3213
+    - path: src/pipeline/stage_06_model_registration.py
+      hash: md5
+      md5: 74ae1c791556dc5e4ce49aef67b844dd
+      size: 1287
