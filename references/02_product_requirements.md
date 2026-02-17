@@ -20,13 +20,14 @@ This Product Requirements Document (PRD) is structured to reflect professional i
 
 **Background:** Current credit risk assessment processes in banking are manual, fragmented, and time-intensive. Risk Managers spend approximately 70% of their time gathering data from disparate sources (financial statements, news, credit bureaus) and only 30% on actual decision-making. This results in high Turnaround Time (TAT) (24–48 hours) and potential human error in data synthesis.
 
-**Product Vision:** To build an automated, hybrid AI system where autonomous agents collaborate to execute the "heavy lifting" of data collection and initial analysis. By wrapping a deterministic Machine Learning model (Random Forest/XGBoost) as a tool for a probabilistic reasoning agent (LLM), we aim to reduce the preliminary assessment time from days to minutes.
+**Product Vision:** To build an automated, hybrid AI system where autonomous agents collaborate to execute the "heavy lifting" of data collection and initial analysis. By wrapping a deterministic Machine Learning model (Random Forest/XGBoost) as a tool for a probabilistic reasoning agent (**Gemini / Open Source LLM**), we aim to reduce the preliminary assessment time from days to minutes.
 
 **Business Value (McKinsey Alignment):**
 
-* **Operational Efficiency:** Reduce manual data entry and calculation time by ~90%.
-* **Consistency:** Standardize the interpretation of quantitative risk scores across the organization.
-* **Agility:** Enable real-time risk reporting for SME (Small to Medium Enterprise) accounts.
+*   **Operational Efficiency:** Reduce manual data entry and calculation time by ~90%.
+*   **Consistency:** Standardize the interpretation of quantitative risk scores across the organization.
+*   **Agility:** Enable real-time risk reporting for SME (Small to Medium Enterprise) accounts.
+*   **Auditability & Vendor Independence:** Leverage Open Source models to ensure full control over data privacy and avoid vendor lock-in.
 
 ---
 
@@ -69,16 +70,17 @@ The system is divided into three functional layers: The Interface, The Agentic O
 * **NFR-01 (Latency):** The end-to-end process (User Click → Final Report) should take no longer than 30 seconds.
 * **NFR-02 (Reliability):** The ML Microservice must have 99.9% uptime. If the ML service is down, the Agent must report "Unable to calculate quantitative score" rather than hallucinating a number.
 * **NFR-03 (Modularity):** The ML model file must be replaceable without modifying the Agent's code.
-* **NFR-04 (Traceability):** All agent decisions (intermediate tool calls) must be logged to the UI or console for "Chain of Thought" auditing.
+*   **NFR-04 (Traceability):** All agent decisions (intermediate tool calls) must be logged to the UI or console for "Chain of Thought" auditing.
+*   **NFR-05 (Auditability):** The system must explicitly log which model (Gemini Cloud vs. Local OS Model) was used for each reasoning step.
 
 ---
 
 ## 5. Technical Architecture & Stack
 
-* **Frontend:** Streamlit (Python).
-* **Orchestration:** LangChain (Graph/Chain logic).
-* **LLM Provider:** OpenAI GPT-4 (via LangChain ChatOpenAI).
-* **Backend API:** FastAPI (Uvicorn server).
+*   **Frontend:** Streamlit (Python).
+*   **Orchestration:** LangChain / LangGraph.
+*   **LLM Provider:** **Google Gemini** (Cloud) & **Hugging Face** (Local Open Source).
+*   **Backend API:** FastAPI (Uvicorn server).
 * **Model serialization:** Pickle (`.pkl`).
 * **Environment Management:** `uv` or `venv`.
 

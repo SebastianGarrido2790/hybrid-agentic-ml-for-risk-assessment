@@ -17,10 +17,10 @@ In modern banking, a Senior Credit Risk Manager spends approximately 70% of thei
 4. Manually input these figures into a rigid scoring model.
 
 **The Friction Point:**
-This manual workflow results in a **Turnaround Time (TAT) of 24 to 48 hours** per application. It creates a bottleneck where high-value decisions are delayed by low-value data gathering. Furthermore, disjointed data sources lead to inconsistent decision-making—one manager might weigh a negative news article heavily, while another might miss it entirely.
+This manual workflow results in a **Turnaround Time (TAT) of 24 to 48 hours** per application. It creates a bottleneck where high-value decisions are delayed by low-value data gathering. Furthermore, dependence on purely manual review or opaque, closed-source automated tools can lead to high costs and lack of auditability.
 
 **The Opportunity (McKinsey Alignment):**
-By deploying an **Agentic AI Workflow**, we can invert this ratio. The AI Agents handle the deterministic scoring (ML) and the qualitative synthesis (NLP), presenting the manager with a "Decision-Ready" report. This shifts the manager's role from "Data Gatherer" to "Strategic Decision Maker," potentially reducing TAT from days to minutes.
+By deploying an **Agentic AI Workflow** using **Hybrid Models (Gemini + Open Source)**, we can invert this ratio. The AI Agents handle the deterministic scoring (ML) and the qualitative synthesis (NLP) using the most cost-effective model for the task, presenting the manager with a "Decision-Ready" report. This shifts the manager's role from "Data Gatherer" to "Strategic Decision Maker," reducing TAT from days to minutes while maintaining full data control.
 
 ---
 
@@ -38,9 +38,10 @@ By deploying an **Agentic AI Workflow**, we can invert this ratio. The AI Agents
 
 * **Input Validated:** The Streamlit interface accepts a Company ID and successfully passes it to the Agent Orchestrator.
 * **Agent Routing:** The Orchestrator correctly identifies the need for quantitative data and autonomously triggers the `get_credit_risk_score` tool (FastAPI).
-* **Data Integrity:** The Risk Score displayed in the final report matches the exact output of the ML model (no LLM hallucination of the numbers).
-* **Qualitative Context:** The report includes at least one paragraph of text analysis (simulated financial health or market sentiment) derived from the `analyze_financial_ratios` tool.
-* **Output Format:** The final output is rendered in the UI as a clean, structured Markdown report (not raw JSON), containing an Executive Summary, the Score, and a Recommendation.
+*   **Data Integrity:** The Risk Score displayed in the final report matches the exact output of the ML model (no LLM hallucination of the numbers).
+*   **Qualitative Context:** The report includes at least one paragraph of text analysis derived from the `analyze_financial_ratios` tool.
+*   **Model Auditability:** The report metadata indicates which model (e.g., Gemini 1.5 vs. Llama 3) was used to generate the qualitative analysis.
+*   **Output Format:** The final output is rendered in the UI as a clean, structured Markdown report.
 
 ---
 

@@ -7,7 +7,9 @@ The primary objective of ACRAS is to transform the traditional, manual credit ri
 * **Reduce Turnaround Time (TAT):** Shrink the preliminary analysis window from 24–48 hours to under 5 minutes.
 * **Enhance Decision Quality:** Minimize human error and bias by standardizing the interpretation of quantitative risk scores.
 * **Operational Scalability:** Enable the handling of high-volume, low-complexity SME (Small to Medium Enterprise) loan applications without proportional increases in headcount.
-* **Unified Intelligence:** Synthesize disparate data sources (financial ratios, market sentiment, credit history) into a single, cohesive executive report.
+*   **Unified Intelligence:** Synthesize disparate data sources (financial ratios, market sentiment, credit history) into a single, cohesive executive report.
+*   **Auditability & Control:** Ensure full transparency and reproducibility of AI decisions by leveraging Open Source models and local execution where necessary.
+*   **No Vendor Lock-in:** Architecture supports seamless switching between proprietary cloud models (Gemini) and open-source alternatives.
 
 ## 2. Architectural Design
 
@@ -97,10 +99,11 @@ We combine the industry-standard **CRISP-DM** (Cross-Industry Standard Process f
 - Dockerize the API service for containerized deployment
 
 ### Phase 4: Agentic Reasoning Engine (The "Brain" - LangChain)
-- Create`agent_tools.py`: Wrap FastAPI `/predict` as a structured LangChain Tool
-- Create`financial_analyst_tool.py`: Implement deterministic rule-based financial ratios logic
-- Implement `orchestrator.py`: Define the Agent State Graph (LangGraph) and routing logic
-- Setup prompts: Design versioned System Prompts for Data Scientist and Analyst personas
+-   Create `agent_tools.py`: Wrap FastAPI `/predict` as a structured LangChain Tool
+-   Create `financial_analyst_tool.py`: Implement deterministic rule-based financial ratios logic
+-   Implement `model_router.py`: Logic to switch between **Gemini** (Cloud) and **Hugging Face** (Local) models.
+-   Implement `orchestrator.py`: Define the Agent State Graph (LangGraph) and routing logic
+-   Setup prompts: Design versioned System Prompts for Data Scientist and Analyst personas
 
 ### Phase 5: User Interface (Streamlit)
 - Design main dashboard layout with sidebar for configuration
@@ -136,12 +139,13 @@ Adhering to MLOps best practices ensures the system is production-ready and sust
 
 ## 7. Technology Stack
 
-* **Language:** Python 3.10+
-* **Orchestration Framework:** LangChain (for Agentic workflows)
-* **API Framework:** FastAPI (high-performance, async)
-* **User Interface:** Streamlit (rapid data app development)
-* **Machine Learning:** Scikit-learn (model training), Pandas (data manipulation)
-* **Package Management:** `uv` (fast Python package installer)
+*   **Language:** Python 3.10+
+*   **Orchestration Framework:** LangChain / LangGraph
+*   **API Framework:** FastAPI (high-performance, async)
+*   **User Interface:** Streamlit (rapid data app development)
+*   **Machine Learning:** Scikit-learn (model training), Pandas (data manipulation)
+*   **LLM Backend:** **Google Gemini** (Cloud) + **Hugging Face** (Local)
+*   **Package Management:** `uv` (fast Python package installer)
 
 ## 8. Project Analogy: The "AI Orchestra"
 

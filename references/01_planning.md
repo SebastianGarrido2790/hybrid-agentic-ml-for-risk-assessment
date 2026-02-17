@@ -37,7 +37,10 @@ A functional prototype where a user enters a company profile (or ID). The system
 
 ### 5. What tools should I use to develop this project?
 
-* **LangChain:** For chaining the "reasoning" components and tool binding.
-* **FastAPI:** For the "doing" component (the ML inference). Standard for MLOps due to speed and automatic documentation.
-* **Streamlit:** For rapid prototyping of the business interface.
-* **Pydantic:** To enforce strict data contracts between the Agents and the API.
+*   **LangChain / LangGraph:** For chaining the "reasoning" components and managing agent state.
+*   **Google Gemini & Hugging Face:** The "Brain" of the system. We use a **Hybrid Approach**:
+    *   **Gemini 1.5 Pro/Flash:** For complex reasoning and high-context tasks (Cloud).
+    *   **Open Source Models (e.g., Llama 3, Mistral, Gemma):** For local inference, privacy, and cost control (via Hugging Face).
+*   **FastAPI:** For the "doing" component (the ML inference). Standard for MLOps due to speed and automatic documentation.
+*   **Streamlit:** For rapid prototyping of the business interface.
+*   **Pydantic:** To enforce strict data contracts between the Agents and the API.
