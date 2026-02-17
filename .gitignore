@@ -95,3 +95,4 @@ logs/
 mlruns/
 data/raw/*
 !data/raw/.gitkeep
+AGENTS.md

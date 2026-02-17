@@ -50,7 +50,7 @@ The component utilizes the `mlflow.sklearn.log_model` function with the `registe
 3.  Logs the final evaluation metrics directly to the registration run for traceability.
 
 ### 3. Fault-Tolerant Connection
-In alignment with the "Antigravity" standards, the component includes a fallback mechanism:
+In alignment with the "ACRAS" standards, the component includes a fallback mechanism:
 *   If the MLflow server is unreachable (e.g., local development without a running docker container), the component logs a warning and proceeds without crashing the pipeline.
 *   This allows DVC to track the stage completion locally even if centralized tracking is temporarily offline.
 
