@@ -67,6 +67,6 @@ async def predict(input_data: PredictionInput, request: Request):
     except Exception as e:
         print(f"Prediction Error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Prediction failed: {str(e)}",
         )
