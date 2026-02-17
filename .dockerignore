@@ -1,0 +1,30 @@
+__pycache__
+*.pyc
+.git
+.dvc
+.dvc/cache
+mlruns
+mlartifacts
+.venv
+.env
+.DS_Store
+*.log
+logs
+models
+notebooks
+data
+references
+reports
+
+# Ignore all artifacts first
+artifacts/**
+
+# But allow the necessary model and preprocessor structure
+!artifacts/model_trainer/acras_rf_model.joblib
+!artifacts/data_transformation/preprocessor.pkl
+# config is needed for paths
+!config/
+# src is needed for code
+!src/
+!main.py
+!pyproject.toml

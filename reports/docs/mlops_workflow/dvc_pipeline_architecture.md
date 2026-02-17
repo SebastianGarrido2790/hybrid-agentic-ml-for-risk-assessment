@@ -24,6 +24,7 @@ graph TD
         stage_03[Stage 03: Data Transformation]
         stage_04[Stage 04: Model Training]
         stage_05[Stage 05: Model Evaluation]
+        stage_06[Stage 06: Model Registration]
     end
 
     subgraph "Data Sources"
@@ -58,8 +59,13 @@ graph TD
     stage_04 --> model_artifact
     
     model_artifact --> stage_05
+    model_artifact --> stage_05
     stage_05 --> metrics_file
     stage_05 --> roc_plot
+    
+    stage_05 --> stage_06
+    metrics_file --> stage_06
+    stage_06 --> mlflow_registry[[MLflow Registry]]
 ```
 
 ## Pipeline Stages Breakdown
@@ -71,6 +77,7 @@ graph TD
 | **03: Transformation** | `stage_03_data_transformation.py` | Robust scaling and missing value imputation. | `preprocessor.pkl` |
 | **04: Training** | `stage_04_model_trainer.py` | Baseline Random Forest fitting and serialization. | `acras_rf_model.joblib` |
 | **05: Evaluation** | `stage_05_model_evaluation.py` | Metric calculation, ROC Plotting, and MLflow logging. | `metrics.json` |
+| **06: Registration** | `stage_06_model_registration.py` | Register the best model to the MLflow Model Registry if metrics meet thresholds. | `MLflow Model Registry` |
 
 ## Strategy: The Dual-Entry Pattern
 To balance production stability with developer velocity, ACRAS implements a **Dual-Entry Orchestration Strategy**:
