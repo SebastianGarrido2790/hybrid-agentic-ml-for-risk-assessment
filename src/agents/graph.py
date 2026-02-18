@@ -10,13 +10,13 @@ from typing import Annotated, TypedDict, Union, Literal
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from langchain_core.messages import BaseMessage
-from src.agent.tools.ml_api_tool import get_credit_risk_score
-from src.agent.tools.finance_tool import (
+from src.agents.tools.ml_api_tool import get_credit_risk_score
+from src.agents.tools.finance_tool import (
     calculate_debt_to_equity,
     calculate_ebitda_margin,
     calculate_current_ratio,
 )
-from src.agent.model_factory import get_llm
+from src.agents.model_factory import get_llm
 import operator
 
 

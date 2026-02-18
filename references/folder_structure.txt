@@ -12,20 +12,17 @@ Hybrid Agentic ML for Risk Assessment
 │   ├── config.yaml            <- System paths (artifacts/data)
 │   └── params.yaml            <- Hyperparameters (K-neighbors, Chunk size)
 │
-├── artifacts/                 <- Generated artifacts
+├── artifacts/                 <- Generated artifacts (models, metrics, transformed data, serialized models, etc.)
 │
 ├── .github/
 │   └── workflows/             <- CI/CD (main.yaml)
 │
 ├── data/
 │   ├── external               <- Data from third party sources
-│   ├── interim                <- Intermediate data that has been transformed
 │   ├── processed              <- The final, canonical data sets for modeling
 │   └── raw                    <- The original, immutable data dump
 │
 ├── logs/                      <- Logs of the pipeline execution
-│
-├── models/                    <- Trained and serialized models, model predictions, or model summaries
 │
 ├── notebooks/                 <- Jupyter notebooks
 │
@@ -36,11 +33,24 @@ Hybrid Agentic ML for Risk Assessment
 │   ├── docs/                  <- Generated documents to be used in reporting
 │   └── figures/               <- Generated graphics and figures to be used in reporting
 │
-├── tests/                     <- Unit tests and integration tests
+├── tests/                     <- Unit, integration, app, and agentic tests
 │
 └── src/                            <- Source code for use in this project
     │
     ├── __init__.py                 <- Makes src a Python module
+    │
+    ├── agents/                     <- Agent code
+    │   ├── __init__.py             <- Makes agents a Python module
+    │   ├── tools/                  <- Tools for agents
+    │   ├── config.py               <- Agent configuration
+    │   ├── graph.py                <- Agent graph
+    │   └── model_factory.py        <- Model factory for agents
+    │
+    ├── app/                        <- Application code
+    │   ├── __init__.py             <- Makes app a Python module
+    │   ├── api/                    <- API endpoints
+    │   ├── main.py                 <- Application entry point
+    │   └── schemas.py              <- Pydantic schemas for API
     │
     ├── components/                 <- Business Logic/Workers (The "How")
     │
@@ -52,10 +62,6 @@ Hybrid Agentic ML for Risk Assessment
     │
     ├── features/                   <- Feature engineering
     │   └── build_features.py       <- Code to create features for modeling
-    │
-    ├── models/
-    │   ├── predict_model.py        <- Code to run model inference with trained models          
-    │   └── train_model.py          <- Code to train models
     │
     ├── pipeline/                   <- Execution Stages (The "Conductor")
     │

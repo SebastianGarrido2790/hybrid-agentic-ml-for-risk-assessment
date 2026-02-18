@@ -10,7 +10,7 @@ from typing import Literal
 from langchain_core.language_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
-from src.agent.config import get_agent_settings
+from src.agents.config import get_agent_settings
 import logging
 
 # Configure logger

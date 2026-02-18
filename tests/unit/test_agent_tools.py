@@ -9,7 +9,7 @@ and ensures that tools handle valid inputs and error conditions correctly.
 import pytest
 import requests
 from unittest.mock import patch
-from src.agent.tools.ml_api_tool import get_credit_risk_score
+from src.agents.tools.ml_api_tool import get_credit_risk_score
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def mock_api_response():
 
 def test_ml_api_tool_success(mock_api_response):
     """Test successful API call."""
-    with patch("src.agent.tools.ml_api_tool.requests.post") as mock_post:
+    with patch("src.agents.tools.ml_api_tool.requests.post") as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = mock_api_response
 
@@ -54,7 +54,7 @@ def test_ml_api_tool_success(mock_api_response):
 
 def test_ml_api_tool_failure():
     """Test API connection failure."""
-    with patch("src.agent.tools.ml_api_tool.requests.post") as mock_post:
+    with patch("src.agents.tools.ml_api_tool.requests.post") as mock_post:
         mock_post.side_effect = requests.exceptions.ConnectionError
 
         result = get_credit_risk_score.invoke(

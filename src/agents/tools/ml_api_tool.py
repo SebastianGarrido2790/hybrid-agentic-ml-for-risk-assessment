@@ -9,7 +9,7 @@ using Pydantic, and graceful error handling for the agent.
 import requests
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
-from src.agent.config import get_agent_settings
+from src.agents.config import get_agent_settings
 import logging
 
 logger = logging.getLogger(__name__)
