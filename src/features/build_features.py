@@ -1,8 +1,10 @@
 """
-Feature Engineering Module.
+Feature Engineering Module for ACRAS.
 
-This module handles column translation, financial ratio calculations, and safe handling of
-missing/infinite values for the credit risk assessment system.
+This module is responsible for:
+- Translating raw Spanish column names to English.
+- Calculating key financial ratios (EBITDA Margin, Debt-to-Equity, Current Ratio).
+- Handling data safety (inf values, missing values).
 """
 
 import pandas as pd
@@ -11,53 +13,65 @@ import numpy as np
 
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Calculates financial ratios and translates columns to English schema.
+    Transforms raw merged data into predictive features.
 
     Args:
-        df (pd.DataFrame): Merged raw DataFrame.
+        df (pd.DataFrame): Raw merged dataframe from Ingestion.
 
     Returns:
-        pd.DataFrame: DataFrame with calculated features.
+        pd.DataFrame: Dataframe with English column names and calculated ratios.
     """
-    # Translation & Mapping
-    df = df.rename(
-        columns={
-            "riesgo_sector": "sector_risk_score",
-            "anos_operando": "years_operating",
-            "crecimiento_ventas": "revenue_growth",
-            "default_12m": "target",
-            "pd_verdadera": "default_probability",
-        }
-    )
+    df = df.copy()
 
-    # Calculate Ratios
-    # EBITDA Margin = EBITDA / Revenue (ingresos)
-    # Using safe division handling 0 denominators
-    df["ebitda_margin"] = df["ebitda"] / df["ingresos"].replace(0, np.nan)
+    # 1. Column Translation (Spanish -> English)
+    mapping = {
+        "riesgo_sector": "sector_risk_score",
+        "anos_operando": "years_operating",
+        "crecimiento_ingresos": "revenue_growth",
+        "default_12m": "target",
+        "pd_verdadera": "default_probability",
+    }
+    df = df.rename(columns=mapping)
 
-    # Debt to Equity = Total Liab / Equity (patrimonio)
-    df["debt_to_equity"] = df["pasivos_totales"] / df["patrimonio"].replace(0, np.nan)
+    # 2. Financial Ratio Calculation
+    # EBITDA Margin: Operating profitability (Profit / Revenue)
+    # Using 'ingresos' (Revenue) and 'ebitda'
+    if "ebitda" in df.columns and "ingresos" in df.columns:
+        df["ebitda_margin"] = np.where(
+            df["ingresos"] != 0, df["ebitda"] / df["ingresos"], 0
+        )
 
-    # Current Ratio Proxy = (Cash + AR + Inventory) / AP
-    # Assuming AP ('cuentas_pagar') ~ Current Liabilities proxy
-    current_assets = df["caja"] + df["cuentas_cobrar"] + df["inventario"]
-    df["current_ratio"] = current_assets / df["cuentas_pagar"].replace(0, np.nan)
+    # Debt to Equity: Leverage (Total Liabilities / Equity)
+    # Using 'pasivos_totales' and 'patrimonio'
+    if "pasivos_totales" in df.columns and "patrimonio" in df.columns:
+        df["debt_to_equity"] = np.where(
+            df["patrimonio"] != 0,
+            df["pasivos_totales"] / df["patrimonio"],
+            10.0,  # High risk cap for insolvent entities
+        )
 
-    # Fill NaNs from division by zero with safe defaults (e.g. 0 or median)
-    # Using 0 for simplicity in ratios where denominator is 0
-    df = df.fillna(
-        {
-            "ebitda_margin": 0,
-            "debt_to_equity": 10,  # High default for inf debt/equity? Or 0? Let's use median later or 0 now.
-            "current_ratio": 0,
-        }
-    )
+    # Current Ratio: Liquidity (Current Assets / Current Liabilities)
+    # Formula from report: (caja + cuentas_cobrar + inventario) / cuentas_pagar
+    if all(
+        col in df.columns
+        for col in ["caja", "cuentas_cobrar", "inventario", "cuentas_pagar"]
+    ):
+        current_assets = df["caja"] + df["cuentas_cobrar"] + df["inventario"]
+        df["current_ratio"] = np.where(
+            df["cuentas_pagar"] != 0, current_assets / df["cuentas_pagar"], 0.0
+        )
 
-    # Cap inf values if any
+    # 3. Data Cleaning & Safety
+    # Replace infinite values with 0
     df = df.replace([np.inf, -np.inf], 0)
 
-    # Cast target to int if it became float during aggregation/merge
+    # Fill remaining NaNs from any transformations
+    df = df.fillna(0)
+
+    # Type Casting
     if "target" in df.columns:
         df["target"] = df["target"].astype(int)
+    if "years_operating" in df.columns:
+        df["years_operating"] = df["years_operating"].astype(int)
 
     return df

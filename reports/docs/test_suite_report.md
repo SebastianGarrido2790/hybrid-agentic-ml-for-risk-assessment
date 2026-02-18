@@ -16,6 +16,7 @@ The testing directory mirrors the source code structure for intuitive navigation
 tests/
 ├── conftest.py          # Global Shared Fixtures (Sample Data)
 ├── unit/                # Component-level Logic Tests
+│   ├── test_agent_tools.py
 │   ├── test_config.py
 │   ├── test_data_ingestion.py
 │   ├── test_data_validation.py
@@ -46,7 +47,14 @@ tests/
 | :--- | :--- | :--- |
 | **Ingestion -> Validation** | `test_pipeline.py` | - **Artifact Handoff**: Verifies that files created by Ingestion (`train.csv`) are correctly located and read by Validation.<br>- **End-to-End Success**: Mocks data generation to ensure the full sequence runs without error. |
 
-### 3.3 API Tests (Prediction Service)
+
+### 3.3 Agentic Reasoning Engine Tests
+
+| Component | Test File | Key Scenarios Verified |
+| :--- | :--- | :--- |
+| **Agent Tools** | `test_agent_tools.py` | - **API Integration**: Mocks valid/invalid responses from the ML API.<br>- **Pydantic Validation**: Ensures tools correctly validate input types.<br>- **Error Handling**: Verifies graceful degradation when external services are down. |
+
+### 3.4 API Tests (Prediction Service)
 
 | Endpoint | Test File | Scenarios Verified |
 | :--- | :--- | :--- |
@@ -78,13 +86,14 @@ uv run pytest tests/ > tests/logs/test_output.txt
 ```
 tests\app\test_api.py .....
 tests\integration\test_pipeline.py .
+tests\unit\test_agent_tools.py ..
 tests\unit\test_config.py .
 tests\unit\test_data_ingestion.py ..
 tests\unit\test_data_transformation.py ..
 tests\unit\test_data_validation.py ..
 tests\unit\test_model_trainer.py .
 
-================== 14 passed in 2.51s ==================
+================== 16 passed in 3.01s ==================
 ```
 
 ### Dependencies
