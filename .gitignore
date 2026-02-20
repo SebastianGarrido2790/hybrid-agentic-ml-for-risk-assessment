@@ -95,4 +95,7 @@ logs/
 mlruns/
 data/raw/*
 !data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
 AGENTS.md
+available_models.txt

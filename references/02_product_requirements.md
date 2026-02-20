@@ -20,7 +20,7 @@ This Product Requirements Document (PRD) is structured to reflect professional i
 
 **Background:** Current credit risk assessment processes in banking are manual, fragmented, and time-intensive. Risk Managers spend approximately 70% of their time gathering data from disparate sources (financial statements, news, credit bureaus) and only 30% on actual decision-making. This results in high Turnaround Time (TAT) (24–48 hours) and potential human error in data synthesis.
 
-**Product Vision:** To build an automated, hybrid AI system where autonomous agents collaborate to execute the "heavy lifting" of data collection and initial analysis. By wrapping a deterministic Machine Learning model (Random Forest/XGBoost) as a tool for a probabilistic reasoning agent (**Gemini / Open Source LLM**), we aim to reduce the preliminary assessment time from days to minutes.
+**Product Vision:** To build an automated, hybrid AI system where autonomous agents collaborate to execute the "heavy lifting" of data collection and initial analysis. By wrapping a deterministic Machine Learning model (Random Forest/XGBoost) as a probabilistic default risk tool for a probabilistic reasoning agent (**Gemini / Open Source LLM**), we aim to reduce the preliminary assessment time from days to minutes.
 
 **Business Value (McKinsey Alignment):**
 

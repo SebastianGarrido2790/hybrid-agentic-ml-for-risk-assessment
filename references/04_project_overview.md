@@ -4,7 +4,7 @@
 
 The primary objective of ACRAS is to transform the traditional, manual credit risk assessment process into an automated, intelligent workflow. By integrating deterministic Machine Learning (ML) models with probabilistic AI Agents, the system aims to:
 
-* **Reduce Turnaround Time (TAT):** Shrink the preliminary analysis window from 24–48 hours to under 5 minutes.
+* **Reduce Turnaround Time (TAT):** By using this system, a process that traditionally takes a bank 5 to 10 days is completed by the agents in just a matter of minutes.
 * **Enhance Decision Quality:** Minimize human error and bias by standardizing the interpretation of quantitative risk scores.
 * **Operational Scalability:** Enable the handling of high-volume, low-complexity SME (Small to Medium Enterprise) loan applications without proportional increases in headcount.
 *   **Unified Intelligence:** Synthesize disparate data sources (financial ratios, market sentiment, credit history) into a single, cohesive executive report.
@@ -17,13 +17,13 @@ The system follows a **Microservices-based Agentic Architecture**, decoupling th
 
 * **Layer 1: The Interface (Streamlit):** A lightweight, user-friendly dashboard for Risk Managers to input company data and view generated reports.
 * **Layer 2: The Orchestrator (LangChain):** A central AI agent acting as the "Brain." It parses user intent, breaks down tasks, and delegates work to specialized sub-agents or tools.
-* **Layer 3: The MLOps Backend (FastAPI):** A robust, high-performance API wrapping the trained Machine Learning model. It serves as a deterministic "Tool" that the agents can query for precise risk probabilities.
+* **Layer 3: The MLOps Backend (FastAPI):** A robust, high-performance API wrapping the trained Machine Learning model. It serves as a deterministic "Tool" that the agents can query for precise probabilities of default.
 
 ## 3. Agentic Data Science Workflow
 
 ### The Machine Learning Microservice (FastAPI)
 
-    • We need to train an ML model (save a .pkl file using a suitable algorithm for the task).
+    • We need to train an ML model (save a .pkl file using a suitable algorithm to calculate the probability of default).
 
     • Generate code to wrap this model in a FastAPI application. Transforming it into a tool that we will make available to a specialized agent.
 
@@ -39,7 +39,7 @@ Define a LangChain structure with the following specific roles (adaptable to my 
 
     ◦ Goal: Quantitative analysis.
 
-    ◦ Tools: Must have a custom tool to query the FastAPI endpoint created in Step 1.
+    ◦ Tools: Must have a custom tool to query the FastAPI endpoint created before.
 
     ◦ Task: Receive raw data, query the ML model for a prediction/score, and interpret the numerical result (e.g., convert a probability into a credit rating like AAA/CCC).
 
@@ -57,11 +57,17 @@ Define a LangChain structure with the following specific roles (adaptable to my 
 
 ### The Application Layer (Streamlit)
 
-    • Generate an app.py script using Streamlit.
+    • User Input via Streamlit Interface A business user, such as a risk manager, accesses a web application. The user selects the specific company they want to evaluate (for example, company "467") and clicks a button to "assess the risk".
 
-    • The app should allow a user (e.g., a Risk Manager) to input a target entity (e.g., Company Name/ID).
+    • The Data Scientist Agent & The ML API Once launched, an AI agent assigned the role of "Data Scientist" takes the company's data and makes a call to a FastAPI endpoint. This API acts as a "tool" that houses a pre-trained machine learning model (stored as a .pkl file). The API runs the model to calculate the company's "probability of default" (the likelihood they will not repay a loan) and returns this score to the agent. The Data Scientist agent then interprets this mathematical score into a qualitative risk rating, such as "CCC".
 
-    • It should trigger the LangChain process and display the final generated report/analysis to the user.
+    • The Financial Analyst Agent Working alongside the Data Scientist, a "Financial Analyst" agent accesses the target company's financial statements. This agent's job is to calculate key financial ratios—such as EBITDA, profit margins, and debt coverage—and analyze this data to identify the company's financial strengths and weaknesses.
+
+    • The Orchestrator Agent An "Orchestrator" or "Head" agent manages the entire process. It delegates the initial tasks and then collects the quantitative scoring from the Data Scientist agent and the qualitative analysis from the Financial Analyst agent.
+
+    • Final Report Generation The Orchestrator agent synthesizes all of the gathered information and generates a comprehensive, professional executive report in PDF format. This is not merely a generic template with plugged-in numbers, but a customized, extensively written analysis specific to that exact company.
+
+    • The Final Result The risk manager can then download and review this generated PDF report to make an informed decision on whether to grant credit to the company.
 
 ## 4. Project Lifecycle (CRISP-DM + MLOps)
 

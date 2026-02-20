@@ -1,14 +1,29 @@
 stages:
+  data_augmentation:
+    cmd: python src/tools/synthetic_data_generator.py
+    deps:
+      - src/tools/synthetic_data_generator.py
+      - data/raw/financial_statements_training.csv
+      - data/raw/pd_training.csv
+      - data/raw/financial_statements_validation.csv
+      - data/raw/pd_validation.csv
+    outs:
+      - data/processed/financial_statements_training.csv
+      - data/processed/pd_training.csv
+      - data/processed/financial_statements_validation.csv
+      - data/processed/pd_validation.csv
+
   data_ingestion:
     cmd: python src/pipeline/stage_01_data_ingestion.py
     deps:
       - src/pipeline/stage_01_data_ingestion.py
       - config/config.yaml
       - src/components/data_ingestion.py
-      - data/raw/financial_statements_training.csv
-      - data/raw/pd_training.csv
-      - data/raw/financial_statements_validation.csv
-      - data/raw/pd_validation.csv
+      - src/features/build_features.py
+      - data/processed/financial_statements_training.csv
+      - data/processed/pd_training.csv
+      - data/processed/financial_statements_validation.csv
+      - data/processed/pd_validation.csv
     params:
       - config/params.yaml:
           - data_split.test_size
