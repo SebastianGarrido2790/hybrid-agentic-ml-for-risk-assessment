@@ -7,6 +7,13 @@ It handles:
 - Health Checks
 - Prometheus Metrics Instrumentation
 - Prediction Requests
+
+Usage:
+- Option 1: Using the python module (production-like)
+    uv run python -m src.app.main
+
+- Option 2: Using uvicorn with auto-reload (development)
+    uv run uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
 """
 
 from fastapi import FastAPI
