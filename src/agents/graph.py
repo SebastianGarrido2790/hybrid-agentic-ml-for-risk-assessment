@@ -18,6 +18,7 @@ from src.agents.tools.finance_tool import (
     calculate_debt_to_equity,
     calculate_ebitda_margin,
     calculate_current_ratio,
+    calculate_revenue_growth,
 )
 from src.agents.model_factory import get_llm
 from src.agents.config import get_agent_settings
@@ -36,6 +37,7 @@ financial_tools_list = [
     calculate_debt_to_equity,
     calculate_ebitda_margin,
     calculate_current_ratio,
+    calculate_revenue_growth,
 ]
 ml_tools_list = [
     get_credit_risk_score,
@@ -175,13 +177,18 @@ def financial_analyst_node(state: AgentState):
         "Your role is to perform a deterministic financial deep-dive. "
         "INSTRUCTIONS:\n"
         "1. Use `fetch_company_data` to retrieve the core profile.\n"
-        "2. Use calculation tools for: Debt-to-Equity, EBITDA Margin, and Current Ratio.\n"
-        "3. Provide your output in this structure:\n"
-        "### Financial Metrics Summary\n"
-        "- **Liquidity:** [Metric Value] ([Brief Interpretation])\n"
-        "- **Solvency:** [Metric Value] ([Brief Interpretation])\n"
-        "- **Profitability:** [Metric Value] ([Brief Interpretation])\n"
-        "4. Summarize the biggest financial strength and weakness detected."
+        "2. Use calculation tools for: Debt-to-Equity, EBITDA Margin, Current Ratio, and Revenue Growth.\n"
+        "3. Your analysis MUST cover:\n"
+        "   - **Liquidity:** Analyze current ratio and cash position (caja).\n"
+        "   - **Solvency:** Analyze debt-to-equity ratio.\n"
+        "   - **Creditworthiness:** Discuss bureau score and delinquency (ratio_mora).\n"
+        "   - **Market Context:** Discuss impact of market conditions (if available in record).\n"
+        "4. Provide your output in this structure:\n"
+        "### Financial Analysis Overview\n"
+        "- **Liquidity & Solvency:** [Detailed Analysis]\n"
+        "- **Credit Profile:** [Detailed Analysis]\n"
+        "- **Key Metrics:** [Metric values and brief interpretations]\n"
+        "5. Summarize the biggest financial strength and weakness detected."
     )
 
     inputs = [SystemMessage(content=system_prompt)] + messages
@@ -220,24 +227,34 @@ def orchestrator_node(state: AgentState):
     messages = state["messages"]
     system_prompt = (
         "You are the Chief Risk Officer (CRO). Your task is to synthesize the final Executive Report. "
+        "CRITICAL: You MUST replace all placeholders in square brackets (e.g., [Value]) with the actual data and analysis "
+        "derived from the Financial Analyst and Data Scientist. NEVER output the square brackets themselves.\n\n"
         "You MUST follow this Markdown structure strictly for the report to render correctly in PDF:\n\n"
         "# Executive Credit Risk Assessment\n"
         "## 1. Executive Summary\n"
-        "[Provide a high-level overview of the credit decision and the entity's profile.]\n\n"
-        "## 2. Financial Performance Analysis\n"
+        "Provide a high-level overview of the credit decision and the entity's profile. "
+        "Interpret the findings; do not just list them.\n\n"
+        "## 2. Liquidity and Solvency Analysis\n"
+        "- **Liquidity:** [Analyze current ratio and cash position]\n"
+        "- **Solvency:** [Analyze debt-to-equity ratio]\n\n"
+        "## 3. Creditworthiness and Market Context\n"
+        "- **Credit Profile:** [Discuss bureau score and delinquency]\n"
+        "- **Market Context:** [Discuss impact of market conditions]\n\n"
+        "## 4. Key Performance Indicators\n"
         "| Metric | Value | Assessment |\n"
         "| :--- | :--- | :--- |\n"
-        "| Current Ratio | [Value] | [Comment] |\n"
-        "| Debt-to-Equity | [Value] | [Comment] |\n"
-        "| EBITDA Margin | [Value] | [Comment] |\n\n"
-        "## 3. Quantitative Risk Prediction\n"
+        "| Current Ratio | [Value] | [Assessment] |\n"
+        "| Debt-to-Equity | [Value] | [Assessment] |\n"
+        "| Revenue Growth | [Value] | [Assessment] |\n"
+        "| EBITDA Margin | [Value] | [Assessment] |\n\n"
+        "## 5. Quantitative Risk Prediction\n"
         "**Probability of Default (PD):** [Value]%\n"
         "**Scoreboard Analysis:** [Explain how the metrics translated into the risk score.]\n\n"
-        "## 4. Final Directive & Conclusion\n"
+        "## 6. Final Directive & Conclusion\n"
         "**Recommendation:** [APPROVE / REJECT / REVIEW]\n"
         "**Rationale:** [Summarize the fatal or key deciding factor.]\n\n"
         "**Risk Score: [XX]**\n"
-        "(The Risk Score must be between 0 and 100 on a single line for extraction.)"
+        "(The Risk Score must be between 0 (Safe) and 100 (High Risk) on a single line for extraction. Replace [XX] with the actual number.)"
     )
     inputs = [SystemMessage(content=system_prompt)] + messages
     response = invoke_with_fallback(cro_models, inputs, "CRO")

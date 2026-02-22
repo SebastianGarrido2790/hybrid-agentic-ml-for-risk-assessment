@@ -21,6 +21,21 @@ To launch the application locally, follow these steps:
 3.  **Access the Dashboard:**
     Open your browser and navigate to `http://localhost:8501`.
 
+### 2.1 Launching the App with a Single Command
+To simplify the launch process, you can use the provided batch script `launch_acras.bat`. This script automates the entire startup sequence:
+
+1.  **Run the script:**
+    ```bash
+    .\launch_acras.bat
+    ```
+2.  **Monitor the process:**
+
+    The script will automatically:
+    *   Sync dependencies using `uv sync` to ensure your environment is exactly as defined in `pyproject.toml`.
+    *   Launch the FastAPI backend in a minimized window (so it doesn't clutter your desktop but remains active).
+    *   Wait for 5 seconds for the API to initialize to warm up before the UI connects.
+    *   Launch the Streamlit frontend in the foreground (your main window).
+
 ## 3. Using the Interface
 1.  **Select Company ID:** Use the dropdown in the sidebar to select a valid company for assessment.
 2.  **View Context:** The sidebar displays quick references like annual revenue.
@@ -33,7 +48,7 @@ To launch the application locally, follow these steps:
 6.  **Analytics Dashboard:**
     *   **Gauge Chart:** Interactive visualization of the risk score (0-100).
     *   **Decision Logic Box:** Instant classification (Approve, Review, Reject).
-7.  **Download Executive PDF:** A one-click button to generate a professionally formatted PDF report for offline storage.
+7.  **Download Executive PDF:** A one-click button to generate a professionally formatted PDF report for offline storage. 
 
 ## 4. Understanding the Agent Cluster Workflow
 

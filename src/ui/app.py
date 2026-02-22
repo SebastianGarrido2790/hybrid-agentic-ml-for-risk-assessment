@@ -109,6 +109,8 @@ if "risk_score" not in st.session_state:
     st.session_state.risk_score = 50.0
 if "last_company_id" not in st.session_state:
     st.session_state.last_company_id = None
+if "pdf_path" not in st.session_state:
+    st.session_state.pdf_path = None
 
 # --- Sidebar ---
 with st.sidebar:
@@ -143,6 +145,7 @@ with st.sidebar:
             st.session_state.assessment_result = None
             st.session_state.risk_score = 50.0
             st.session_state.last_company_id = None
+            st.session_state.pdf_path = None
             st.rerun()
 
     st.caption("Version 1.1 - Persistence Enabled")
@@ -201,6 +204,7 @@ if submit_btn and selected_id:
 
     # Clear previous result while running
     st.session_state.assessment_result = None
+    st.session_state.pdf_path = None
 
     # Layout: Report Left, Dashboard Right
     col1, col2 = st.columns([1.5, 1])
@@ -285,23 +289,39 @@ if st.session_state.assessment_result:
 
         # Document Action
         st.markdown("---")
-        try:
-            pdf_path = generate_pdf_report(
-                st.session_state.assessment_result,
-                filename=f"ACRAS_Report_{st.session_state.last_company_id}.pdf",
-            )
-            with open(pdf_path, "rb") as f:
-                pdf_bytes = f.read()
+        if (
+            st.session_state.get("pdf_path")
+            and Path(st.session_state.pdf_path).exists()
+        ):
+            try:
+                with open(st.session_state.pdf_path, "rb") as f:
+                    pdf_bytes = f.read()
 
-            st.download_button(
-                label="📥 Download Executive PDF",
-                data=pdf_bytes,
-                file_name=f"ACRAS_Report_{st.session_state.last_company_id}.pdf",
-                mime="application/pdf",
-                width="stretch",
-            )
-        except Exception as e:
-            st.info(f"PDF Engine Offline: {e}")
+                st.download_button(
+                    label="📥 Download Executive PDF",
+                    data=pdf_bytes,
+                    file_name=f"ACRAS_Report_{st.session_state.last_company_id}.pdf",
+                    mime="application/pdf",
+                    width="stretch",
+                )
+                if st.button("🔄 Regenerate PDF"):
+                    st.session_state.pdf_path = None
+                    st.rerun()
+
+            except Exception as e:
+                st.error(f"Error reading PDF: {e}")
+        else:
+            if st.button("📄 Generate Official PDF", width="stretch"):
+                with st.spinner("🖌️ Rendering Premium Report..."):
+                    try:
+                        pdf_path = generate_pdf_report(
+                            st.session_state.assessment_result,
+                            filename=f"ACRAS_Report_{st.session_state.last_company_id}.pdf",
+                        )
+                        st.session_state.pdf_path = pdf_path
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"PDF Engine Error: {e}")
 
 elif not submit_btn:
     # Welcome State

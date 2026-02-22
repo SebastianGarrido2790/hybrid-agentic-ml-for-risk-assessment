@@ -28,6 +28,11 @@ class CurrentRatioInput(BaseModel):
     current_liabilities: float = Field(..., description="Current Liabilities")
 
 
+class RevenueGrowthInput(BaseModel):
+    current_revenue: float = Field(..., description="Current Period Revenue")
+    previous_revenue: float = Field(..., description="Previous Period Revenue")
+
+
 @tool("calculate_debt_to_equity", args_schema=DebtToEquityInput)
 def calculate_debt_to_equity(
     total_liabilities: float, shareholders_equity: float
@@ -52,3 +57,12 @@ def calculate_current_ratio(current_assets: float, current_liabilities: float) -
     if current_liabilities == 0:
         return "Error: Division by zero (Current Liabilities is 0)"
     return str(round(current_assets / current_liabilities, 2))
+
+
+@tool("calculate_revenue_growth", args_schema=RevenueGrowthInput)
+def calculate_revenue_growth(current_revenue: float, previous_revenue: float) -> str:
+    """Calculates the year-over-year revenue growth percentage."""
+    if previous_revenue == 0:
+        return "Error: Division by zero (Previous Revenue is 0)"
+    growth = ((current_revenue - previous_revenue) / previous_revenue) * 100
+    return f"{growth:.2f}%"

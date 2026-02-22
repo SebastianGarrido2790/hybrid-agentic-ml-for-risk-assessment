@@ -14,7 +14,7 @@ def generate_pdf_report(report_md: str, filename: str = "risk_report.pdf") -> st
         # Define paths
         base_dir = Path(__file__).resolve().parent.parent.parent
         template_dir = base_dir / "src" / "utils" / "templates"
-        output_dir = base_dir / "reports"
+        output_dir = base_dir / "reports" / "figures"
         output_dir.mkdir(exist_ok=True)
 
         # 1. Convert Markdown to HTML
