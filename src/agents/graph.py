@@ -6,9 +6,13 @@ the task context to each other:
 1. Financial Analyst: Fetches data and calculates ratios.
 2. Data Scientist: Predicts default probability using the ML API.
 3. Orchestrator (CRO): Synthesizes the final report.
+
+The architecture incorporates hot-swapping logic via dynamic imports and
+configuration factories, allowing for runtime model updates and tool
+re-binding without system downtime.
 """
 
-from typing import Annotated, TypedDict, List
+from typing import Annotated, TypedDict, List, Optional, Tuple
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
@@ -20,8 +24,7 @@ from src.agents.tools.finance_tool import (
     calculate_current_ratio,
     calculate_revenue_growth,
 )
-from src.agents.model_factory import get_llm
-from src.agents.config import get_agent_settings
+import importlib
 import operator
 
 
@@ -43,90 +46,105 @@ ml_tools_list = [
     get_credit_risk_score,
 ]
 
-settings = get_agent_settings()
 
-# --- Models ---
-# TIER 1: PRIMARY - Uses Factory Default
-try:
-    llm_primary = get_llm()
-except Exception:
-    llm_primary = None
+def get_dynamic_models(tools_list: Optional[List] = None):
+    """
+    Dynamically instantiates the model hierarchy based on current config.py.
+    This allows for hot-swapping providers without restarting the app.
+    """
+    # Force refresh of config and settings
+    import src.agents.config as config_module
 
-# TIER 2: FIRST FALLBACK - Dynamic (Opposite of Primary)
-# If default is HF, 1st fallback is Gemini. If default is Gemini, 1st fallback is HF.
-try:
-    if settings.DEFAULT_LLM_PROVIDER == "huggingface":
-        # Primary is HF -> 1st Fallback is Gemini Power
-        llm_fallback_1 = get_llm(
-            provider="gemini", model_name=settings.GEMINI_POWER_MODEL
+    importlib.reload(config_module)  # Requires a "module object" to work
+    current_settings = config_module.get_agent_settings()
+
+    # Force refresh of model factory
+    import src.agents.model_factory as factory_module
+
+    importlib.reload(factory_module)  # Requires a "module object" to work
+
+    # 1. Primary
+    try:
+        m_primary = factory_module.get_llm()
+    except Exception:
+        m_primary = None
+
+    # 2. Fallback 1 (Dynamic switch)
+    try:
+        if current_settings.DEFAULT_LLM_PROVIDER == "huggingface":
+            m_fb1 = factory_module.get_llm(
+                provider="gemini", model_name=current_settings.GEMINI_POWER_MODEL
+            )
+        else:
+            m_fb1 = factory_module.get_llm(provider="huggingface")
+    except Exception:
+        m_fb1 = None
+
+    # 3. Fallback 2 (Lite)
+    try:
+        m_fb2 = factory_module.get_llm(
+            provider="gemini", model_name=current_settings.GEMINI_LITE_MODEL
         )
-    else:
-        # Primary is Gemini -> 1st Fallback is HF
-        llm_fallback_1 = get_llm(provider="huggingface")
-except Exception:
-    llm_fallback_1 = None
+    except Exception:
+        m_fb2 = None
 
-# TIER 3: SECOND FALLBACK - Google Gemini Flash Lite (Ultra-Low Latency / Reliable)
-try:
-    llm_fallback_2 = get_llm(provider="gemini", model_name=settings.GEMINI_LITE_MODEL)
-except Exception:
-    llm_fallback_2 = None
+    raw_models = [m_primary, m_fb1, m_fb2]
+
+    if tools_list:
+        return bind_tools_to_all(tools_list, fallback_models=raw_models)
+    return raw_models
 
 
-# --- Startup Summary ---
-print("\n" + "=" * 60)
-print("🚀 ACRAS AGENT CLUSTER: ACTIVE HIERARCHY")
-print("=" * 60)
-print(f"PRIMARY PROVIDER: {settings.DEFAULT_LLM_PROVIDER.upper()}")
-print(
-    f"  └─ Tier 1 (Primary):  {settings.HF_MODEL if settings.DEFAULT_LLM_PROVIDER == 'huggingface' else settings.GEMINI_POWER_MODEL}"
-)
-print(
-    f"  └─ Tier 2 (Fallback): {settings.GEMINI_POWER_MODEL if settings.DEFAULT_LLM_PROVIDER == 'huggingface' else settings.HF_MODEL}"
-)
-print(f"  └─ Tier 3 (Reliable): {settings.GEMINI_LITE_MODEL}")
-print("=" * 60 + "\n")
-
-
-# HELPER: Bind tools to a list of models
-def bind_tools_to_all(tools):
-    """
-    Automatically prepares all tiers with the necessary financial and risk tools,
-    ensuring that the fallback models know exactly how to fetch data even if they
-    are swapped mid-run.
-    """
+def bind_tools_to_all(tools, fallback_models: List):
+    """Refactored helper for dynamic binding"""
     bound = []
-    for m in [llm_primary, llm_fallback_1, llm_fallback_2]:
+    for m in fallback_models:
         if m:
             try:
                 bound.append(m.bind_tools(tools))
             except Exception:
-                # Some models (like simple HF ones) might not support native bind_tools
                 bound.append(m)
         else:
             bound.append(None)
     return bound
 
 
-fin_models = bind_tools_to_all(financial_tools_list)
-ds_models = bind_tools_to_all(ml_tools_list)
-cro_models = [llm_primary, llm_fallback_1, llm_fallback_2]
-
-
 # --- Helper for Fallback ---
-def invoke_with_fallback(models_tier: List, inputs, agent_name="Agent"):
+def invoke_with_fallback(
+    models_tier: List, inputs, agent_name="Agent"
+) -> Tuple[BaseMessage, List[BaseMessage]]:
     """
     Sequentially attempts to invoke models in the provided list (Tiers).
-    Applies System Instruction optimization for the 7B models (Tier 2/HF).
+    Returns (response_message, log_messages_list).
     """
+    logs = []
+    state_errors = []
 
     for i, model in enumerate(models_tier):
         if not model:
             continue
 
+        # Robust model name detection
+        if hasattr(model, "model_name"):
+            model_info = str(model.model_name).lower()
+        elif hasattr(model, "model"):
+            model_info = str(model.model).lower()
+        elif hasattr(model, "llm") and hasattr(model.llm, "repo_id"):
+            model_info = str(model.llm.repo_id).lower()
+        else:
+            model_info = str(getattr(model, "repo_id", "Unknown")).lower()
+
+        tier_name = ["Primary", "1st Fallback", "2nd Fallback"][i]
+
         try:
-            # OPTIMIZATION: If not the primary model (often 7B/OpenSource), merge System Prompt
-            if i > 0:
+            # OPTIMIZATION: If not using a native Tier 1 LLM (like Gemini),
+            # or if it's the 1st/2nd fallback, merge instructions into the prompt.
+            if (
+                i > 0
+                or "qwen" in model_info
+                or "meta" in model_info
+                or "mistral" in model_info
+            ):
                 system_instruction = ""
                 user_messages = []
                 for m in inputs:
@@ -137,9 +155,14 @@ def invoke_with_fallback(models_tier: List, inputs, agent_name="Agent"):
 
                 if user_messages:
                     last_msg = user_messages[-1]
+                    # Ensure the model cannot ignore the report structure
                     new_content = (
-                        f"### SYSTEM INSTRUCTION ###\n{system_instruction}\n"
-                        f"### USER INPUT ###\n{last_msg.content or ''}"
+                        "### ROLE & GUIDELINES ###\n"
+                        f"{system_instruction}\n"
+                        "### CURRENT DATA & CONTEXT ###\n"
+                        f"{last_msg.content or ''}\n\n"
+                        "ASSISTANCE_READY: True\n"
+                        "RESPONSE STRUCTURE: Follow mandatory sections strictly."
                     )
                     new_last_msg = HumanMessage(content=new_content)
                     final_inputs = user_messages[:-1] + [new_last_msg]
@@ -148,19 +171,29 @@ def invoke_with_fallback(models_tier: List, inputs, agent_name="Agent"):
             else:
                 final_inputs = inputs
 
-            tier_name = ["Primary", "1st Fallback", "2nd Fallback"][i]
-            model_info = getattr(model, "model", getattr(model, "repo_id", "Unknown"))
             print(f"🤖 {agent_name} -> Calling {tier_name} ({model_info})...")
+            if i > 0:
+                logs.append(
+                    SystemMessage(
+                        content=f"🔄 Falling back to {tier_name} ({model_info})..."
+                    )
+                )
 
-            return model.invoke(final_inputs)
+            return model.invoke(final_inputs), logs
 
         except Exception as e:
-            tier_name = ["Primary", "1st Fallback", "2nd Fallback"][i]
-            print(f"⚠️ {agent_name}: {tier_name} failed ({e}).")
-            if i == len(models_tier) - 1:
-                return SystemMessage(content=f"Error: All tiers failed. {e}")
+            error_msg = f"Tier {i + 1} ({tier_name} - {model_info}) failed: {str(e)}"
+            print(f"⚠️ {agent_name}: {error_msg}")
+            logs.append(SystemMessage(content=f"⚠️ {tier_name} ({model_info}) failed."))
+            state_errors.append(error_msg)
 
-    return SystemMessage(content="System Error: No models available.")
+            if i == len(models_tier) - 1:
+                combined_errors = "\n".join(state_errors)
+                return SystemMessage(
+                    content=f"Error: All tiers failed.\n{combined_errors}"
+                ), logs
+
+    return SystemMessage(content="System Error: No models available."), logs
 
 
 # --- Nodes ---
@@ -172,93 +205,55 @@ def financial_analyst_node(state: AgentState):
     Focus: Data extraction and metric calculation.
     """
     messages = state["messages"]
-    system_prompt = (
-        "You are a Senior Financial Analyst at ACRAS. "
-        "Your role is to perform a deterministic financial deep-dive. "
-        "INSTRUCTIONS:\n"
-        "1. Use `fetch_company_data` to retrieve the core profile.\n"
-        "2. Use calculation tools for: Debt-to-Equity, EBITDA Margin, Current Ratio, and Revenue Growth.\n"
-        "3. Your analysis MUST cover:\n"
-        "   - **Liquidity:** Analyze current ratio and cash position (caja).\n"
-        "   - **Solvency:** Analyze debt-to-equity ratio.\n"
-        "   - **Creditworthiness:** Discuss bureau score and delinquency (ratio_mora).\n"
-        "   - **Market Context:** Discuss impact of market conditions (if available in record).\n"
-        "4. Provide your output in this structure:\n"
-        "### Financial Analysis Overview\n"
-        "- **Liquidity & Solvency:** [Detailed Analysis]\n"
-        "- **Credit Profile:** [Detailed Analysis]\n"
-        "- **Key Metrics:** [Metric values and brief interpretations]\n"
-        "5. Summarize the biggest financial strength and weakness detected."
-    )
 
+    # DYNAMIC RELOAD for HOT SWAPPING
+    import src.agents.prompts as prompts_module
+
+    importlib.reload(prompts_module)  # Requires a "module object" to work
+    system_prompt = getattr(prompts_module, "FINANCIAL_ANALYST_SYSTEM_PROMPT")
+
+    models = get_dynamic_models(financial_tools_list)
     inputs = [SystemMessage(content=system_prompt)] + messages
-    response = invoke_with_fallback(fin_models, inputs, "Financial Analyst")
-    return {"messages": [response]}
+    response, logs = invoke_with_fallback(models, inputs, "Financial Analyst")
+    return {"messages": logs + [response]}
 
 
 def data_scientist_node(state: AgentState):
     """
-    Agent 2: Lead Data Scientist.
-    Focus: ML Inference and quantitative interpretation.
+    Agent 2: Risk Data Scientist.
+    Focus: Quantitative ML risk prediction.
     """
     messages = state["messages"]
-    system_prompt = (
-        "You are a Lead Data Scientist specializing in Credit Risk. "
-        "Your role is to quantify default probability using the ML engine. "
-        "INSTRUCTIONS:\n"
-        "1. Extract the raw numeric values from the Financial Analyst's report.\n"
-        "2. Call `get_credit_risk_score` with exactly: ingresos, ebitda, pasivo_circulante, activo_circulante, pasivos_totales, capital.\n"
-        "3. Your output MUST include:\n"
-        "### Quantitative Risk Analysis\n"
-        "- **Model PD:** [Value returned by tool]\n"
-        "- **Risk Tier:** [Low/Moderate/High based on PD]\n"
-        "- **Model Insight:** [Brief note on which financial factor likely drove this score]"
-    )
+
+    # DYNAMIC RELOAD for HOT SWAPPING
+    import src.agents.prompts as prompts_module
+
+    importlib.reload(prompts_module)  # Requires a "module object" to work
+    system_prompt = getattr(prompts_module, "DATA_SCIENTIST_SYSTEM_PROMPT")
+
+    models = get_dynamic_models(ml_tools_list)
     inputs = [SystemMessage(content=system_prompt)] + messages
-    response = invoke_with_fallback(ds_models, inputs, "Data Scientist")
-    return {"messages": [response]}
+    response, logs = invoke_with_fallback(models, inputs, "Data Scientist")
+    return {"messages": logs + [response]}
 
 
 def orchestrator_node(state: AgentState):
     """
-    Agent 3: Chief Risk Officer (CRO).
-    Focus: Executive synthesis and final recommendation.
+    Agent 3: CRO / Orchestrator.
+    Focus: Synthesis and final directive.
     """
     messages = state["messages"]
-    system_prompt = (
-        "You are the Chief Risk Officer (CRO). Your task is to synthesize the final Executive Report. "
-        "CRITICAL: You MUST replace all placeholders in square brackets (e.g., [Value]) with the actual data and analysis "
-        "derived from the Financial Analyst and Data Scientist. NEVER output the square brackets themselves.\n\n"
-        "You MUST follow this Markdown structure strictly for the report to render correctly in PDF:\n\n"
-        "# Executive Credit Risk Assessment\n"
-        "## 1. Executive Summary\n"
-        "Provide a high-level overview of the credit decision and the entity's profile. "
-        "Interpret the findings; do not just list them.\n\n"
-        "## 2. Liquidity and Solvency Analysis\n"
-        "- **Liquidity:** [Analyze current ratio and cash position]\n"
-        "- **Solvency:** [Analyze debt-to-equity ratio]\n\n"
-        "## 3. Creditworthiness and Market Context\n"
-        "- **Credit Profile:** [Discuss bureau score and delinquency]\n"
-        "- **Market Context:** [Discuss impact of market conditions]\n\n"
-        "## 4. Key Performance Indicators\n"
-        "| Metric | Value | Assessment |\n"
-        "| :--- | :--- | :--- |\n"
-        "| Current Ratio | [Value] | [Assessment] |\n"
-        "| Debt-to-Equity | [Value] | [Assessment] |\n"
-        "| Revenue Growth | [Value] | [Assessment] |\n"
-        "| EBITDA Margin | [Value] | [Assessment] |\n\n"
-        "## 5. Quantitative Risk Prediction\n"
-        "**Probability of Default (PD):** [Value]%\n"
-        "**Scoreboard Analysis:** [Explain how the metrics translated into the risk score.]\n\n"
-        "## 6. Final Directive & Conclusion\n"
-        "**Recommendation:** [APPROVE / REJECT / REVIEW]\n"
-        "**Rationale:** [Summarize the fatal or key deciding factor.]\n\n"
-        "**Risk Score: [XX]**\n"
-        "(The Risk Score must be between 0 (Safe) and 100 (High Risk) on a single line for extraction. Replace [XX] with the actual number.)"
-    )
+
+    # DYNAMIC RELOAD for HOT SWAPPING
+    import src.agents.prompts as prompts_module
+
+    importlib.reload(prompts_module)  # Requires a "module object" to work
+    system_prompt = getattr(prompts_module, "ORCHESTRATOR_SYSTEM_PROMPT")
+
+    models = get_dynamic_models()
     inputs = [SystemMessage(content=system_prompt)] + messages
-    response = invoke_with_fallback(cro_models, inputs, "CRO")
-    return {"messages": [response]}
+    response, logs = invoke_with_fallback(models, inputs, "CRO")
+    return {"messages": logs + [response]}
 
 
 # --- Conditional Logic ---

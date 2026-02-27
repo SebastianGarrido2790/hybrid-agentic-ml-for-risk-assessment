@@ -21,12 +21,12 @@ The decision to integrate Open-Source models like Hugging Face (HF) into the ACR
 
 ---
 
-### **1. Executive Recommendation: Qwen2.5-72B-Instruct**
+### **1. Executive Recommendation: Qwen2.5-7B-Instruct**
 
-For a production-grade orchestration agent, **Qwen2.5-72B-Instruct** (by Alibaba Cloud) is the optimal open-weights choice.
+For the current ACRAS implementation and production-grade orchestration on shared infrastructure, **Qwen2.5-7B-Instruct** (by Alibaba Cloud) is our primary recommendation.
 
-* **Why it wins:** It consistently tops open-source leaderboards (like Berkeley Function Calling Leaderboard and LMSYS Chatbot Arena) specifically for coding, mathematics, and strict function-calling accuracy. It rivals proprietary models (like GPT-4) in parsing complex system prompts and routing sub-tasks to deterministic tools.
-* **ACRAS Alignment:** It will reliably map the Streamlit UI inputs into the precise Pydantic schema required by your FastAPI Machine Learning endpoint.
+* **Why it wins:** While larger models like 72B exist, the 7B version offers a superior balance of reasoning density and operational reliability. It consistently handles complex system prompts and strict function-calling with extremely low latency.
+* **ACRAS Alignment:** It is perfectly suited for the Hugging Face Inference API, ensuring that the Streamlit UI mapping to FastAPI remains robust and free from timeout issues common with larger architectures.
 
 ### **2. Candidate Assessment**
 
@@ -34,7 +34,7 @@ Here is the comparison of the top three open-source candidates based on your arc
 
 | Model | Size / Architecture | Tool Calling Accuracy | Hardware Requirements (Inference) | Best Use Case |
 | --- | --- | --- | --- | --- |
-| **Qwen2.5-72B-Instruct** | 72 Billion Parameters (Dense) | Exceptional | 2-4x A100/H100 GPUs (depending on quantization) | **Production Orchestrator.** Best overall for complex reasoning and flawless tool execution. |
+| **Qwen2.5-7B-Instruct** | 7 Billion Parameters (Dense) | Exceptional | 1x RTX 3090 / Shared API | **Primary Orchestrator.** Best overall for agile reasoning and flawless tool execution on constrained/shared infrastructure. |
 | **Meta-Llama-3.1-70B-Instruct** | 70 Billion Parameters (Dense) | Very Good | 2-4x A100/H100 GPUs | **Strong Alternative.** Massive community support, highly robust, but slightly trails Qwen in native strict-JSON function calling. |
 | **Mistral-Nemo-Instruct-2407** | 12 Billion Parameters (Dense) | Good | 1x L4 or RTX 4090 (Fits on a single GPU) | **Local Prototyping & Testing.** Ideal for the CI/CD pipeline and unit testing the LangChain workflow efficiently. |
 

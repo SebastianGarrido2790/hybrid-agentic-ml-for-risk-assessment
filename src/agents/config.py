@@ -6,7 +6,6 @@ This module defines the `AgentSettings` class, which loads configuration variabl
 """
 
 from typing import Optional, Literal
-from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,9 +18,11 @@ class AgentSettings(BaseSettings):
     DEFAULT_LLM_PROVIDER: Literal["gemini", "huggingface"] = "gemini"
 
     # Model Names
-    HF_MODEL: str = "Qwen/Qwen2.5-72B-Instruct"
-    GEMINI_POWER_MODEL: str = "gemini-1.5-flash-latest"  # Tier 1/2 Performance
-    GEMINI_LITE_MODEL: str = "gemini-flash-lite-latest"  # Tier 3 Reliability
+    HF_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"  # Tier 1/2 Performance (7B is more reliable for Free API)
+    GEMINI_POWER_MODEL: str = "gemini-1.5-flash"  # Tier 1/2 Performance
+    GEMINI_LITE_MODEL: str = (
+        "gemini-2.5-flash-lite"  # Standardized for high availability
+    )
 
     # API Settings
     ML_API_URL: str = "http://localhost:8000/predict"
@@ -31,7 +32,6 @@ class AgentSettings(BaseSettings):
     )
 
 
-@lru_cache()
 def get_agent_settings() -> AgentSettings:
-    """Return cached settings"""
+    """Return settings (no cache to support hot-reloading)"""
     return AgentSettings()

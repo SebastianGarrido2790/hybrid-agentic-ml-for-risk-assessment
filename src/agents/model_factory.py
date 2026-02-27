@@ -11,10 +11,10 @@ from langchain_core.language_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from src.agents.config import get_agent_settings
-import logging
+from src.utils.logger import get_logger
 
 # Configure logger
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 settings = get_agent_settings()
 
@@ -43,12 +43,13 @@ def get_llm(
             return ChatGoogleGenerativeAI(
                 model=target_model,
                 temperature=0,
+                max_output_tokens=1024,
                 google_api_key=settings.GOOGLE_API_KEY,
                 convert_system_message_to_human=True,
             )
         except Exception as e:
             logger.error(f"Failed to instantiate Gemini {target_model}: {e}")
-            # NOTE: A common error for gemini-1.5-flash-latest is a 404 if the model isn't available in the region.
+            # NOTE: A common error for gemini-1.5-flash is a 404 if the model isn't available in the region.
             raise e
 
     elif target_provider == "huggingface":
@@ -63,7 +64,7 @@ def get_llm(
         llm = HuggingFaceEndpoint(
             repo_id=target_model,
             task="text-generation",
-            max_new_tokens=512,
+            max_new_tokens=1024,
             do_sample=False,
             huggingfacehub_api_token=settings.HUGGINGFACEHUB_API_TOKEN,
         )

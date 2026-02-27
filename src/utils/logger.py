@@ -11,9 +11,9 @@ import logging
 from datetime import datetime
 from typing import Optional
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
-from src.utils.paths import LOGS_DIR
-
+LOGS_DIR = Path("logs")
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOGS_DIR / "runs.log"
 
@@ -31,8 +31,9 @@ def get_logger(
         - Works safely across multi-module projects
 
     Args:
-        name (str): Logger name, typically __name__.
-        headline (Optional[str]): Optional headline for visual separation (e.g., script name).
+        name (Optional[str]): Optional logger name, typically __name__.
+        headline (Optional[str]): Optional headline for visual separation
+            (e.g., script name).
 
     Returns:
         logging.Logger: Configured logger instance (using RichHandler if available).
@@ -44,7 +45,7 @@ def get_logger(
     if not logger.handlers:
         formatter = logging.Formatter(
             "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+            datefmt="%Y-%m-%d %H:%M",
         )
 
         file_handler = RotatingFileHandler(
@@ -75,7 +76,10 @@ def get_logger(
 
         # Add a visually distinct headline
         if headline:
-            headline_text = f"========== START: {headline} ({datetime.now():%Y-%m-%d %H:%M:%S}) ==========\n"
+            headline_text = (
+                f"========================= START: {headline} "
+                f"({datetime.now():%Y-%m-%d %H:%M}) =========================\n"
+            )
             with open(LOG_FILE, "a", encoding="utf-8") as f:
                 f.write(headline_text)
 

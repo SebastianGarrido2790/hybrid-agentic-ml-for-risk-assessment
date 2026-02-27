@@ -69,5 +69,4 @@ Hybrid Agentic ML for Risk Assessment
         ├── common.py               <- Config readers
         ├── exception.py            <- Custom Error Handling (Reliability)
         ├── logger.py               <- Logging configuration
-        ├── mlflow_config.py        <- MLflow configuration across modules
-        └── paths.py                <- Define and manage file paths used throughout the project
+        └── mlflow_config.py        <- MLflow configuration across modules

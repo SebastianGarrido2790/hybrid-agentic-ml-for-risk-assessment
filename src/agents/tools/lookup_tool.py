@@ -1,3 +1,10 @@
+"""
+Lookup Tools for the Agentic Reasoning Engine.
+
+This module provides tools for fetching raw company data from internal
+CSV databases (e.g., validation datasets) for agents to analyze.
+"""
+
 import pandas as pd
 from langchain_core.tools import tool
 from src.utils.logger import get_logger

@@ -13,11 +13,13 @@ It allows Risk Managers to:
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from src.agents.graph import app as agent_app
 from src.utils.pdf_generator import generate_pdf_report
 import re
 from pathlib import Path
+import importlib
+import src.agents.config as config_module
 
 # Page Config
 st.set_page_config(
@@ -76,7 +78,30 @@ st.markdown(
 
 # Title and Header
 st.title("🏦 ACRAS Intelligence Suite")
-st.markdown("#### *Advanced Agentic Credit Risk & Analysis System*")
+col_title, col_info = st.columns([3, 1])
+with col_title:
+    st.markdown("#### *Advanced Agentic Credit Risk & Analysis System*")
+
+with col_info:
+    # Force reload of config module to reflect file changes in UI instantly
+    importlib.reload(config_module)
+    settings = config_module.get_agent_settings()
+
+    provider = settings.DEFAULT_LLM_PROVIDER.upper()
+    model = (
+        settings.HF_MODEL
+        if settings.DEFAULT_LLM_PROVIDER == "huggingface"
+        else settings.GEMINI_POWER_MODEL
+    )
+    st.markdown(
+        f"""
+        <div style="background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 5px; border-left: 3px solid #3b82f6; font-size: 0.8em;">
+            <b>Active Intelligence:</b> {provider}<br>
+            <span style="color: #94a3b8;">{model}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 st.markdown("---")
 
 
@@ -111,6 +136,8 @@ if "last_company_id" not in st.session_state:
     st.session_state.last_company_id = None
 if "pdf_path" not in st.session_state:
     st.session_state.pdf_path = None
+if "reasoning_log" not in st.session_state:
+    st.session_state.reasoning_log = []
 
 # --- Sidebar ---
 with st.sidebar:
@@ -146,6 +173,7 @@ with st.sidebar:
             st.session_state.risk_score = 50.0
             st.session_state.last_company_id = None
             st.session_state.pdf_path = None
+            st.session_state.reasoning_log = []
             st.rerun()
 
     st.caption("Version 1.1 - Persistence Enabled")
@@ -153,13 +181,32 @@ with st.sidebar:
 
 # --- Helper Functions ---
 def extract_risk_score(text):
-    """Extracts the risk score from the text."""
-    match = re.search(r"(?:Risk )?Score:\*{0,2}\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE)
-    if match:
-        score = float(match.group(1))
-        if score <= 1.0:
+    """
+    Extracts the final risk score from the text.
+    Takes the LAST occurrence of 'Risk Score' to avoid picking up
+    intermediate mentions of 'Bureau Score' or other metrics.
+    """
+    # Look for the specific system tag first, then fallback to general matches
+    system_tag_match = re.search(
+        r"SYSTEM FINAL RISK SCORE:\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE
+    )
+    if system_tag_match:
+        score = float(system_tag_match.group(1))
+        # Handle cases where model spits out 725 instead of 7.25
+        if score > 100:
+            score = score / 100
+        return min(max(score, 0.0), 100.0)
+
+    # Fallback to last occurrence of 'Score'
+    matches = re.findall(
+        r"(?:Risk\s+)?Score:\*{0,2}\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE
+    )
+    if matches:
+        score = float(matches[-1])
+        # Handle cases where score might be a probability (0-1)
+        if score <= 1.0 and "PD" in text:
             score *= 100
-        return score
+        return min(max(score, 0.0), 100.0)  # Clamp to 0-100
     return 50.0
 
 
@@ -205,6 +252,7 @@ if submit_btn and selected_id:
     # Clear previous result while running
     st.session_state.assessment_result = None
     st.session_state.pdf_path = None
+    st.session_state.reasoning_log = []
 
     # Layout: Report Left, Dashboard Right
     col1, col2 = st.columns([1.5, 1])
@@ -220,40 +268,66 @@ if submit_btn and selected_id:
                         if not messages:
                             continue
 
-                        last_msg = messages[-1]
+                        for msg in messages:
+                            # Identify Agent
+                            agent_label = "🤖 Agent"
+                            if node_name == "financial_analyst":
+                                agent_label = "📊 **Analyst**"
+                            elif node_name == "data_scientist":
+                                agent_label = "🔬 **Scientist**"
+                            elif node_name == "orchestrator":
+                                agent_label = "👔 **Director**"
 
-                        # Identify Agent
-                        agent_label = "🤖 Agent"
-                        if node_name == "financial_analyst":
-                            agent_label = "📊 **Analyst**"
-                        elif node_name == "data_scientist":
-                            agent_label = "🔬 **Scientist**"
-                        elif node_name == "orchestrator":
-                            agent_label = "👔 **Director**"
+                            # Handle Fallback / Log Messages
+                            if isinstance(msg, SystemMessage) and any(
+                                icon in str(msg.content) for icon in ["🔄", "⚠️", "🚨"]
+                            ):
+                                log_txt = f"{agent_label} → {msg.content}"
+                                status.write(log_txt)
+                                st.session_state.reasoning_log.append(
+                                    {"type": "info", "msg": log_txt}
+                                )
+                                continue
 
-                        if hasattr(last_msg, "tool_calls") and last_msg.tool_calls:
-                            for tc in last_msg.tool_calls:
-                                status.write(
-                                    f"{agent_label} → Executing `{tc['name']}`"
-                                )
-                        elif last_msg.content:
-                            if node_name == "orchestrator":
-                                st.session_state.assessment_result = str(
-                                    last_msg.content
-                                )
-                                st.session_state.risk_score = extract_risk_score(
-                                    st.session_state.assessment_result
-                                )
-                                st.session_state.last_company_id = selected_id
-                                status.write(
-                                    f"{agent_label} → Compiling Final Directive..."
-                                )
-                            else:
-                                status.write(
-                                    f"{agent_label} → Intelligence Update Captured."
-                                )
-                                with st.expander(f"Access {node_name} logs"):
-                                    st.write(last_msg.content)
+                            # Handle standard model outputs
+                            if hasattr(msg, "tool_calls") and msg.tool_calls:
+                                for tc in msg.tool_calls:
+                                    m_txt = f"{agent_label} → Executing `{tc['name']}`"
+                                    status.write(m_txt)
+                                    st.session_state.reasoning_log.append(
+                                        {"type": "tool", "msg": m_txt}
+                                    )
+                            elif msg.content:
+                                if node_name == "orchestrator":
+                                    st.session_state.assessment_result = str(
+                                        msg.content
+                                    )
+                                    st.session_state.risk_score = extract_risk_score(
+                                        st.session_state.assessment_result
+                                    )
+                                    st.session_state.last_company_id = selected_id
+                                    m_txt = (
+                                        f"{agent_label} → Compiling Final Directive..."
+                                    )
+                                    status.write(m_txt)
+                                    st.session_state.reasoning_log.append(
+                                        {"type": "info", "msg": m_txt}
+                                    )
+                                else:
+                                    m_txt = (
+                                        f"{agent_label} → Intelligence Update Captured."
+                                    )
+                                    status.write(m_txt)
+                                    st.session_state.reasoning_log.append(
+                                        {
+                                            "type": "expander",
+                                            "msg": m_txt,
+                                            "node_name": node_name,
+                                            "content": msg.content,
+                                        }
+                                    )
+                                    with st.expander(f"Access {node_name} logs"):
+                                        st.write(msg.content)
 
                 status.update(
                     label="✨ **Analysis Synthesized**",
@@ -272,6 +346,19 @@ if st.session_state.assessment_result:
 
     with col1:
         st.markdown(f"### 📋 Analysis for Company {st.session_state.last_company_id}")
+
+        if st.session_state.reasoning_log:
+            with st.expander(
+                "🔍 **Agent Cluster Synchronization Logs**", expanded=False
+            ):
+                for log in st.session_state.reasoning_log:
+                    if log["type"] == "expander":
+                        st.write(log["msg"])
+                        with st.expander(f"Access {log['node_name']} logs"):
+                            st.write(log["content"])
+                    else:
+                        st.write(log["msg"])
+
         st.markdown(st.session_state.assessment_result)
 
     with col2:

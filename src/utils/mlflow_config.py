@@ -6,11 +6,16 @@ Fully environment-aware, using ENV loaded from src.utils.paths.
 import os
 import yaml
 from pathlib import Path
-from src.utils.paths import ENV  # Centralized environment detection
+from dotenv import load_dotenv
 from src.utils.logger import get_logger
 from src.constants import PARAMS_FILE_PATH
 
+# Load environment variables from .env file
+load_dotenv()
+
 logger = get_logger(__name__)
+
+ENV = os.getenv("ENV", "local").lower()  # e.g., "local", "staging", "production"
 
 
 def get_mlflow_uri(params_path: Path = PARAMS_FILE_PATH) -> str:
