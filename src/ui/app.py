@@ -134,10 +134,12 @@ if "risk_score" not in st.session_state:
     st.session_state.risk_score = 50.0
 if "last_company_id" not in st.session_state:
     st.session_state.last_company_id = None
-if "pdf_path" not in st.session_state:
-    st.session_state.pdf_path = None
+if "pdf_bytes" not in st.session_state:
+    st.session_state.pdf_bytes = None
 if "reasoning_log" not in st.session_state:
     st.session_state.reasoning_log = []
+if "used_fallback_lite" not in st.session_state:
+    st.session_state.used_fallback_lite = False
 
 # --- Sidebar ---
 with st.sidebar:
@@ -172,7 +174,7 @@ with st.sidebar:
             st.session_state.assessment_result = None
             st.session_state.risk_score = 50.0
             st.session_state.last_company_id = None
-            st.session_state.pdf_path = None
+            st.session_state.pdf_bytes = None
             st.session_state.reasoning_log = []
             st.rerun()
 
@@ -251,8 +253,9 @@ if submit_btn and selected_id:
 
     # Clear previous result while running
     st.session_state.assessment_result = None
-    st.session_state.pdf_path = None
+    st.session_state.pdf_bytes = None
     st.session_state.reasoning_log = []
+    st.session_state.used_fallback_lite = False
 
     # Layout: Report Left, Dashboard Right
     col1, col2 = st.columns([1.5, 1])
@@ -284,6 +287,11 @@ if submit_btn and selected_id:
                             ):
                                 log_txt = f"{agent_label} → {msg.content}"
                                 status.write(log_txt)
+
+                                # Track if the Lite fallback was triggered
+                                if "2nd Fallback" in str(msg.content):
+                                    st.session_state.used_fallback_lite = True
+
                                 st.session_state.reasoning_log.append(
                                     {"type": "info", "msg": log_txt}
                                 )
@@ -328,6 +336,26 @@ if submit_btn and selected_id:
                                     )
                                     with st.expander(f"Access {node_name} logs"):
                                         st.write(msg.content)
+
+                # 4. Generate PDF automatically in memory (one-click download ready)
+                try:
+                    # Append provider nickname for clearer file tracking
+                    provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
+                    if st.session_state.get("used_fallback_lite"):
+                        provider_nick += "-lite"
+
+                    filename = f"ACRAS_Report_{selected_id}_{provider_nick}.pdf"
+
+                    pdf_bytes = generate_pdf_report(
+                        st.session_state.assessment_result,
+                        filename=filename,
+                        save_to_disk=False,  # Explicitly disable
+                    )
+                    st.session_state.pdf_bytes = pdf_bytes
+                except Exception as pdf_err:
+                    st.session_state.reasoning_log.append(
+                        {"type": "info", "msg": f"⚠️ PDF readiness failed: {pdf_err}"}
+                    )
 
                 status.update(
                     label="✨ **Analysis Synthesized**",
@@ -376,39 +404,24 @@ if st.session_state.assessment_result:
 
         # Document Action
         st.markdown("---")
-        if (
-            st.session_state.get("pdf_path")
-            and Path(st.session_state.pdf_path).exists()
-        ):
+        if st.session_state.get("pdf_bytes"):
             try:
-                with open(st.session_state.pdf_path, "rb") as f:
-                    pdf_bytes = f.read()
+                provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
+                if st.session_state.get("used_fallback_lite"):
+                    provider_nick += "-lite"
 
                 st.download_button(
                     label="📥 Download Executive PDF",
-                    data=pdf_bytes,
-                    file_name=f"ACRAS_Report_{st.session_state.last_company_id}.pdf",
+                    data=st.session_state.pdf_bytes,
+                    file_name=f"ACRAS_Report_{st.session_state.last_company_id}_{provider_nick}.pdf",
                     mime="application/pdf",
                     width="stretch",
+                    use_container_width=True,
                 )
-                if st.button("🔄 Regenerate PDF"):
-                    st.session_state.pdf_path = None
-                    st.rerun()
-
             except Exception as e:
-                st.error(f"Error reading PDF: {e}")
+                st.error(f"Error preparing download: {e}")
         else:
-            if st.button("📄 Generate Official PDF", width="stretch"):
-                with st.spinner("🖌️ Rendering Premium Report..."):
-                    try:
-                        pdf_path = generate_pdf_report(
-                            st.session_state.assessment_result,
-                            filename=f"ACRAS_Report_{st.session_state.last_company_id}.pdf",
-                        )
-                        st.session_state.pdf_path = pdf_path
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"PDF Engine Error: {e}")
+            st.warning("⚠️ Report preparation partial. PDF not available.")
 
 elif not submit_btn:
     # Welcome State

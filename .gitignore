@@ -99,3 +99,4 @@ data/processed/*
 !data/processed/.gitkeep
 AGENTS.md
 available_models.txt
+*.pdf
