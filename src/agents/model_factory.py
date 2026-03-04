@@ -43,9 +43,8 @@ def get_llm(
             return ChatGoogleGenerativeAI(
                 model=target_model,
                 temperature=0,
-                max_output_tokens=1024,
+                max_output_tokens=8192,
                 google_api_key=settings.GOOGLE_API_KEY,
-                convert_system_message_to_human=True,
             )
         except Exception as e:
             logger.error(f"Failed to instantiate Gemini {target_model}: {e}")
@@ -64,7 +63,7 @@ def get_llm(
         llm = HuggingFaceEndpoint(
             repo_id=target_model,
             task="text-generation",
-            max_new_tokens=1024,
+            max_new_tokens=8192,
             do_sample=False,
             huggingfacehub_api_token=settings.HUGGINGFACEHUB_API_TOKEN,
         )

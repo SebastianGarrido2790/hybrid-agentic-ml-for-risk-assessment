@@ -46,23 +46,23 @@ def get_credit_risk_score(company_id: int) -> str:
         row = record.iloc[0]
 
         payload = {
-            "ingresos": float(row["ingresos"]),
+            "annual_revenue": float(row["ingresos"]),
             "ebitda": float(row["ebitda"]),
-            "activos_totales": float(row["activos_totales"]),
-            "pasivos_totales": float(row["pasivos_totales"]),
-            "patrimonio": float(row["patrimonio"]),
-            "caja": float(row["caja"]),
-            "gastos_intereses": float(row["gastos_intereses"]),
-            "cuentas_cobrar": float(row["cuentas_cobrar"]),
-            "inventario": float(row["inventario"]),
-            "cuentas_pagar": float(row["cuentas_pagar"]),
+            "total_assets": float(row["activos_totales"]),
+            "total_liabilities": float(row["pasivos_totales"]),
+            "total_equity": float(row["patrimonio"]),
+            "cash": float(row["caja"]),
+            "interest_expenses": float(row["gastos_intereses"]),
+            "accounts_receivable": float(row["cuentas_cobrar"]),
+            "inventory": float(row["inventario"]),
+            "accounts_payable": float(row["cuentas_pagar"]),
             "sector_risk_score": float(row["sector_risk_score"]),
             "years_operating": int(row["years_operating"]),
-            "ratio_mora": float(row["ratio_mora"]),
-            "ratio_utilizacion": float(row["ratio_utilizacion"]),
+            "delinquency_ratio": float(row["ratio_mora"]),
+            "credit_utilization": float(row["ratio_utilizacion"]),
             "revenue_growth": float(row["revenue_growth"]),
-            "margen_beneficio": float(row["margen_beneficio"]),
-            "score_buro": int(row["score_buro"]),
+            "profit_margin": float(row["margen_beneficio"]),
+            "bureau_score": int(row["score_buro"]),
             "ebitda_margin": float(row["ebitda_margin"]),
             "debt_to_equity": float(row["debt_to_equity"]),
             "current_ratio": float(row["current_ratio"]),
@@ -73,6 +73,7 @@ def get_credit_risk_score(company_id: int) -> str:
         return f"Error: Failed to prepare data. {e}"
 
     try:
+        # Increase timeout to 10 or 15 seconds if you experience "Agentic Timeout" errors in larger batches
         response = requests.post(settings.ML_API_URL, json=payload, timeout=5)
         response.raise_for_status()
         data = response.json()

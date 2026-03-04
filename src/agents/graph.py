@@ -137,14 +137,9 @@ def invoke_with_fallback(
         tier_name = ["Primary", "1st Fallback", "2nd Fallback"][i]
 
         try:
-            # OPTIMIZATION: If not using a native Tier 1 LLM (like Gemini),
-            # or if it's the 1st/2nd fallback, merge instructions into the prompt.
-            if (
-                i > 0
-                or "qwen" in model_info
-                or "meta" in model_info
-                or "mistral" in model_info
-            ):
+            # OPTIMIZATION: If it's the 1st/2nd fallback, merge instructions into the prompt.
+            # Do NOT merge if i == 0, as it destroys the strict formatting ChatHuggingFace needs for tool calls
+            if i > 0:
                 system_instruction = ""
                 user_messages = []
                 for m in inputs:
@@ -159,9 +154,10 @@ def invoke_with_fallback(
                     new_content = (
                         "### ROLE & GUIDELINES ###\n"
                         f"{system_instruction}\n"
-                        "### CURRENT DATA & CONTEXT ###\n"
+                        "### PREVIOUS CONTEXT (DO NOT REPEAT THIS) ###\n"
                         f"{last_msg.content or ''}\n\n"
-                        "ASSISTANCE_READY: True\n"
+                        "### YOUR TASK ###\n"
+                        "Provide ONLY your specific analysis. Do NOT repeat or output the previous context.\n"
                         "RESPONSE STRUCTURE: Follow mandatory sections strictly."
                     )
                     new_last_msg = HumanMessage(content=new_content)

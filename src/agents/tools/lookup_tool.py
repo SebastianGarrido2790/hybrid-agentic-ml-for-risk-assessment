@@ -45,6 +45,8 @@ def fetch_company_data(company_id: int) -> str:
         # Clean up numpy types to native python types for JSON serialization
         clean_data = {}
         for k, v in data.items():
+            if k in ["target", "default_probability"]:
+                continue
             if pd.isna(v):
                 clean_data[k] = None
             else:

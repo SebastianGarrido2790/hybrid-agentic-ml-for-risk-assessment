@@ -19,7 +19,7 @@ class AgentSettings(BaseSettings):
 
     # Model Names
     HF_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"  # Tier 1/2 Performance (7B is more reliable for Free API)
-    GEMINI_POWER_MODEL: str = "gemini-1.5-flash"  # Tier 1/2 Performance
+    GEMINI_POWER_MODEL: str = "gemini-2.5-flash"  # Tier 1/2 Performance
     GEMINI_LITE_MODEL: str = (
         "gemini-2.5-flash-lite"  # Standardized for high availability
     )
