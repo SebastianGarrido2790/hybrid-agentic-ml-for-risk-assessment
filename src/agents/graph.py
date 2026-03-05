@@ -47,7 +47,9 @@ ml_tools_list = [
 ]
 
 
-def get_dynamic_models(tools_list: Optional[List] = None):
+def get_dynamic_models(
+    tools_list: Optional[List] = None, tool_choice: Optional[str] = None
+):
     """
     Dynamically instantiates the model hierarchy based on current config.py.
     This allows for hot-swapping providers without restarting the app.
@@ -91,19 +93,28 @@ def get_dynamic_models(tools_list: Optional[List] = None):
     raw_models = [m_primary, m_fb1, m_fb2]
 
     if tools_list:
-        return bind_tools_to_all(tools_list, fallback_models=raw_models)
+        return bind_tools_to_all(
+            tools_list, fallback_models=raw_models, tool_choice=tool_choice
+        )
     return raw_models
 
 
-def bind_tools_to_all(tools, fallback_models: List):
+def bind_tools_to_all(tools, fallback_models: List, tool_choice: Optional[str] = None):
     """Refactored helper for dynamic binding"""
     bound = []
     for m in fallback_models:
         if m:
             try:
-                bound.append(m.bind_tools(tools))
+                if tool_choice:
+                    bound.append(m.bind_tools(tools, tool_choice=tool_choice))
+                else:
+                    bound.append(m.bind_tools(tools))
             except Exception:
-                bound.append(m)
+                # Some models might fail if tool_choice is forced improperly
+                try:
+                    bound.append(m.bind_tools(tools))
+                except Exception:
+                    bound.append(m)
         else:
             bound.append(None)
     return bound
@@ -167,6 +178,19 @@ def invoke_with_fallback(
             else:
                 final_inputs = inputs
 
+            response = model.invoke(final_inputs)
+
+            # Normalize Gemini's output where it returns list of dicts for message content.
+            # This is essential to prevent breaking the concatenation in downstream agents.
+            if isinstance(response.content, list):
+                text_parts = []
+                for part in response.content:
+                    if isinstance(part, dict) and "text" in part:
+                        text_parts.append(part["text"])
+                    elif isinstance(part, str):
+                        text_parts.append(part)
+                response.content = "".join(text_parts)
+
             print(f"🤖 {agent_name} -> Calling {tier_name} ({model_info})...")
             if i > 0:
                 logs.append(
@@ -175,12 +199,12 @@ def invoke_with_fallback(
                     )
                 )
 
-            return model.invoke(final_inputs), logs
+            return response, logs
 
         except Exception as e:
             error_msg = f"Tier {i + 1} ({tier_name} - {model_info}) failed: {str(e)}"
-            print(f"⚠️ {agent_name}: {error_msg}")
-            logs.append(SystemMessage(content=f"⚠️ {tier_name} ({model_info}) failed."))
+            print(f"! {agent_name}: {error_msg}")
+            logs.append(SystemMessage(content=f"! {tier_name} ({model_info}) failed."))
             state_errors.append(error_msg)
 
             if i == len(models_tier) - 1:
@@ -227,7 +251,20 @@ def data_scientist_node(state: AgentState):
     importlib.reload(prompts_module)  # Requires a "module object" to work
     system_prompt = getattr(prompts_module, "DATA_SCIENTIST_SYSTEM_PROMPT")
 
-    models = get_dynamic_models(ml_tools_list)
+    # Inject Company ID to ensure the agent doesn't hallucinate or forget to call the tool
+    company_id = state.get("company_id", "Unknown")
+    system_prompt += f"\n\nTARGET COMPANY ID: {company_id}"
+
+    # Force tool usage if it hasn't been called yet.
+    # Check if there's any ToolMessage indicating ml_tools ran, or just any ToolMessage AFTER financial analyst
+    has_called_ml = any(
+        hasattr(m, "name") and m.name == "get_credit_risk_score" for m in messages
+    )
+
+    # In langchain-google-genai, "any" forces the model to call one of the provided tools
+    current_tool_choice = "any" if not has_called_ml else None
+
+    models = get_dynamic_models(ml_tools_list, tool_choice=current_tool_choice)
     inputs = [SystemMessage(content=system_prompt)] + messages
     response, logs = invoke_with_fallback(models, inputs, "Data Scientist")
     return {"messages": logs + [response]}
