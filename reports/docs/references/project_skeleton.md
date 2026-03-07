@@ -1,5 +1,5 @@
 Hybrid Agentic ML for Risk Assessment
-├── LICENSE.txt                <- Project's license (Open-source if one is chosen)
+├── LICENSE.txt                <- Project's license (MIT)
 ├── README.md                  <- The top-level README for developers using this project
 ├── .env                       <- Environment variables
 ├── .gitignore                 <- Files to ignore by Git
@@ -7,15 +7,17 @@ Hybrid Agentic ML for Risk Assessment
 ├── pyproject.toml             <- UV dependency definitions
 ├── main.py                    <- Pipeline Orchestrator (Script mode)
 ├── Dockerfile                 <- Production container definition
+├── .dockerignore              <- Files to ignore by Docker
 │
-├── config/                    <- Centralize all configuration files ("source of truth")
-│   ├── config.yaml            <- System paths (artifacts/data)
-│   └── params.yaml            <- Hyperparameters (K-neighbors, Chunk size)
+├── .github/
+│   └── workflows/             <- CI/CD workflows
 │
 ├── artifacts/                 <- Generated artifacts (models, metrics, transformed data, serialized models, etc.)
 │
-├── .github/
-│   └── workflows/             <- CI/CD (main.yaml)
+├── config/                    <- Centralize all configuration files ("source of truth")
+│   ├── config.yaml            <- System paths (artifacts/data)
+│   ├── params.yaml            <- Hyperparameters (K-neighbors, Chunk size)
+│   └── schema.yaml            <- Data schema definitions
 │
 ├── data/
 │   ├── external               <- Data from third party sources
@@ -24,13 +26,15 @@ Hybrid Agentic ML for Risk Assessment
 │
 ├── logs/                      <- Logs of the pipeline execution
 │
-├── notebooks/                 <- Jupyter notebooks
+├── notebooks/                 <- Jupyter notebooks (EDA, prototyping)
 │
-├── references/                <- Data dictionaries, manuals, and all other explanatory materials
-│   └── folder_structure.md
-│
-├── reports/                   <- Generated analysis as HTML, PDF, LaTeX, etc.
+├── reports/                   <- Generated analysis, documentation, and visualizations for stakeholders
 │   ├── docs/                  <- Generated documents to be used in reporting
+│   │   ├── architecture/      <- System architecture diagrams and descriptions (The What)
+│   │   ├── decisions/         <- Decisions made during the project (The Why)
+│   │   ├── references/        <- Data dictionaries, manuals, and all other high-level explanatory materials
+│   │   ├── runbooks/          <- Instructions for the project, what’s allowed / not allowed (The Rules)
+│   │   └── workflows/         <- Technical implementation of the project (The How)
 │   └── figures/               <- Generated graphics and figures to be used in reporting
 │
 ├── tests/                     <- Unit, integration, app, and agentic tests

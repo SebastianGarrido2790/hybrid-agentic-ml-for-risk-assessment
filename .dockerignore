@@ -1,30 +1,54 @@
+# --- Python ---
 __pycache__
 *.pyc
+*.pyo
+*.pyd
+.Python
+
+# --- Virtual environments ---
+.venv
+venv
+
+# --- Version control ---
 .git
+.gitignore
+.gitattributes
+
+# --- DVC (pipeline orchestration — not needed at runtime) ---
 .dvc
-.dvc/cache
+.dvcignore
+dvc.yaml
+dvc.lock
 mlruns
 mlartifacts
-.venv
+
+# --- Environment & secrets ---
 .env
+.env.*
+
+# --- OS artifacts ---
 .DS_Store
+Thumbs.db
+
+# --- Logs ---
 *.log
 logs
-models
+
+# --- Dev, test & docs ---
+tests
 notebooks
-data
-references
 reports
+*.md
+.github
 
-# Ignore all artifacts first
+# --- Artifacts: exclude everything, then whitelist only what FastAPI needs ---
 artifacts/**
-
-# But allow the necessary model and preprocessor structure
 !artifacts/model_trainer/acras_rf_model.joblib
 !artifacts/data_transformation/preprocessor.pkl
-# config is needed for paths
-!config/
-# src is needed for code
-!src/
-!main.py
-!pyproject.toml
+!artifacts/data_ingestion/val.csv
+
+# --- Data (raw & processed are not needed at runtime) ---
+data
+
+# --- Other project-level files not needed in the image ---
+main.py
