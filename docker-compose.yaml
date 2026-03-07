@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: acras-prediction-service:v2
+    container_name: acras-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mounts for rapid development (no rebuilds for code changes)
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./artifacts:/app/artifacts
+      - ./logs:/app/logs
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    # Explicitly override both to ensure clean hot-reload in development
+    entrypoint: ["/app/.venv/bin/python", "-m", "uvicorn", "src.app.main:app"]
+    command: ["--host", "0.0.0.0", "--port", "8000", "--reload"]
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8000/health", "||", "exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

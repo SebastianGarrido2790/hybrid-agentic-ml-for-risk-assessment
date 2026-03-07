@@ -167,46 +167,92 @@ uv run uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-## 7. Docker Integration
+## 7. Docker & Containerization
 
-The service uses a **multi-stage build** to keep the final runtime image lean and secure.
+### 7.1 Production-Ready Dockerfile
+The service uses a **multi-stage build** to keep the final runtime image lean and secure, adhering to 2026-grade production hygiene.
 
 | Stage | Base Image | Purpose |
 | :--- | :--- | :--- |
-| `builder` | `ghcr.io/astral-sh/uv:python3.10-bookworm-slim` | Installs all dependencies into `.venv` using `uv` |
-| `runtime` | `python:3.10-slim` | Copies `.venv` + source only — no build tools |
+| `builder` | `ghcr.io/astral-sh/uv:python3.10-bookworm-slim` | Installs dependencies into `.venv` using `uv` with lockfile integrity |
+| `runtime` | `python:3.10-slim-bookworm` | Copies `.venv` + source only — pinned for supply chain security |
 
-**Key features of the updated `Dockerfile`:**
-- **`uv sync --no-dev`** replaces `pip install` for fast, reproducible installs.
-- **Layer caching:** `pyproject.toml` is copied first and `uv sync` runs before `COPY src/` — dependency installation is only re-run when `pyproject.toml` changes.
-- **Non-root user:** Runs as `appuser` for security hardening.
-- **Explicit artifact `COPY`:** The three required runtime artifacts are copied individually, not via a broad `COPY . /app`:
-  - `artifacts/model_trainer/acras_rf_model.joblib`
-  - `artifacts/data_transformation/preprocessor.pkl`
-  - `artifacts/data_ingestion/val.csv` (required by the agent's `lookup_tool`)
-- **`HEALTHCHECK`:** Docker / Kubernetes-native liveness check against `/health`.
-- **2 workers:** `--workers 2` for modest concurrency on a single container.
+**Security & Performance Features:**
+- **Layer Caching:** Dependency manifests (`pyproject.toml`, `uv.lock`) are cached separately from code.
+- **Least Privilege:** Runs as `appuser` with a dedicated group; uses `COPY --chown` to avoid layer bloat.
+- **Fail-Fast HEALTHCHECK:** Native liveness probe integrated into the engine.
 
-> **Prerequisite:** Run `uv run dvc repro` before building to ensure all three artifact files exist locally.
+### 7.2 Development Workflow (No Rebuilds)
+For rapid local iteration, use **Docker Compose**. This maps your local directories into the container using **bind mounts**, allowing code changes to take effect instantly via Uvicorn's `--reload` flag without rebuilding the image.
+
+```yaml
+# Summary of docker-compose.yaml mappings:
+# ./src       -> /app/src       (Instant code updates)
+# ./config    -> /app/config    (Configuration live-updates)
+# ./artifacts -> /app/artifacts (Update models without rebuild)
+# ./logs      -> /app/logs      (Persistence: logs stay on host)
+```
+
+**Commands for Rapid Development:**
 
 ```bash
-# Build the image
+# 1. Start the service with live-reload (recommended)
+docker-compose up --build -d
+
+# 2. View streaming logs
+docker-compose logs -f
+
+# 3. Stop the service
+docker-compose down
+```
+
+> **Note:** Use `docker-compose up --build` only if you change `pyproject.toml` or the `Dockerfile` structure itself. For regular `src/` changes, the container updates automatically.
+
+### 7.3 Manual Docker Commands (CI/CD / Production)
+Use these for building static, immutable images for deployment:
+
+```bash
+# Build a production-ready image
 docker build -t acras-prediction-service:v2 .
 
-# Run the container
-docker run -p 8000:8000 acras-prediction-service:v2
-
-# Verify non-root user
-docker run --rm acras-prediction-service:v2 whoami  # → appuser
-
-# Stop and remove
-docker stop acras-prediction-service:v2
-docker rm acras-prediction-service:v2
+# Run manually (standalone)
+docker run --name acras-api -p 8000:8000 acras-prediction-service:v2
 ```
 
 ---
 
-## 8. API Usage Examples
+## 8. Launching the Full System (Backend + UI)
+
+The full ACRAS application consists of the predictive backend API and the interactive Streamlit dashboard.
+
+### Option A: Hybrid Launch (Recommended)
+This workflow isolates the backend inside a hot-reloading Docker container while allowing you to run the UI locally.
+
+1. **Start the API Backend via Docker Compose:**
+   ```bash
+   docker-compose up -d
+   ```
+2. **Launch the Streamlit UI locally (in a new terminal):**
+   ```bash
+   uv run streamlit run src/ui/app.py
+   ```
+   > The UI will automatically route internal `/predict` calls to the containerized API running on `http://localhost:8000`.
+
+### Option B: Fully Local Launch
+If you want to run both components natively without Docker:
+
+1. **Start the API Backend locally:**
+   ```bash
+   uv run uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+2. **Launch the Streamlit UI locally (in a new terminal):**
+   ```bash
+   uv run streamlit run src/ui/app.py
+   ```
+
+---
+
+## 9. API Usage Examples
 
 ### Health Check
 ```bash
@@ -255,7 +301,7 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-## 9. Error Reference
+## 10. Error Reference
 
 | HTTP Code | Cause | Resolution |
 | :--- | :--- | :--- |
