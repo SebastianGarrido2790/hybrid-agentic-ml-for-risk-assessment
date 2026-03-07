@@ -203,8 +203,10 @@ def invoke_with_fallback(
 
         except Exception as e:
             error_msg = f"Tier {i + 1} ({tier_name} - {model_info}) failed: {str(e)}"
+            # Safe print for Windows terminal (cp1252)
             print(f"! {agent_name}: {error_msg}")
-            logs.append(SystemMessage(content=f"! {tier_name} ({model_info}) failed."))
+            # Keep emoji for Streamlit UI parsing
+            logs.append(SystemMessage(content=f"⚠️ {tier_name} ({model_info}) failed."))
             state_errors.append(error_msg)
 
             if i == len(models_tier) - 1:
