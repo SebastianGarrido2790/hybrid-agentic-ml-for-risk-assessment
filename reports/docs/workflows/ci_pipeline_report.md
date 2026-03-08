@@ -111,39 +111,50 @@ The `github-actions` ecosystem checks ran in under 51 seconds each and passed cl
 
 ---
 
-## 7. Branch Protection — Recommended Configuration
+## 7. Protected Workflow: The "Extra Step" (Pull Request Enforcement)
 
-> **WARNING:** GitHub is currently displaying the warning **"Your master branch isn't protected"**. This warning appeared because adding GitHub Actions status checks signals to GitHub that you now have automated quality gates — but those gates are useless if code can still be pushed directly to `master` without passing them.
+> **WARNING:** The warning **"Your master branch isn't protected"** might appear because adding GitHub Actions status checks signals to GitHub that you now have automated quality gates — but those gates are useless if code can still be pushed directly to `master` without passing them.
 
-### Why the Warning Appeared
-Before CI existed, GitHub treated this repository as a code storage location. Once `.github/workflows/ci.yml` was pushed, the platform detected active status checks and surfaced the protection warning proactively — a sign the repository has matured into a professional MLOps project.
+The ACRAS repository is now under **Master Branch Protection**. This means the main `master` branch is no longer a "naked" storage location but a professionally governed system. As a result, pushing directly to `master` is **prohibited by the server**.
 
-### Recommended Ruleset Configuration
+### 7.1 Why Pushes to `master` Fail
+If you attempt a direct `git push origin master`, the GitHub remote will reject it with a `GH013` error. This is **intentional**. The repository rules mandate that:
+1.  **Safety First**: No code can enter `master` without being vetted by the automated quality gates (tests and linting).
+2.  **Traceability**: Every change must be associated with a Pull Request (PR) for auditability and history tracking.
 
-Navigate to **Settings → Rules → Rulesets → New branch ruleset** and configure as follows:
+### 7.2 The Mandated Workflow (The "Extra Step")
+To update the project, you must follow the **Branch-PR-Merge** protocol:
 
-| Setting | Recommended Value | Rationale |
+1.  **Branch**: Create a specialized branch for your changes:
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+2.  **Push**: Push your work to that remote branch:
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+3.  **Pull Request**: Open a PR on GitHub from your branch to `master`.
+4.  **Automatic CI**: The four quality gates (Lint, Unit, Integration, API) will trigger automatically on the PR.
+5.  **Merge**: Once you see the green **"All checks have passed"** signal, you can click "Merge pull request".
+
+### 7.3 Active Ruleset Configuration
+
+The following ruleset is currently **Active** and enforced on the repository:
+
+| Setting | Status | Rationale |
 | :--- | :--- | :--- |
-| **Ruleset Name** | `Master Branch Protection` | Descriptive label |
-| **Enforcement Status** | `Active` | Must be active to take effect |
-| **Target Branches** | `Include default branch` | Targets `master` automatically |
-| **Restrict deletions** | ✅ Enabled | Prevents accidental deletion of `master` |
-| **Require a pull request before merging** | ✅ Enabled | No direct pushes to `master` |
-| **Required approvals** | `0` | Solo developer — avoids self-review deadlock |
-| **Require status checks to pass** | ✅ Enabled | Core enforcement mechanism |
-| **Required status checks** | Add all four below | See table |
-| **Block force pushes** | ✅ Enabled | Prevents history rewriting |
+| **Restrict deletions** | ✅ Enforced | Prevents accidental deletion of the production branch. |
+| **Require a pull request** | ✅ Enforced | Blocks direct pushes; mandates the branch workflow. |
+| **Required status checks** | ✅ Enforced | Ensures no broken code enters `master`. |
+| **Block force pushes** | ✅ Enforced | Protects git history integrity. |
 
-**Required Status Checks to Add (click "+ Add checks"):**
+**Mandatory Status Checks (Required for Merger):**
+- `Lint & Format (ruff)`
+- `Unit Tests`
+- `Integration Tests`
+- `API Tests (Prediction Service)`
 
-```
-Lint & Format (ruff)
-Unit Tests
-Integration Tests
-API Tests (Prediction Service)
-```
-
-Once active, the `master` branch can only be updated through a Pull Request where all four CI checks show a green checkmark. This transforms the repository from a personal code store into a professionally governed MLOps project with automated quality enforcement.
+This workflow transforms the repository from a personal workspace into a **production-ready MLOps platform**, ensuring zero downtime and maximum reliability for the ACRAS service.
 
 ---
 
