@@ -34,6 +34,7 @@ FROM python:3.10-slim-bookworm AS runtime
 LABEL org.opencontainers.image.title="ACRAS API Prediction Service" \
       org.opencontainers.image.description="FastAPI microservice for risk assessment" \
       org.opencontainers.image.version="1.0"
+# Trigger Docker Build Smoke Test
 
 WORKDIR /app
 
