@@ -4,11 +4,12 @@ Stage 06: Model Registration Pipeline.
 This module orchestrates the registration of the trained model into the MLflow Model Registry.
 """
 
-from src.config.configuration import ConfigurationManager
+import sys
+
 from src.components.model_registration import ModelRegistration
+from src.config.configuration import ConfigurationManager
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
-import sys
 
 STAGE_NAME = "Model Registration stage"
 logger = get_logger(__name__)

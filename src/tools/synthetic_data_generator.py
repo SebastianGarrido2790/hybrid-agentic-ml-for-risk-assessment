@@ -6,10 +6,12 @@ to address class imbalance. It combines the original raw data with generated
 samples and saves the result to data/processed, keeping the raw data untouched.
 """
 
-import pandas as pd
-import numpy as np
 import os
 import sys
+
+import numpy as np
+import pandas as pd
+
 from src.utils.exception import CustomException
 
 

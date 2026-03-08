@@ -8,24 +8,26 @@ This module handles:
 - Logging metrics, parameters, and models to MLflow.
 """
 
+import sys
+from pathlib import Path
+from urllib.parse import urlparse
+
+import joblib
+import mlflow
+import mlflow.sklearn
 import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
+    f1_score,
     precision_score,
     recall_score,
-    f1_score,
     roc_auc_score,
 )
-from urllib.parse import urlparse
-import mlflow
-import mlflow.sklearn
-import joblib
+
 from src.entity.config_entity import ModelEvaluationConfig
-from src.utils.common import save_json, create_directories
-from pathlib import Path
+from src.utils.common import create_directories, save_json
 from src.utils.exception import CustomException
 from src.utils.logger import get_logger
-import sys
 
 logger = get_logger(__name__)
 
@@ -71,8 +73,8 @@ class ModelEvaluation:
             plot_path (Path): File path where the plot will be saved.
         """
         import matplotlib.pyplot as plt
-        from sklearn.metrics import roc_curve, auc
         import seaborn as sns
+        from sklearn.metrics import auc, roc_curve
 
         try:
             sns.set_theme(style="whitegrid")

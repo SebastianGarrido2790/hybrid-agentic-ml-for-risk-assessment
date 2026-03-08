@@ -12,20 +12,22 @@ configuration factories, allowing for runtime model updates and tool
 re-binding without system downtime.
 """
 
-from typing import Annotated, TypedDict, List, Optional, Tuple
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
-from src.agents.tools.ml_api_tool import get_credit_risk_score
-from src.agents.tools.lookup_tool import fetch_company_data
-from src.agents.tools.finance_tool import (
-    calculate_debt_to_equity,
-    calculate_ebitda_margin,
-    calculate_current_ratio,
-    calculate_revenue_growth,
-)
 import importlib
 import operator
+from typing import Annotated, TypedDict
+
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langgraph.graph import END, StateGraph
+from langgraph.prebuilt import ToolNode
+
+from src.agents.tools.finance_tool import (
+    calculate_current_ratio,
+    calculate_debt_to_equity,
+    calculate_ebitda_margin,
+    calculate_revenue_growth,
+)
+from src.agents.tools.lookup_tool import fetch_company_data
+from src.agents.tools.ml_api_tool import get_credit_risk_score
 
 
 # --- State Definition ---
@@ -47,9 +49,7 @@ ml_tools_list = [
 ]
 
 
-def get_dynamic_models(
-    tools_list: Optional[List] = None, tool_choice: Optional[str] = None
-):
+def get_dynamic_models(tools_list: list | None = None, tool_choice: str | None = None):
     """
     Dynamically instantiates the model hierarchy based on current config.py.
     This allows for hot-swapping providers without restarting the app.
@@ -99,7 +99,7 @@ def get_dynamic_models(
     return raw_models
 
 
-def bind_tools_to_all(tools, fallback_models: List, tool_choice: Optional[str] = None):
+def bind_tools_to_all(tools, fallback_models: list, tool_choice: str | None = None):
     """Refactored helper for dynamic binding"""
     bound = []
     for m in fallback_models:
@@ -122,8 +122,8 @@ def bind_tools_to_all(tools, fallback_models: List, tool_choice: Optional[str] =
 
 # --- Helper for Fallback ---
 def invoke_with_fallback(
-    models_tier: List, inputs, agent_name="Agent"
-) -> Tuple[BaseMessage, List[BaseMessage]]:
+    models_tier: list, inputs, agent_name="Agent"
+) -> tuple[BaseMessage, list[BaseMessage]]:
     """
     Sequentially attempts to invoke models in the provided list (Tiers).
     Returns (response_message, log_messages_list).

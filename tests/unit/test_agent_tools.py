@@ -6,10 +6,12 @@ It validates the functionality of the `ml_api_tool` (mocking the API response)
 and ensures that tools handle valid inputs and error conditions correctly.
 """
 
+from unittest.mock import patch
+
+import pandas as pd
 import pytest
 import requests
-import pandas as pd
-from unittest.mock import patch
+
 from src.agents.tools.ml_api_tool import get_credit_risk_score
 
 

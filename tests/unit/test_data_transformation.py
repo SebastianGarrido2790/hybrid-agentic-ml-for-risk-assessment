@@ -5,11 +5,13 @@ Tests the creation of the ColumnTransformer object and the execution
 of the transformation pipeline (fitting and transforming data splits).
 """
 
-import pytest
-import pandas as pd
-from unittest.mock import patch
 from pathlib import Path
+from unittest.mock import patch
+
+import pandas as pd
+import pytest
 from sklearn.compose import ColumnTransformer
+
 from src.components.data_transformation import DataTransformation
 from src.entity.config_entity import DataTransformationConfig
 

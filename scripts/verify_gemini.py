@@ -9,11 +9,13 @@ Usage:
     uv run python scripts/verify_gemini.py
 """
 
-from src.agents.config import get_agent_settings
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage
 import os
+
 from dotenv import load_dotenv
+from langchain_core.messages import HumanMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from src.agents.config import get_agent_settings
 
 load_dotenv()
 

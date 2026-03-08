@@ -9,7 +9,6 @@ Usage:
 
 import logging
 from datetime import datetime
-from typing import Optional
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -18,9 +17,7 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOGS_DIR / "runs.log"
 
 
-def get_logger(
-    name: Optional[str] = None, headline: Optional[str] = None
-) -> logging.Logger:
+def get_logger(name: str | None = None, headline: str | None = None) -> logging.Logger:
     """
     Returns a configured logger with consistent formatting.
     Adds an optional headline section to separate logs per script.

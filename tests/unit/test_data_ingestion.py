@@ -5,10 +5,12 @@ Tests the data loading, merging, feature engineering integration,
 and stratified train-test splitting logic.
 """
 
-import pytest
-import pandas as pd
-from unittest.mock import patch
 from pathlib import Path
+from unittest.mock import patch
+
+import pandas as pd
+import pytest
+
 from src.components.data_ingestion import DataIngestion
 from src.entity.config_entity import DataIngestionConfig
 

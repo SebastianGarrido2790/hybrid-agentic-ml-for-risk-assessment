@@ -16,13 +16,15 @@ Usage:
     uv run uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
 """
 
+from contextlib import asynccontextmanager
+
+import joblib
+import uvicorn
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
+
 from src.app.api.endpoints import router as api_router
 from src.config.configuration import ConfigurationManager
-import joblib
-from contextlib import asynccontextmanager
-import uvicorn
-from prometheus_fastapi_instrumentator import Instrumentator
 
 # Global variables for model and preprocessor NO LONGER USED
 # State is stored in app.state

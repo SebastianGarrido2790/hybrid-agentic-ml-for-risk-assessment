@@ -5,10 +5,12 @@ Provides fixtures specifically for testing the Prediction Service, including
 mocked ML models and preprocessors to simulate app state without loading real artifacts.
 """
 
-import pytest
-from unittest.mock import MagicMock
 from contextlib import asynccontextmanager
+from unittest.mock import MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
+
 from src.app.main import app
 
 

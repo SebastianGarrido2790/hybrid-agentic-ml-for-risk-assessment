@@ -9,8 +9,9 @@ Usage:
     uv run python scripts/verify_raw_gemini.py
 """
 
-import google.generativeai as genai
 import os
+
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 load_dotenv()

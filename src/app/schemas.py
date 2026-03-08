@@ -6,7 +6,7 @@ for API inputs and outputs. It ensures that the model receives data in the
 expected format and types, rejecting invalid requests before they reach the inference logic.
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PredictionInput(BaseModel):

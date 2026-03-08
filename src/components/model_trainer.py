@@ -7,13 +7,15 @@ This module handles:
 - Saving the trained model.
 """
 
-import pandas as pd
-import joblib
-from sklearn.ensemble import RandomForestClassifier
 import sys
+
+import joblib
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+
 from src.entity.config_entity import ModelTrainerConfig
-from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -5,7 +5,8 @@ This module defines the `AgentSettings` class, which loads configuration variabl
 (API keys, model names, API URLs) from environment variables using Pydantic Settings.
 """
 
-from typing import Optional, Literal
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,8 +14,8 @@ class AgentSettings(BaseSettings):
     """Configuration for the Agentic Layer"""
 
     # LLM Settings
-    GOOGLE_API_KEY: Optional[str] = None
-    HUGGINGFACEHUB_API_TOKEN: Optional[str] = None
+    GOOGLE_API_KEY: str | None = None
+    HUGGINGFACEHUB_API_TOKEN: str | None = None
     DEFAULT_LLM_PROVIDER: Literal["gemini", "huggingface"] = "huggingface"
 
     # Model Names

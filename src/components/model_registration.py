@@ -12,8 +12,10 @@ Requirements:
 """
 
 import json
+
 import joblib
 import mlflow
+
 from src.entity.config_entity import ModelRegistrationConfig
 from src.utils.common import logger
 
@@ -38,7 +40,7 @@ class ModelRegistration:
                 return
 
             logger.info(f"Loading metrics from {self.config.metric_file_name}")
-            with open(self.config.metric_file_name, "r") as f:
+            with open(self.config.metric_file_name) as f:
                 metrics = json.load(f)
 
             accuracy = metrics.get("accuracy", 0)

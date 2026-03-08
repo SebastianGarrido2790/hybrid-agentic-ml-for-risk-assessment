@@ -10,16 +10,18 @@ It allows Risk Managers to:
 5. Download the report as a PDF.
 """
 
-import streamlit as st
-import plotly.graph_objects as go
-import pandas as pd
-from langchain_core.messages import HumanMessage, SystemMessage
-from src.agents.graph import app as agent_app
-from src.utils.pdf_generator import generate_pdf_report
+import importlib
 import re
 from pathlib import Path
-import importlib
+
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+from langchain_core.messages import HumanMessage, SystemMessage
+
 import src.agents.config as config_module
+from src.agents.graph import app as agent_app
+from src.utils.pdf_generator import generate_pdf_report
 
 # Page Config
 st.set_page_config(

@@ -7,12 +7,13 @@ The generator uses an in-memory approach (returning bytes) to optimize performan
 and prevent unnecessary disk I/O in the Streamlit application.
 """
 
+import io
+from datetime import datetime
+from pathlib import Path
+
 import markdown
 from jinja2 import Environment, FileSystemLoader
 from xhtml2pdf import pisa
-from datetime import datetime
-from pathlib import Path
-import io
 
 
 def generate_pdf_report(

@@ -6,11 +6,13 @@ This module handles the validation of the ingested data against the defined sche
 - Validates the integrity of the ingested data against the defined schema.
 """
 
-import pandas as pd
 import sys
+
+import pandas as pd
+
 from src.entity.config_entity import DataValidationConfig
-from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

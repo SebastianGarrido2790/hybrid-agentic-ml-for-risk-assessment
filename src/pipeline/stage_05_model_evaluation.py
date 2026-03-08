@@ -5,11 +5,12 @@ This module orchestrates the evaluation of the trained model,
 leveraging the ModelEvaluation component and MLflow for tracking.
 """
 
-from src.config.configuration import ConfigurationManager
-from src.components.model_evaluation import ModelEvaluation
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
 import sys
+
+from src.components.model_evaluation import ModelEvaluation
+from src.config.configuration import ConfigurationManager
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Model Evaluation stage"
 logger = get_logger(__name__)

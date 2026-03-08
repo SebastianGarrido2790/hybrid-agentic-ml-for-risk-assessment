@@ -6,10 +6,11 @@ ConfigurationManager and the DataTransformation component.
 """
 
 import sys
-from src.config.configuration import ConfigurationManager
+
 from src.components.data_transformation import DataTransformation
-from src.utils.logger import get_logger
+from src.config.configuration import ConfigurationManager
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Data Transformation stage"
 logger = get_logger(__name__)

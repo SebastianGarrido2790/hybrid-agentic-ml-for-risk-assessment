@@ -5,10 +5,12 @@ Tests the model training process, including hyperparameter usage,
 training execution on prepared data, and artifact persistence.
 """
 
-import pytest
-import pandas as pd
-from unittest.mock import patch, MagicMock
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+import pytest
+
 from src.components.model_trainer import ModelTrainer
 from src.entity.config_entity import ModelTrainerConfig
 

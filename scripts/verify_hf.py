@@ -10,6 +10,7 @@ Usage:
 """
 
 from langchain_huggingface import HuggingFaceEndpoint
+
 from src.agents.config import get_agent_settings
 
 settings = get_agent_settings()

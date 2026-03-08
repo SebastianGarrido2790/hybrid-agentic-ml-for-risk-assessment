@@ -7,8 +7,8 @@ This module is responsible for:
 - Handling data safety (inf values, missing values).
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:

@@ -6,10 +6,12 @@ merges them, and prints the distribution of defaults to verify
 the impact of the synthetic data augmentation.
 """
 
-import pandas as pd
-import numpy as np
-import sys
 import os
+import sys
+
+import numpy as np
+import pandas as pd
+
 from src.utils.exception import CustomException
 
 

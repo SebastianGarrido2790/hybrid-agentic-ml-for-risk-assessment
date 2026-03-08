@@ -6,10 +6,11 @@ ConfigurationManager and the DataIngestion component.
 """
 
 import sys
-from src.config.configuration import ConfigurationManager
+
 from src.components.data_ingestion import DataIngestion
-from src.utils.logger import get_logger
+from src.config.configuration import ConfigurationManager
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Data Ingestion stage"
 logger = get_logger(__name__)

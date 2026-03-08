@@ -10,16 +10,17 @@ This module handles the initial stage of the MLOps pipeline:
 """
 
 import os
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
 import sys
-from src.entity.config_entity import DataIngestionConfig
-from src.config.configuration import ConfigurationManager
-from src.utils.logger import get_logger
-from src.utils.exception import CustomException
-from src.features.build_features import engineer_features
 
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+from src.config.configuration import ConfigurationManager
+from src.entity.config_entity import DataIngestionConfig
+from src.features.build_features import engineer_features
+from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

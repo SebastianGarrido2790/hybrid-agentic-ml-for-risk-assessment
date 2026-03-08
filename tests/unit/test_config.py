@@ -4,9 +4,11 @@ Unit Tests for ConfigurationManager.
 Tests the loading and parsing of YAML configurations into typed entity objects.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from src.config.configuration import ConfigurationManager
 from src.entity.config_entity import DataIngestionConfig
 

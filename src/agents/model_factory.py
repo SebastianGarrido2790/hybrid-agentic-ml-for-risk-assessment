@@ -6,10 +6,12 @@ Large Language Models (LLMs) from different providers (Google Gemini or Hugging 
 abstracting the initialization complexity from the rest of the application.
 """
 
-from typing import Literal, Optional
+from typing import Literal
+
 from langchain_core.language_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+
 from src.agents.config import get_agent_settings
 from src.utils.logger import get_logger
 
@@ -20,8 +22,8 @@ settings = get_agent_settings()
 
 
 def get_llm(
-    provider: Optional[Literal["gemini", "huggingface"]] = None,
-    model_name: Optional[str] = None,
+    provider: Literal["gemini", "huggingface"] | None = None,
+    model_name: str | None = None,
 ) -> BaseChatModel:
     """
     Factory to return the configured LLM based on the provider.

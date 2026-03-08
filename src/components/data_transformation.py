@@ -8,16 +8,18 @@ This module handles the preprocessing of data for the model pipeline:
 - Saving the preprocessor object for consistent inference.
 """
 
+import sys
+
 import joblib
 import pandas as pd
-import sys
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import RobustScaler, OneHotEncoder
-from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, RobustScaler
+
 from src.entity.config_entity import DataTransformationConfig
-from src.utils.logger import get_logger
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

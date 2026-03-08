@@ -1,0 +1,43 @@
+# ============================================================
+# Dependabot Configuration for ACRAS
+# ============================================================
+# Automates dependency update PRs for:
+#   - pip (pyproject.toml)
+#   - GitHub Actions workflows
+#
+# Minor and patch updates are grouped into a single PR per
+# ecosystem to reduce noise.
+# ============================================================
+
+version: 2
+
+updates:
+  # Python dependencies (pyproject.toml / uv.lock)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      all-non-breaking:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "python"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      all-actions:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "github-actions"

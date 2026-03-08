@@ -5,10 +5,12 @@ This module provides tools for fetching raw company data from internal
 CSV databases (e.g., validation datasets) for agents to analyze.
 """
 
+from pathlib import Path
+
 import pandas as pd
 from langchain_core.tools import tool
+
 from src.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger(__name__)
 

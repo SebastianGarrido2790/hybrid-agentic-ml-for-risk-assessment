@@ -6,11 +6,13 @@ FastAPI prediction service. It handles the HTTP communication, validation of inp
 using Pydantic, and graceful error handling for the agent.
 """
 
+from pathlib import Path
+
+import pandas as pd
 import requests
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
-import pandas as pd
-from pathlib import Path
+
 from src.agents.config import get_agent_settings
 from src.utils.logger import get_logger
 

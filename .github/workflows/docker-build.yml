@@ -1,0 +1,68 @@
+# ============================================================
+# ACRAS — Docker Build Validation
+# ============================================================
+# Validates the Dockerfile builds successfully on changes to
+# Docker-related files. The image is NOT pushed (portfolio project).
+#
+# ML artifacts (model, preprocessor, val.csv) are excluded from
+# .gitignore and will not exist on the runner. Dummy placeholder
+# files are created so the COPY instructions do not fail.
+# ============================================================
+
+name: Docker Build Validation
+
+on:
+    push:
+        branches: [master]
+        paths:
+            - "Dockerfile"
+            - "docker-compose.yaml"
+            - "pyproject.toml"
+            - "uv.lock"
+            - "src/**"
+    pull_request:
+        branches: [master]
+        paths:
+            - "Dockerfile"
+            - "docker-compose.yaml"
+            - "pyproject.toml"
+            - "uv.lock"
+            - "src/**"
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    docker-build:
+        name: Docker Build Smoke Test
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Create dummy ML artifact placeholders
+              # ML artifacts are gitignored and produced by the DVC pipeline locally.
+              # We create empty placeholder files so the Dockerfile COPY steps
+              # do not fail during CI smoke-testing.
+              run: |
+                  mkdir -p artifacts/model_trainer
+                  mkdir -p artifacts/data_transformation
+                  mkdir -p artifacts/data_ingestion
+                  touch artifacts/model_trainer/acras_rf_model.joblib
+                  touch artifacts/data_transformation/preprocessor.pkl
+                  touch artifacts/data_ingestion/val.csv
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build Docker image (no push)
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  push: false
+                  tags: acras-prediction-service:ci-${{ github.sha }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max

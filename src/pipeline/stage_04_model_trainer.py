@@ -5,10 +5,11 @@ This module coordinates the model training process.
 """
 
 import sys
-from src.config.configuration import ConfigurationManager
+
 from src.components.model_trainer import ModelTrainer
-from src.utils.logger import get_logger
+from src.config.configuration import ConfigurationManager
 from src.utils.exception import CustomException
+from src.utils.logger import get_logger
 
 STAGE_NAME = "Model Trainer stage"
 logger = get_logger(__name__)

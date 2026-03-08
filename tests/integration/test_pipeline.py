@@ -6,6 +6,7 @@ specifically ensuring the Data Ingestion output is correctly consumed by Data Va
 """
 
 import pytest
+
 from src.components.data_ingestion import DataIngestion
 from src.components.data_validation import DataValidation
 from src.entity.config_entity import DataIngestionConfig, DataValidationConfig
@@ -93,6 +94,6 @@ def test_ingestion_validation_integration(
     assert (validation_dir / "status.txt").exists()
 
     # Check if status file says True
-    with open(validation_dir / "status.txt", "r") as f:
+    with open(validation_dir / "status.txt") as f:
         content = f.read()
         assert "Validation status: True" in content
