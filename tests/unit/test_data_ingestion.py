@@ -56,6 +56,7 @@ def test_load_and_merge_raw_data(
     assert merged_df[merged_df["id_empresa"] == 1]["risk_score"].values[0] == 11.0
 
 
+@patch("pandas.DataFrame.to_csv")
 @patch("src.components.data_ingestion.DataIngestion._load_and_merge_raw_data")
 @patch("src.components.data_ingestion.engineer_features")
 @patch("src.components.data_ingestion.train_test_split")
@@ -65,6 +66,7 @@ def test_initiate_data_ingestion(
     mock_train_test_split,
     mock_engineer_features,
     mock_load_merge,
+    mock_to_csv,
     data_ingestion_config,
 ):
     # Setup
