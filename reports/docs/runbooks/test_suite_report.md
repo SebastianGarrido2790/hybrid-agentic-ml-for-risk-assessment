@@ -52,14 +52,14 @@ tests/
 
 | Component | Test File | Key Scenarios Verified |
 | :--- | :--- | :--- |
-| **Agent Tools** | `test_agent_tools.py` | - **API Integration**: Mocks valid/invalid responses from the ML API.<br>- **Pydantic Validation**: Ensures tools correctly validate input types.<br>- **Error Handling**: Verifies graceful degradation when external services are down. |
+| **Agent Tools** | `test_agent_tools.py` | - **API Integration**: Mocks valid/invalid responses from the ML API.<br>- **Pydantic Validation**: Ensures tools correctly validate the strict `company_id` input schema.<br>- **Data Isolation**: Mocks `pd.read_csv` and file system lookups to detach agent tests from local FTI artifacts.<br>- **Error Handling**: Verifies graceful degradation when external services are down. |
 
 ### 3.4 API Tests (Prediction Service)
 
 | Endpoint | Test File | Scenarios Verified |
 | :--- | :--- | :--- |
-| **GET /health** | `test_api.py` | - Returns `200 OK` and service status.<br>- Checks if artifacts are loaded. |
-| **POST /predict** | `test_api.py` | - **Low Risk**: Mocks model probability < 0.3.<br>- **High Risk**: Mocks model probability > 0.7.<br>- **Validation Error**: Returns `422 Unprocessable Content` for invalid JSON payloads. |
+| **GET /health** | `test_api.py` | - Returns `200 OK` and service status.<br>- **Fail-Fast**: Returns `503 Service Unavailable` if artifacts are missing (e.g. uninitialized state). |
+| **POST /predict** | `test_api.py` | - **Low Risk**: Mocks model probability < 0.3.<br>- **Medium Risk**: Mocks model probability >= 0.3 and < 0.7.<br>- **High Risk**: Mocks model probability > 0.7.<br>- **Validation Error**: Returns `422 Unprocessable Content` for invalid JSON payloads. |
 | **GET /metrics** | `test_api.py` | - Verifies Prometheus metrics endpoint exposure. |
 
 ## 4. Execution & Tools
@@ -84,7 +84,7 @@ uv run pytest tests/ > tests/logs/test_output.txt
 
 **Output**:
 ```
-tests\app\test_api.py .....
+tests\app\test_api.py .......
 tests\integration\test_pipeline.py .
 tests\unit\test_agent_tools.py ..
 tests\unit\test_config.py .
@@ -93,7 +93,7 @@ tests\unit\test_data_transformation.py ..
 tests\unit\test_data_validation.py ..
 tests\unit\test_model_trainer.py .
 
-================== 16 passed in 3.01s ==================
+================== 18 passed in 1.10s ==================
 ```
 
 ### Dependencies
@@ -102,6 +102,8 @@ tests\unit\test_model_trainer.py .
 - `httpx` / `fastapi.testclient`: For API testing.
 
 ## 5. Recent Improvements
+- **Agent Tools Refactoring**: Updated `test_agent_tools.py` to match the FTI `company_id`-only schema and mocked local data extraction, fixing validation errors and improving determinism.
+- **API Test Coverage**: Closed coverage gaps by adding tests for Medium Risk logic mapping and 503 uninitialized state handling.
 - **Docstrings**: All test modules are now fully documented with distinct purpose headers.
 - **Deprecation Fixes**: Updated API tests to use modern `HTTP_422_UNPROCESSABLE_CONTENT` status codes.
 - **Cleanup**: Removed unused imports across the suite.

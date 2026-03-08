@@ -8,6 +8,7 @@ and ensures that tools handle valid inputs and error conditions correctly.
 
 import pytest
 import requests
+import pandas as pd
 from unittest.mock import patch
 from src.agents.tools.ml_api_tool import get_credit_risk_score
 
@@ -19,12 +20,10 @@ def mock_api_response():
 
 def test_ml_api_tool_success(mock_api_response):
     """Test successful API call."""
-    with patch("src.agents.tools.ml_api_tool.requests.post") as mock_post:
-        mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = mock_api_response
-
-        result = get_credit_risk_score.invoke(
+    mock_df = pd.DataFrame(
+        [
             {
+                "id_empresa": 123,
                 "ingresos": 1000,
                 "ebitda": 200,
                 "activos_totales": 500,
@@ -46,7 +45,18 @@ def test_ml_api_tool_success(mock_api_response):
                 "debt_to_equity": 0.25,
                 "current_ratio": 5.0,
             }
-        )
+        ]
+    )
+
+    with (
+        patch("src.agents.tools.ml_api_tool.requests.post") as mock_post,
+        patch("src.agents.tools.ml_api_tool.Path.exists", return_value=True),
+        patch("src.agents.tools.ml_api_tool.pd.read_csv", return_value=mock_df),
+    ):
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = mock_api_response
+
+        result = get_credit_risk_score.invoke({"company_id": 123})
 
         assert "Risk Level: Low" in result
         assert "Probability of Default: 0.15" in result
@@ -54,11 +64,10 @@ def test_ml_api_tool_success(mock_api_response):
 
 def test_ml_api_tool_failure():
     """Test API connection failure."""
-    with patch("src.agents.tools.ml_api_tool.requests.post") as mock_post:
-        mock_post.side_effect = requests.exceptions.ConnectionError
-
-        result = get_credit_risk_score.invoke(
+    mock_df = pd.DataFrame(
+        [
             {
+                "id_empresa": 123,
                 "ingresos": 1000,
                 "ebitda": 200,
                 "activos_totales": 500,
@@ -80,6 +89,16 @@ def test_ml_api_tool_failure():
                 "debt_to_equity": 0.25,
                 "current_ratio": 5.0,
             }
-        )
+        ]
+    )
+
+    with (
+        patch("src.agents.tools.ml_api_tool.requests.post") as mock_post,
+        patch("src.agents.tools.ml_api_tool.Path.exists", return_value=True),
+        patch("src.agents.tools.ml_api_tool.pd.read_csv", return_value=mock_df),
+    ):
+        mock_post.side_effect = requests.exceptions.ConnectionError
+
+        result = get_credit_risk_score.invoke({"company_id": 123})
 
         assert "Error: The ML Model API is currently unreachable" in result

@@ -90,11 +90,56 @@ def test_predict_high_risk(client, mock_model):
     assert data["risk_level"] == "High"
 
 
+def test_predict_medium_risk(client, mock_model):
+    # Valid input payload
+    payload = {
+        "ingresos": 5000000,
+        "ebitda": 1000000,
+        "activos_totales": 2000000,
+        "pasivos_totales": 800000,
+        "patrimonio": 1200000,
+        "caja": 200000,
+        "gastos_intereses": 50000,
+        "cuentas_cobrar": 150000,
+        "inventario": 100000,
+        "cuentas_pagar": 80000,
+        "sector_risk_score": 3.5,
+        "years_operating": 5,
+        "ratio_mora": 0.02,
+        "ratio_utilizacion": 0.4,
+        "revenue_growth": 0.1,
+        "margen_beneficio": 0.2,
+        "score_buro": 750,
+        "ebitda_margin": 0.2,
+        "debt_to_equity": 0.66,
+        "current_ratio": 2.0,
+    }
+
+    mock_model.predict.return_value = [0]
+    mock_model.predict_proba.return_value = [[0.5, 0.5]]  # 0.5 -> Medium Risk
+
+    response = client.post("/predict", json=payload)
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["prediction"] == 0
+    assert data["probability"] == 0.5
+    assert data["risk_level"] == "Medium"
+
+
 def test_predict_validation_error(client):
     # Invalid payload (missing required field 'ingresos')
     payload = {"ebitda": 1000000}
     response = client.post("/predict", json=payload)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_health_service_not_ready(client):
+    # Temporarily remove model to simulate uninitialized state during app start
+    if hasattr(client.app.state, "model"):
+        del client.app.state.model
+    response = client.get("/health")
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 # Optional: Metrics check
