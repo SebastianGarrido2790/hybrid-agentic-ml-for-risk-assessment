@@ -27,11 +27,11 @@ from src.utils.mlflow_config import get_mlflow_uri
 class ConfigurationManager:
     def __init__(
         self,
-        config_filepath=CONFIG_FILE_PATH,
-        params_filepath=PARAMS_FILE_PATH,
-        schema_filepath=SCHEMA_FILE_PATH,
+        config_filepath: str | Path = CONFIG_FILE_PATH,
+        params_filepath: str | Path = PARAMS_FILE_PATH,
+        schema_filepath: str | Path = SCHEMA_FILE_PATH,
     ):
-        self.config = read_yaml(config_filepath)
+        self.config = read_yaml(Path(config_filepath))
         self.params = read_yaml(params_filepath)
         self.schema = read_yaml(schema_filepath)
 

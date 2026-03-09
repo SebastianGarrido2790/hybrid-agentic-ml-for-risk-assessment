@@ -63,10 +63,6 @@ def test_validate_all_columns_failure_missing_col(
 
     # Verify
     assert result is False
-    try:
-        # It writes failure status
-        handle = mock_file()
-        handle.write.assert_any_call("Validation status: False\n")
-    except AssertionError:
-        # Sometimes write calls are split differently, check calls list if needed
-        pass
+    # It writes failure status
+    handle = mock_file()
+    handle.write.assert_any_call("Validation status: False\n")

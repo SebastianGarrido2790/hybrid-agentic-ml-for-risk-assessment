@@ -15,7 +15,7 @@ import pandas as pd
 from src.utils.exception import CustomException
 
 
-def check_distribution(data_dir, label):
+def check_distribution(data_dir: str, label: str):
     """
     Analyzes the distribution of the target class in a given directory.
 

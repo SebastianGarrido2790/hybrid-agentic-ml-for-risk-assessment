@@ -17,14 +17,16 @@ import joblib
 import mlflow
 
 from src.entity.config_entity import ModelRegistrationConfig
-from src.utils.common import logger
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ModelRegistration:
     def __init__(self, config: ModelRegistrationConfig):
         self.config = config
 
-    def log_into_mlflow(self):
+    def log_into_mlflow(self) -> None:
         """
         Registers the model in MLflow Model Registry.
         """
@@ -63,7 +65,7 @@ class ModelRegistration:
 
             with mlflow.start_run(run_name="Model_Registration_Stage"):
                 mlflow.log_metrics(metrics)
-                mlflow.sklearn.log_model(
+                mlflow.sklearn.log_model(  # type: ignore
                     sk_model=self.load_model(),
                     artifact_path="model",
                     registered_model_name=self.config.model_name,
@@ -82,5 +84,5 @@ class ModelRegistration:
                 logger.error(f"Error during model registration: {e}")
                 raise e
 
-    def load_model(self):
+    def load_model(self) -> object:
         return joblib.load(self.config.model_path)

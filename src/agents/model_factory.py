@@ -62,14 +62,14 @@ def get_llm(
                 "HUGGINGFACEHUB_API_TOKEN not found. Ensure it is set in .env"
             )
 
-        llm = HuggingFaceEndpoint(
+        llm = HuggingFaceEndpoint(  # type: ignore
             repo_id=target_model,
             task="text-generation",
             max_new_tokens=8192,
             do_sample=False,
             huggingfacehub_api_token=settings.HUGGINGFACEHUB_API_TOKEN,
         )
-        return ChatHuggingFace(llm=llm)
+        return ChatHuggingFace(llm=llm)  # type: ignore
 
     else:
         raise ValueError(f"Unsupported provider: {target_provider}")

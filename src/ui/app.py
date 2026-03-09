@@ -13,6 +13,7 @@ It allows Risk Managers to:
 import importlib
 import re
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -184,7 +185,7 @@ with st.sidebar:
 
 
 # --- Helper Functions ---
-def extract_risk_score(text):
+def extract_risk_score(text: str):
     """
     Extracts the final risk score from the text.
     Takes the LAST occurrence of 'Risk Score' to avoid picking up
@@ -214,7 +215,7 @@ def extract_risk_score(text):
     return 50.0
 
 
-def create_gauge_chart(score):
+def create_gauge_chart(score: float):
     fig = go.Figure(
         go.Indicator(
             mode="gauge+number",
@@ -248,10 +249,15 @@ def create_gauge_chart(score):
 # --- Main Flow ---
 if submit_btn and selected_id:
     prompt = f"Please assess credit risk for Company ID {selected_id}."
-    initial_state = {
-        "messages": [HumanMessage(content=prompt)],
-        "company_id": str(selected_id),
-    }
+    from src.agents.graph import AgentState
+
+    initial_state = cast(
+        AgentState,
+        {
+            "messages": [HumanMessage(content=prompt)],
+            "company_id": str(selected_id),
+        },
+    )
 
     # Clear previous result while running
     st.session_state.assessment_result = None
@@ -300,8 +306,10 @@ if submit_btn and selected_id:
                                 continue
 
                             # Handle standard model outputs
-                            if hasattr(msg, "tool_calls") and msg.tool_calls:
-                                for tc in msg.tool_calls:
+                            if hasattr(msg, "tool_calls") and getattr(
+                                msg, "tool_calls", None
+                            ):
+                                for tc in getattr(msg, "tool_calls", []):
                                     m_txt = f"{agent_label} → Executing `{tc['name']}`"
                                     status.write(m_txt)
                                     st.session_state.reasoning_log.append(
@@ -349,7 +357,7 @@ if submit_btn and selected_id:
                     filename = f"ACRAS_Report_{selected_id}_{provider_nick}.pdf"
 
                     pdf_bytes = generate_pdf_report(
-                        st.session_state.assessment_result,
+                        str(st.session_state.assessment_result),
                         filename=filename,
                         save_to_disk=False,  # Explicitly disable
                     )
@@ -414,7 +422,7 @@ if st.session_state.assessment_result:
 
                 st.download_button(
                     label="📥 Download Executive PDF",
-                    data=st.session_state.pdf_bytes,
+                    data=cast(bytes, st.session_state.pdf_bytes),
                     file_name=f"ACRAS_Report_{st.session_state.last_company_id}_{provider_nick}.pdf",
                     mime="application/pdf",
                     width="stretch",

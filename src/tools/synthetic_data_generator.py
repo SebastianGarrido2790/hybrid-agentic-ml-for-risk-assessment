@@ -15,7 +15,7 @@ import pandas as pd
 from src.utils.exception import CustomException
 
 
-def generate_synthetic_data(n_samples=50):
+def generate_synthetic_data(n_samples: int = 50):
     """
     Generates synthetic data for distressed companies (defaults).
 

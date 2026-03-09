@@ -8,6 +8,7 @@ and creating directories, ensuring a dry (Don't Repeat Yourself) architecture.
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import yaml
 from box import ConfigBox
@@ -46,8 +47,9 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
         raise e
 
 
-@ensure_annotations
-def create_directories(path_to_directories: list, verbose: bool = True):
+def create_directories(
+    path_to_directories: list[Path | str], verbose: bool = True
+) -> None:
     """Creates a list of directories if they do not already exist.
 
     Args:
@@ -60,8 +62,7 @@ def create_directories(path_to_directories: list, verbose: bool = True):
             logger.info(f"created directory at: {path}")
 
 
-@ensure_annotations
-def save_json(path: Path, data: dict):
+def save_json(path: Path, data: dict[str, Any]) -> None:
     """save json data
 
     Args:
