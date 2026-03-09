@@ -14,7 +14,7 @@ re-binding without system downtime.
 
 import importlib
 import operator
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
@@ -49,7 +49,9 @@ ml_tools_list = [
 ]
 
 
-def get_dynamic_models(tools_list: list | None = None, tool_choice: str | None = None):
+def get_dynamic_models(
+    tools_list: list[Any] | None = None, tool_choice: str | None = None
+):
     """
     Dynamically instantiates the model hierarchy based on current config.py.
     This allows for hot-swapping providers without restarting the app.
@@ -99,7 +101,9 @@ def get_dynamic_models(tools_list: list | None = None, tool_choice: str | None =
     return raw_models
 
 
-def bind_tools_to_all(tools, fallback_models: list, tool_choice: str | None = None):
+def bind_tools_to_all(
+    tools: list[Any], fallback_models: list[Any], tool_choice: str | None = None
+):
     """Refactored helper for dynamic binding"""
     bound = []
     for m in fallback_models:
@@ -122,7 +126,7 @@ def bind_tools_to_all(tools, fallback_models: list, tool_choice: str | None = No
 
 # --- Helper for Fallback ---
 def invoke_with_fallback(
-    models_tier: list, inputs, agent_name="Agent"
+    models_tier: list[Any], inputs: list[BaseMessage], agent_name: str = "Agent"
 ) -> tuple[BaseMessage, list[BaseMessage]]:
     """
     Sequentially attempts to invoke models in the provided list (Tiers).
@@ -296,14 +300,14 @@ def orchestrator_node(state: AgentState):
 
 def route_financial_analyst(state: AgentState):
     last_msg = state["messages"][-1]
-    if hasattr(last_msg, "tool_calls") and last_msg.tool_calls:
+    if hasattr(last_msg, "tool_calls") and getattr(last_msg, "tool_calls", None):
         return "financial_tools"
     return "data_scientist"  # Move to next agent when done
 
 
 def route_data_scientist(state: AgentState):
     last_msg = state["messages"][-1]
-    if hasattr(last_msg, "tool_calls") and last_msg.tool_calls:
+    if hasattr(last_msg, "tool_calls") and getattr(last_msg, "tool_calls", None):
         return "ml_tools"
     return "orchestrator"  # Move to final report
 

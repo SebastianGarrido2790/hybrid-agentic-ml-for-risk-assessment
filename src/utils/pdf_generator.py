@@ -82,9 +82,9 @@ def generate_pdf_report(
         pdf_buffer = io.BytesIO()
         pisa_status = pisa.CreatePDF(final_html, dest=pdf_buffer)
 
-        if pisa_status.err:
-            print(f"xhtml2pdf Error during rendering: {pisa_status.err}")
-            raise Exception(f"PDF Rendering Error: {pisa_status.err}")
+        if pisa_status.err:  # type: ignore
+            print(f"xhtml2pdf Error during rendering: {pisa_status.err}")  # type: ignore
+            raise Exception(f"PDF Rendering Error: {pisa_status.err}")  # type: ignore
 
         pdf_bytes = pdf_buffer.getvalue()
         pdf_buffer.close()

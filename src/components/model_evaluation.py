@@ -10,12 +10,15 @@ This module handles:
 
 import sys
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 import joblib
 import mlflow
 import mlflow.sklearn
+import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -46,7 +49,11 @@ class ModelEvaluation:
         """
         self.config = config
 
-    def eval_metrics(self, actual, pred):
+    def eval_metrics(
+        self,
+        actual: pd.Series | Any,
+        pred: NDArray[np.int_],
+    ) -> tuple[float, float, float, float]:
         """
         Calculates core classification metrics.
 
@@ -58,12 +65,15 @@ class ModelEvaluation:
             tuple: (accuracy, precision, recall, f1)
         """
         accuracy = accuracy_score(actual, pred)
-        precision = precision_score(actual, pred, zero_division=0)
-        recall = recall_score(actual, pred, zero_division=0)
-        f1 = f1_score(actual, pred, zero_division=0)
+        accuracy = accuracy_score(actual, pred)
+        precision = float(precision_score(actual, pred, zero_division="warn"))
+        recall = float(recall_score(actual, pred, zero_division="warn"))
+        f1 = float(f1_score(actual, pred, zero_division="warn"))
         return accuracy, precision, recall, f1
 
-    def save_roc_plot(self, actual, prob, plot_path):
+    def save_roc_plot(
+        self, actual: Any, prob: NDArray[np.float64], plot_path: Path
+    ) -> None:
         """
         Generates and saves the Receiver Operating Characteristic (ROC) curve.
 
@@ -117,7 +127,7 @@ class ModelEvaluation:
         except Exception as e:
             logger.warning(f"Failed to create ROC plot: {e}")
 
-    def log_into_mlflow(self):
+    def log_into_mlflow(self) -> None:
         """
         Main execution logic for the evaluation stage.
         Loads data, calculates metrics, saves them locally, and logs to MLflow.
@@ -130,13 +140,17 @@ class ModelEvaluation:
             model = joblib.load(self.config.model_path)
 
             test_x = test_data.drop([self.config.target_column], axis=1)
-            test_y = test_data[[self.config.target_column]]
+            test_y = test_data[self.config.target_column]
 
             # Only set registry URI if it is a valid remote URI
             mlflow_uri = self.config.mlflow_uri
-            if mlflow_uri and mlflow_uri.strip() and not mlflow_uri.startswith("file:"):
-                mlflow.set_registry_uri(mlflow_uri)
-                mlflow.set_tracking_uri(mlflow_uri)
+            if (
+                mlflow_uri
+                and str(mlflow_uri).strip()
+                and not str(mlflow_uri).startswith("file:")
+            ):
+                mlflow.set_registry_uri(str(mlflow_uri))
+                mlflow.set_tracking_uri(str(mlflow_uri))
             else:
                 mlflow.set_tracking_uri("file:./mlruns")
 
@@ -147,7 +161,7 @@ class ModelEvaluation:
                 logger.warning(
                     f"Failed to set experiment on remote server: {e}. Falling back to local './mlruns'."
                 )
-                mlflow.set_registry_uri(None)
+                mlflow.set_registry_uri("")
                 mlflow.set_tracking_uri("file:./mlruns")
                 mlflow.set_experiment(self.config.experiment_name)
 
@@ -162,9 +176,9 @@ class ModelEvaluation:
             if hasattr(model, "predict_proba"):
                 y_prob = model.predict_proba(test_x)[:, 1]
                 # Check for single-class data to avoid ROC-AUC failure
-                if len(test_y[self.config.target_column].unique()) > 1:
+                if len(np.unique(test_y)) > 1:
                     try:
-                        roc_auc = roc_auc_score(test_y, y_prob)
+                        roc_auc = float(roc_auc_score(test_y, y_prob))
                     except Exception as e:
                         logger.warning(f"ROC-AUC calculation failed: {e}")
                         roc_auc = 0.5
@@ -199,9 +213,11 @@ class ModelEvaluation:
             roc_plot_path = plot_dir / "roc_auc_curve.png"
 
             if y_prob is not None:
-                self.save_roc_plot(
-                    test_y[self.config.target_column], y_prob, roc_plot_path
-                )
+                # Ensure actual is a Series for pandas unique() and roc_curve
+                actual_series = test_y
+                if isinstance(actual_series, pd.DataFrame):
+                    actual_series = actual_series.iloc[:, 0]
+                self.save_roc_plot(actual_series, y_prob, roc_plot_path)
 
             # Optional MLflow logging (Fault Tolerant)
             try:
@@ -214,13 +230,13 @@ class ModelEvaluation:
                         mlflow.log_artifact(str(roc_plot_path), "plots")
 
                     if tracking_url_type_store != "file":
-                        mlflow.sklearn.log_model(
+                        mlflow.sklearn.log_model(  # type: ignore
                             model,
                             self.config.mlflow_model_name,
                             registered_model_name=self.config.registered_model_name,
                         )
                     else:
-                        mlflow.sklearn.log_model(model, self.config.mlflow_model_name)
+                        mlflow.sklearn.log_model(model, self.config.mlflow_model_name)  # type: ignore
             except Exception as e:
                 logger.warning(f"MLflow logging failed but pipeline continues: {e}")
 

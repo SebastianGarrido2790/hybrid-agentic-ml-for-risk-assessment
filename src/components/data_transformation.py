@@ -9,6 +9,8 @@ This module handles the preprocessing of data for the model pipeline:
 """
 
 import sys
+from pathlib import Path
+from typing import Any
 
 import joblib
 import pandas as pd
@@ -151,12 +153,14 @@ class DataTransformation:
                 # Fallback if specific step name changes or simplistic pipeline
                 cat_feature_names = categorical_cols  # Should not happen with OHE
 
-            final_columns = numerical_cols + list(cat_feature_names) + [target_col]
+            final_columns: list[str] = (
+                list(numerical_cols) + list(cat_feature_names) + [target_col]
+            )
 
             # Helper to combine X and y
-            def save_transformed(X_arr, y_series, path):
+            def save_transformed(X_arr: Any, y_series: Any, path: str | Path):
                 # X_arr is numpy array (dense)
-                df_trans = pd.DataFrame(X_arr, columns=final_columns[:-1])
+                df_trans = pd.DataFrame(X_arr, columns=pd.Index(final_columns[:-1]))
                 df_trans[target_col] = y_series.values
                 df_trans.to_csv(path, index=False)
                 return df_trans.shape

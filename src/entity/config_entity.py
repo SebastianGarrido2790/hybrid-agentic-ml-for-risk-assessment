@@ -7,6 +7,7 @@ and immutability to prevent attribute errors across different stages of the syst
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -27,7 +28,7 @@ class DataValidationConfig:
     root_dir: Path
     STATUS_FILE: str
     unzip_data_dir: Path
-    all_schema: dict
+    all_schema: dict[str, str]
 
 
 @dataclass(frozen=True)
@@ -55,7 +56,7 @@ class ModelEvaluationConfig:
     root_dir: Path
     test_data_path: Path
     model_path: Path
-    all_params: dict
+    all_params: dict[str, Any]
     metric_file_name: Path
     target_column: str
     mlflow_uri: str

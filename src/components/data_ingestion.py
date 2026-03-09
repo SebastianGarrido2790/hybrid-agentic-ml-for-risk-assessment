@@ -11,6 +11,8 @@ This module handles the initial stage of the MLOps pipeline:
 
 import os
 import sys
+from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -40,7 +42,7 @@ class DataIngestion:
         self.config = config
 
     def _load_and_merge_raw_data(
-        self, financial_path: str, pd_path: str
+        self, financial_path: str | Path, pd_path: str | Path
     ) -> pd.DataFrame:
         """
         Loads and merges Financial Statements and PD tables using aggregation to avoiding Cartesian products.
@@ -66,7 +68,7 @@ class DataIngestion:
 
         # 2. Aggregate PD: Group by ID and take mean
         # We only want to mean the numeric columns, excluding ID from the mean operation but using it as key
-        numeric_cols_pd = df_pd.select_dtypes(include=[np.number]).columns.tolist()
+        numeric_cols_pd = list(df_pd.select_dtypes(include=[np.number]).columns)
         if "id_empresa" in numeric_cols_pd:
             numeric_cols_pd.remove(
                 "id_empresa"
@@ -131,11 +133,14 @@ class DataIngestion:
             # --- First Split: Train vs Temp (Test + Val) ---
             try:
                 # Attempt stratified split
-                train_set, temp_set = train_test_split(
-                    df_full,
-                    test_size=test_val_ratio,
-                    random_state=self.config.random_state,
-                    stratify=strat_col,
+                train_set, temp_set = cast(
+                    tuple[pd.DataFrame, pd.DataFrame],
+                    train_test_split(
+                        df_full,
+                        test_size=test_val_ratio,
+                        random_state=self.config.random_state,
+                        stratify=strat_col,
+                    ),
                 )
                 logger.info("First split (Train/Temp) stratified successfully.")
             except ValueError as e:
@@ -143,11 +148,14 @@ class DataIngestion:
                 logger.warning(
                     f"Stratified split failed for Train/Temp (likely too few positive samples): {e}. Falling back to random split."
                 )
-                train_set, temp_set = train_test_split(
-                    df_full,
-                    test_size=test_val_ratio,
-                    random_state=self.config.random_state,
-                    stratify=None,
+                train_set, temp_set = cast(
+                    tuple[pd.DataFrame, pd.DataFrame],
+                    train_test_split(
+                        df_full,
+                        test_size=test_val_ratio,
+                        random_state=self.config.random_state,
+                        stratify=None,
+                    ),
                 )
 
             # --- Second Split: Temp -> Val + Test ---
@@ -161,11 +169,14 @@ class DataIngestion:
 
             try:
                 # Attempt stratified split
-                val_set, test_set = train_test_split(
-                    temp_set,
-                    test_size=test_ratio_relative,
-                    random_state=self.config.random_state,
-                    stratify=strat_col_temp,
+                val_set, test_set = cast(
+                    tuple[pd.DataFrame, pd.DataFrame],
+                    train_test_split(
+                        temp_set,
+                        test_size=test_ratio_relative,
+                        random_state=self.config.random_state,
+                        stratify=strat_col_temp,
+                    ),
                 )
                 logger.info("Second split (Val/Test) stratified successfully.")
             except ValueError as e:
@@ -173,11 +184,14 @@ class DataIngestion:
                 logger.warning(
                     f"Stratified split failed for Val/Test (likely only 1 positive sample left): {e}. Falling back to random split."
                 )
-                val_set, test_set = train_test_split(
-                    temp_set,
-                    test_size=test_ratio_relative,
-                    random_state=self.config.random_state,
-                    stratify=None,
+                val_set, test_set = cast(
+                    tuple[pd.DataFrame, pd.DataFrame],
+                    train_test_split(
+                        temp_set,
+                        test_size=test_ratio_relative,
+                        random_state=self.config.random_state,
+                        stratify=None,
+                    ),
                 )
 
             # 5. Save Artifacts

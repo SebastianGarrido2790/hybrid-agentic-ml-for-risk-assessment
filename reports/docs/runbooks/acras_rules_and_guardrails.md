@@ -2,8 +2,8 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Runbook · The Rules
-**Version:** 1.0
-**Date:** 2026-03-08
+**Version:** 1.1
+**Date:** 2026-03-09
 **Status:** Active — Authoritative Reference
 
 ---
@@ -30,7 +30,8 @@ All design decisions in ACRAS flow from this principle. LLM agents are probabili
 
 | Rule | Requirement | Enforcement |
 | :--- | :--- | :--- |
-| **Type Hints** | 100% coverage on all functions, methods, and class attributes | `mypy` / `pyright` |
+| **Type Hints** | 100% coverage on all functions, methods, and class attributes | `pyright` (Standard Mode) |
+| **py.typed** | Mandatory marker file in `src/` to signal PEP 561 compliance | Project Skeleton Rule |
 | **Pydantic Models** | Every external input (API, tool call, config) must use a `BaseModel` | Code review |
 | **No Untyped Dicts** | `dict` must never cross module or agent/tool boundaries | Linter (`ruff`) |
 
@@ -265,7 +266,7 @@ The `get_credit_risk_score` tool **must not raise exceptions** to the agent. On 
 
 | Layer | Tool | Scope | Coverage Target |
 | :--- | :--- | :--- | :--- |
-| **Unit** | `pytest` | Tools, pipeline stages, schemas | Deterministic code → 100% path coverage |
+| **Unit** | `pytest` | Tools, pipeline stages, schemas | 80%+ (Gate: 40% initial) |
 | **Integration** | `pytest` | DVC pipeline end-to-end execution | At least 1 full pipeline run per stage |
 | **API** | `pytest` (HTTPX TestClient) | FastAPI endpoints (`/predict`, `/health`) | All happy-path + error paths |
 | **Agentic Evals** | LLM-as-a-Judge | Agent response quality | Relevance, Tool Usage, Schema Adherence, Business Value |

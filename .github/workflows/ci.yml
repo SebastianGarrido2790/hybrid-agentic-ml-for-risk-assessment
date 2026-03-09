@@ -59,7 +59,41 @@ jobs:
         run: uv run ruff format --check .
 
   # ──────────────────────────────────────────────────────────
-  # JOB 2: Unit Tests
+  # JOB 2: Type Check (pyright)
+  # Runs in parallel with tests, gated behind lint.
+  # ──────────────────────────────────────────────────────────
+  type-check:
+    name: Type Check (pyright)
+    runs-on: ubuntu-latest
+    needs: [lint]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install system dependencies (libcairo2 for xhtml2pdf)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config libcairo2-dev
+
+      - name: Install dev dependencies
+        run: uv sync --extra dev
+
+      - name: Run pyright type check
+        env:
+          PYTHONPATH: "."
+        run: uv run pyright src/
+
+  # ──────────────────────────────────────────────────────────
+  # JOB 3: Unit Tests
   # Runs in parallel with integration and API tests.
   # ──────────────────────────────────────────────────────────
   test-unit:
@@ -90,7 +124,7 @@ jobs:
       - name: Run unit tests
         env:
           PYTHONPATH: "."
-        run: uv run pytest tests/unit/ -v
+        run: uv run pytest tests/unit/ -v --cov=src --cov-fail-under=40
 
   # ──────────────────────────────────────────────────────────
   # JOB 3: Integration Tests
