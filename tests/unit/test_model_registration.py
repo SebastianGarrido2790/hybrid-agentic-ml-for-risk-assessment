@@ -43,7 +43,10 @@ def test_register_model(
 
     registration = ModelRegistration(config=mock_registration_config)
 
-    with patch("builtins.open", MagicMock()):
+    with (
+        patch("builtins.open", MagicMock()),
+        patch("pathlib.Path.exists", return_value=True),
+    ):
         registration.log_into_mlflow()
 
     mock_mlflow.log_metrics.assert_called_once_with({"accuracy": 0.9, "roc_auc": 0.8})

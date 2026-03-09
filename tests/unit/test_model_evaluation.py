@@ -58,7 +58,10 @@ def test_evaluate_model(
     evaluation = ModelEvaluation(config=mock_evaluation_config)
     mock_mlflow.get_tracking_uri.return_value = "file:./mlruns"
 
-    with patch("src.components.model_evaluation.save_json") as mock_save_json:
+    with (
+        patch("src.components.model_evaluation.save_json") as mock_save_json,
+        patch("pathlib.Path.exists", return_value=True),
+    ):
         evaluation.log_into_mlflow()
 
     mock_save_json.assert_called_once()
