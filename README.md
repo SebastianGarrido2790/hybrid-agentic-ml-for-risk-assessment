@@ -85,12 +85,12 @@ The system generates board-ready PDF reports that combine technical precision wi
   <table width="100%">
     <tr>
       <td align="center">
-        <a href="ACRAS_Report_22_huggingface.pdf">
+        <a href="reports/figures/ACRAS_Report_22_huggingface.pdf">
           <img src="https://img.shields.io/badge/📄_Executive_Report-HuggingFace_Backbone-blue?style=for-the-badge" alt="HuggingFace Report" height="30">
         </a>
       </td>
       <td align="center">
-        <a href="ACRAS_Report_59_gemini.pdf">
+        <a href="reports/figures/ACRAS_Report_59_gemini.pdf">
           <img src="https://img.shields.io/badge/📄_Executive_Report-Google_Gemini_Backbone-red?style=for-the-badge" alt="Gemini Report" height="30">
         </a>
       </td>

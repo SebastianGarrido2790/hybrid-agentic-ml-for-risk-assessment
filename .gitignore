@@ -100,4 +100,4 @@ data/processed/*
 AGENTS.md
 available_models.txt
 cov_output.txt
-*.pdf
+# *.pdf
