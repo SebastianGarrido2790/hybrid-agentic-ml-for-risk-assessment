@@ -1,89 +1,190 @@
-# ACRAS: Advanced Agentic Credit Risk & Analysis System
+# ACRAS: Agentic Credit Risk & Analysis System
 
-![Version](https://img.shields.io/badge/Version-1.1--In--Development-blueviolet)
-![Tech Stack](https://img.shields.io/badge/Stack-Python_|_FastAPI_|_Streamlit_|_LangGraph-blue)
-![License](https://img.shields.io/badge/License-Proprietary-red)
+<div align="center">
+  <img src="reports/figures/multi-agent_system_for_credit_risk_assessment.png" alt="ACRAS System Architecture" width="900" style="border-radius: 10px; margin-bottom: 20px;">
+  <p align="center">
+    <b>"The Brain (Agent) directs; The Hands (Tools) execute."</b>
+  </p>
+</div>
 
-**ACRAS** is a hybrid Agentic MLOps framework designed to transform corporate credit risk assessment. It moves beyond static scoring by orchestrating a cluster of specialized AI agents that collaborate with deterministic Machine Learning models to produce deep, qualitative, and quantitative risk narratives.
-
-> [!NOTE]
-> **Project Status:** This repository is currently under active development. Core reasoning engines and UI synchronization are functional, with advanced evaluation frameworks and integration tests in the pipeline.
-
----
-
-## 🧠 The Agentic Brain (Antigravity Architecture)
-
-ACRAS uses a multi-agent cluster orchestrated via **LangGraph**, following the "Brain vs. Brawn" principle: agents handle reasoning, while deterministic tools handle the heavy lifting.
-
-### 1. The Agent Cluster
-*   **📊 Financial Analyst**: Auditor-style agent that extracts metrics and performs deterministic ratio calculations (Liquidity/Solvency).
-*   **🔬 Risk Data Scientist**: Translates financial profiles into ML-driven risk scores, interpreting the Probability of Default (PD).
-*   **👔 Chief Risk Officer (Director)**: Final synthesizer that compiles findings into an executive-grade directive.
-
-### 2. Resilience: 3-Tier Fallback Engine
-To ensure 100% reliability in production, ACRAS implements a self-healing fallback mechanism:
-1.  **Primary**: Your preferred model (e.g., Qwen2.5-7B or Gemini 1.5 Pro).
-2.  **1st Fallback**: Automatic cross-provider switch (e.g., if HF is down, it swaps to Google Gemini).
-3.  **2nd Fallback**: Final safety net using standardized high-availability models (`gemini-1.5-flash`).
+<div align="center">
+  <img src="https://img.shields.io/badge/Status-Production--Ready-brightgreen?style=for-the-badge&logo=github" alt="Production Ready">
+  <img src="https://img.shields.io/badge/Architecture-Agentic--FTI-blue?style=for-the-badge&logo=fastapi" alt="Agentic FTI Architecture">
+  <img src="https://img.shields.io/badge/Tech-LangGraph_|_DVC_|_MLflow-blueviolet?style=for-the-badge&logo=python" alt="Tech Stack">
+  <img src="https://img.shields.io/badge/Security-Strict--Typing-orange?style=for-the-badge&logo=pydantic" alt="Strict Typing">
+</div>
 
 ---
 
-## ⚡ Key Features
+## 🚀 The Vision: Transforming Corporate Risk Assessment
 
-*   **Global Hot-Swapping**: Update LLM providers or model names in `config.py` and see them refresh instantly in the active app without restarts.
-*   **UI Observability**: A real-time "Active Intelligence" badge and cluster synchronization logs let you watch the AI's "Chain of Thought" and tool execution.
-*   **Deterministic Integrity**: Critical calculations and ML predictions are wrapped in Pydantic-validated tools to prevent LLM hallucinations.
-*   **Executive Reporting**: One-click generation of professional PDF reports including KPI dashboards and qualitative insights.
+**ACRAS** is not just another credit scoring model; it is a **Hybrid Agentic MLOps System** designed for high-stakes corporate financial evaluations. By decoupling **Probabilistic Reasoning** (Large Language Models) from **Deterministic Execution** (Machine Learning models and Financial Rules), ACRAS aims to eliminate the "hallucination problem" while providing deep, contextual risk narratives that traditional scoring engines cannot match.
+
+### 🧠 The Agentic Brain (Orchestration)
+
+Powered by **LangGraph**, ACRAS orchestrates a specialized cluster of AI agents following the **Separation of Concerns (Brain vs. Brawn)** principle:
+
+1.  **📊 Financial Analyst Agent**: The auditor. Processes raw financial statements, calculates deterministic ratios (Liquidity, Solvency), and ensures data integrity.
+2.  **🔬 Risk Data Scientist Agent**: The modeler. Interfaces with our **Inference Pipeline** (Proprietary ML models) to generate Probability of Default (PD) and risk classifications.
+3.  **👔 Chief Risk Officer (Director)**: The synthesizer. Compiles all quantitative metrics and qualitative reasoning into an executive-grade directive.
 
 ---
 
-## 🚀 Quick Start
+## 🎨 Professional Interface & Experience
 
-### 1. Prerequisites
-*   Python 3.10+
-*   [uv](https://github.com/astral-sh/uv) (Recommended for lightning-fast dependency management)
+The system features a state-of-the-art **Streamlit Dashboard** that provides full observability into the Agent Cluster's reasoning process.
 
-### 2. Installation
+<div align="center">
+  <table border="0">
+    <tr>
+      <td><img src="reports/figures/acras_ui_01.png" alt="UI Dashboard Overview" width="450" style="border-radius: 8px;"></td>
+      <td><img src="reports/figures/acras_ui_02.png" alt="Agent Reasoning Path" width="450" style="border-radius: 8px;"></td>
+    </tr>
+    <tr>
+      <td align="center"><i>Comprehensive Financial Dashboard</i></td>
+      <td align="center"><i>Real-time Agentic Analysis Tracing</i></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 🛠️ Engineering Excellence: The FTI MLOps Pattern
+
+ACRAS adheres to the **FTI (Feature, Training, Inference)** design pattern, ensuring that data engineering, model development, and serving are completely decoupled and independently scalable.
+
+- **Feature Pipeline**: Managed with **DVC (Data Version Control)** and validated using **Great Expectations (GX)** to prevent schema drift.
+- **Training Pipeline**: Experiment tracking with **MLflow**, including hyperparameter optimization and versioned model artifacts stored in a **Model Registry**.
+- **Inference Pipeline**: A high-performance **FastAPI microservice** containerized with **Docker**, abstracting the ML complexity from the Agentic Brain.
+
+### 🛡️ System Resilience & "Agentic Healing"
+
+ACRAS is designed for 100% reliability in production through a multi-layered **Agentic Healing** architecture. The system doesn't just fail; it adapts.
+
+1.  **3-Tier Model Resilience**:
+    *   **Auto-Switch**: If the primary model (e.g., Qwen on HuggingFace) times out, the system automatically transitions to a cross-provider secondary (Gemini Pro) and finally to a high-availability safety net (Gemini Flash).
+    *   **Implementation**: Controlled via the `invoke_with_fallback` engine in `src/agents/graph.py`.
+
+2.  **Graceful Tool Degradation**:
+    *   **Adaptive Strategy**: If the ML Inference API is unreachable, tools return descriptive guidance (e.g., *"Proceed with qualitative analysis only"*), allowing the Agent to self-correct its reasoning chain rather than crashing.
+    *   **Safety**: All tools are Pydantic-validated to prevent halluncination-driven math errors.
+
+3.  **Instructional Recovery**:
+    *   **Prompt Pulse**: On every fallback transition, the engine injects a dynamic **"ROLE & GUIDELINES"** block into the prompt. This "heals" the reasoning process by stripping noise from the failing model and ensuring the new model adheres strictly to formatting contracts.
+
+4.  **Stateful Observability**:
+    *   **Chain-of-Failure Tracing**: Every error or fallback is recorded as a `🔄 Fallback` event in the LangGraph state. Downstream agents (like the CRO) read these "scars" and adjust the final risk narrative to reflect the data gaps, ensuring transparency for the end user.
+
+---
+
+## 📊 Executive Reporting
+
+The system generates board-ready PDF reports that combine technical precision with business clarity.
+
+<div align="center">
+  <table width="100%">
+    <tr>
+      <td align="center">
+        <a href="ACRAS_Report_22_huggingface.pdf">
+          <img src="https://img.shields.io/badge/📄_Executive_Report-HuggingFace_Backbone-blue?style=for-the-badge" alt="HuggingFace Report" height="30">
+        </a>
+      </td>
+      <td align="center">
+        <a href="ACRAS_Report_59_gemini.pdf">
+          <img src="https://img.shields.io/badge/📄_Executive_Report-Google_Gemini_Backbone-red?style=for-the-badge" alt="Gemini Report" height="30">
+        </a>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## � Tech Stack & Tooling
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Agentic Brain** | LangGraph, LangChain, Google Gemini, Qwen2.5 |
+| **ML Frameworks** | Scikit-Learn, Pandas, Numpy, Pydantic |
+| **MLOps Core** | DVC, MLflow, Great Expectations |
+| **API & Service** | FastAPI, Uvicorn, Docker, Docker Compose |
+| **Frontend** | Streamlit, Plotly, Seaborn |
+| **QA & CI/CD** | Pytest, Ruff, GitHub Actions, Pyright |
+| **Package Manager** | uv |
+
+---
+
+## 🚀 Getting Started
+
+ACRAS is designed for rapid deployment using modern dependency management.
+
+### 1. Installation
 ```bash
 # Clone the repository
 git clone https://github.com/SebastianGarrido2790/hybrid-agentic-ml-for-risk-assessment.git
 cd hybrid-agentic-ml-for-risk-assessment
 
-# Sync dependencies
+# Install dependencies via uv (fastest)
 uv sync
 ```
 
-### 3. Launching the System
-Use the provided batch script to launch the API and UI simultaneously:
-```bash
+### 1.2 Environment Configuration
+
+Create a `.env` file in the root directory based on the provided `.env.example`. This file manages your connection to the AI backbones and experimental tracking.
+
+```env
+# Core API Keys
+GOOGLE_API_KEY="your_gemini_api_key"
+HUGGINGFACEHUB_API_TOKEN="your_hf_token"
+
+# Optional Model Overrides
+# GEMINI_POWER_MODEL=gemini-1.5-pro
+# HF_MODEL=Qwen/Qwen2.5-7B-Instruct
+
+# MLOps Config
+MLFLOW_TRACKING_URI=http://127.0.0.1:5000
+```
+
+### 2. Launch the System
+```powershell
+# Starts both the FastAPI Inference Service and the Streamlit Dashboard
 .\launch_acras.bat
 ```
 
+### 3. Monitoring
+- **MLflow UI**: Visit `http://localhost:5000` to inspect experiment metrics.
+- **API Docs**: Visit `http://localhost:8000/docs` for the interactive Swagger UI.
+
 ---
 
-## 🛠️ Configuration (The Command Center)
+## 🛡️ Testing & Quality Assurance
 
-ACRAS uses a dual-layer configuration system managed via `src/agents/config.py`.
+ACRAS implements a rigorous **Multi-Point Validation** strategy centered around four critical pillars of system health.
 
-*   **Dynamic Source**: Edit `src/agents/config.py` for live hot-swapping.
-*   **Environment**: Store secrets (`GOOGLE_API_KEY`, `HUGGINGFACEHUB_API_TOKEN`) in a `.env` file.
+### The 4 Pillars of Validation
+1.  **Static Logic & Type Safety**: 100% type hint coverage enforced via `pyright` and modular linting with `ruff`.
+2.  **Functional Integrity**: Comprehensive unit testing with `pytest`, requiring a minimum **40% coverage gate** for all core modules.
+3.  **Pipeline Synchronization**: Automated `DVC` status checks to ensure data artifacts and model versions are perfectly in sync with the code.
+4.  **API Resilience**: Real-time health-check validation of the inference microservice.
 
-```env
-# Example .env
-GOOGLE_API_KEY=your_key_here
-HUGGINGFACEHUB_API_TOKEN=your_token_here
+### Single-Command Validation
+Developers can run the full battery of tests using the provided validation script:
+```powershell
+.\validate_system.bat
 ```
 
----
-
-## 📈 Roadmap & Upcoming Features
-- [x] Multi-agent cluster orchestration (LangGraph)
-- [x] Dynamic model hot-swapping
-- [x] Real-time UI observability logs
-- [ ] **Phase 6**: LLM-as-a-Judge evaluation framework (DeepEval)
-- [ ] **Phase 7**: Full CI/CD integration for automated model retraining
-- [ ] **Phase 8**: Interactive "Agentic Healing" for data correction
+### CI/CD Integration
+Every pull request triggers a **GitHub Actions** workflow that executes the entire validation pillar, ensuring that only 100% healthy code reaches the `master` branch.
 
 ---
 
-*Developed by **Sebastian Garrido** - Exploring the intersection of Agentic AI and MLOps.*
+## 👨‍� Developed By
+
+**Sebastian Garrido** - *Agentic System Architect & MLOps Engineer*
+Exploration at the intersection of Probabilistic Agentic Workflows and Deterministic Machine Learning.
+
+---
+
+<p align="center">
+  <i>Part of the <b>Hybrid Financial Intelligence</b> initiative. Built with precision, deployed for impact.</i>
+</p>
