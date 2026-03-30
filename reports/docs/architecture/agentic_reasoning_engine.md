@@ -131,7 +131,7 @@ The graph consists of five nodes: three agent nodes and two deterministic tool n
 
 ### 3.5 Deterministic Tools — `src/agents/tools/`
 
-Following Rule 1.2 (Brain vs. Hands), all computation is delegated to deterministic tools. The LLM never performs arithmetic.
+Following a Brain vs. Hands approach, all computation is delegated to deterministic tools. The LLM never performs arithmetic.
 
 #### `lookup_tool.py` — `fetch_company_data`
 
@@ -164,7 +164,7 @@ All tools guard against division by zero, returning a descriptive error string.
 
 ### 3.6 System Prompts — `prompts.py`
 
-Following the **No Naked Prompts policy** (Rule 1.5), all system prompts are centralized in `prompts.py`, completely segregated from the execution logic in `graph.py`. This module is reloaded dynamically on each graph node invocation to support live prompt tuning without restarts.
+Following the **No Naked Prompts policy** architectural design, all system prompts are centralized in `prompts.py`, completely segregated from the execution logic in `graph.py`. This module is reloaded dynamically on each graph node invocation to support live prompt tuning without restarts.
 
 | Prompt Constant | Agent | Key Constraint |
 | :--- | :--- | :--- |
@@ -280,6 +280,6 @@ DEFAULT_LLM_PROVIDER=huggingface   # or "gemini"; omit for live hot-swapping
 | Agent pattern | Sequential Relay (not parallel) | Risk scoring requires ordered context accumulation; Analyst findings feed the Scientist |
 | Tool execution | `ToolNode` (pre-built) | Standard LangGraph pattern; cleanly maps `tool_calls` to `ToolMessage` objects |
 | Fallback strategy | `importlib.reload` per node | Enables hot-swapping without restart; state is always based on current config |
-| Math delegation | Pydantic-validated deterministic tools | Eliminates LLM hallucinations on financial ratios per Rule 1.2 |
-| Prompt management | Centralized `prompts.py` + dynamic reload | Supports live prompt tuning (Rule 1.5, No Naked Prompts) |
+| Math delegation | Pydantic-validated deterministic tools | Eliminates LLM hallucinations on financial ratios |
+| Prompt management | Centralized `prompts.py` + dynamic reload | Supports live prompt tuning (No Naked Prompts) |
 | Data leakage prevention | `target`/`default_probability` excluded in lookup tool | Prevents agent from seeing ground truth label during inference |

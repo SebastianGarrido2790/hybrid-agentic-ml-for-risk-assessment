@@ -102,7 +102,7 @@ ACRAS is a **well-architected portfolio project** that demonstrates strong under
 **Gaps found:**
 - `ConfigurationManager` methods have no return-type annotations on `__init__`.
 - `eval_metrics()` uses untyped `actual`, `pred` params.
-- `all_params: dict` and `all_schema: dict` in config entities are untyped dictionaries (violates Rule 2.3).
+- `all_params: dict` and `all_schema: dict` in config entities are untyped dictionaries (violates data quality rules).
 - Various functions missing explicit return types (e.g., `initiate_data_ingestion`).
 
 **Recommendation:**
@@ -161,7 +161,7 @@ ACRAS is a **well-architected portfolio project** that demonstrates strong under
 > **IMPORTANT**
 > `read_yaml()` returns `ConfigBox`, which provides attribute-style access but **zero type safety**. Any typo (`config.modl_trainer` instead of `config.model_trainer`) silently returns `None` / `Box()` at runtime instead of raising an error.
 
-**Impact:** This undermines the typed entity layer and violates Rule 2.3 ("No untyped dictionaries").
+**Impact:** This undermines the typed entity layer and violates "No untyped dictionaries".
 
 **Recommendation:**
 Replace `ConfigBox` with **Pydantic `BaseModel`** for YAML parsing:
@@ -286,7 +286,7 @@ Per the README roadmap ("Phase 6"), implement automated agent evaluation:
 - **Tool Usage Accuracy:** Did agents call the correct tools with correct arguments?
 - Store eval results in `reports/docs/evaluations/` and track them with MLflow.
 
-### 3.2 Add OpenTelemetry Tracing (Rule 3.2)
+### 3.2 Add OpenTelemetry Tracing
 
 Replace `print()` debugging with structured traces:
 ```toml
@@ -295,7 +295,7 @@ Replace `print()` debugging with structured traces:
 "opentelemetry-sdk>=1.20.0"  
 "opentelemetry-instrumentation-fastapi>=0.41b0"
 ```
-This gives you span-level visibility into agent decisions, tool calls, token usage, and latency — completely aligned with your AgentOps rules.
+This gives you span-level visibility into agent decisions, tool calls, token usage, and latency.
 
 ### 3.3 Add Pre-commit Hooks
 
@@ -314,7 +314,7 @@ repos:
 ```
 This prevents lint/type issues from ever reaching CI.
 
-### 3.4 Add Great Expectations (GX) Data Validation (Rule 2.1)
+### 3.4 Add Great Expectations (GX) Data Validation
 
 The current `DataValidation` component only checks column presence. Production-grade validation should also enforce:
 - Value ranges (e.g., `revenue_growth` between -1.0 and 10.0)

@@ -198,7 +198,7 @@ In the Company 62 run (high sector risk: 0.84), `gemini-2.5-flash` proactively t
 - `calculate_ebitda_margin()` → 0.11 (vs. 0.1076 in raw data ✅)
 - `calculate_revenue_growth()` → 3.68% (vs. 3.67% in raw data ✅)
 
-> **Finding F-03 (NOTABLE):** This behavior indicates that Gemini's reasoning engine adapts its tool usage strategy based on contextual risk signals. In higher-risk company profiles, the agent independently validates pre-computed metrics rather than trusting the dataset values — a behavior aligned with our **Rule 1.2 (Tools are Deterministic, Agents are Probabilistic)** design principle. All verified values were consistent with the Feature Pipeline output, confirming data integrity.
+> **Finding F-03 (NOTABLE):** This behavior indicates that Gemini's reasoning engine adapts its tool usage strategy based on contextual risk signals. In higher-risk company profiles, the agent independently validates pre-computed metrics rather than trusting the dataset values — a behavior aligned with our **Tools are Deterministic, Agents are Probabilistic** design principle. All verified values were consistent with the Feature Pipeline output, confirming data integrity.
 
 ---
 
@@ -252,7 +252,7 @@ During the Company 62 run, the HuggingFace primary provider failed at the `data_
 Given Qwen's consistent under-rating of the `ratio_mora` field, implement a **deterministic post-processing rule** in the report generation layer:
 
 ```python
-# Deterministic override — enforces Rule 1.4 (Structured Output)
+# Deterministic override — enforces Structured Output
 if financial_data.ratio_mora > 0.20:
     risk_dashboard["mora_ratio_rating"] = "High"
 ```
