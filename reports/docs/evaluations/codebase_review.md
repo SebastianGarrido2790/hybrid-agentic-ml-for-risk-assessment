@@ -1,6 +1,5 @@
 # ACRAS Codebase Review — Production Readiness & Portfolio Assessment
 
-**Reviewer:** Antigravity (Automated Review)
 **Date:** 2026-03-09
 **Version:** 1.1 (Second Pass)
 **Scope:** Full codebase — 54 Python source files, 10 test files, 3 CI workflows, 3 YAML configs, Dockerfile, docker-compose, `pyproject.toml`, and 28 documentation files.

@@ -8,7 +8,7 @@ echo ============================================================
 echo   🚀 ACRAS: AGENTIC CREDIT RISK ASSESSMENT SYSTEM
 echo ============================================================
 echo.
-echo [SYSTEM] Initializing Antigravity Stack...
+echo [SYSTEM] Initializing ACRAS Stack...
 echo.
 
 :: Step 1: Check/Sync Dependencies
