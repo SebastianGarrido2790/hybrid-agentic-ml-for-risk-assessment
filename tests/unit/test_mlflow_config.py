@@ -5,9 +5,9 @@ This module verifies the URI resolution logic, ensuring that environment variabl
 staging defaults, and YAML fallbacks are correctly prioritized across different
 environments (local, staging, production).
 """
+
 import os
-from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
 import pytest
 import yaml
