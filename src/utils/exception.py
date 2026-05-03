@@ -11,6 +11,7 @@ Implementation details:
 - Strict Typing: Uses ModuleType instead of untyped sys imports to satisfy modern linters.
 """
 
+from pathlib import Path
 from types import ModuleType
 
 from src.constants import PROJECT_ROOT
@@ -37,8 +38,18 @@ def error_message_detail(error: Exception | str, error_detail: ModuleType) -> st
         file_name = "unknown"
         line_number = 0
 
+    if file_name != "unknown":
+        file_path = Path(file_name)
+        try:
+            # Try to make it relative to project root for cleaner logs
+            display_path = str(file_path.relative_to(PROJECT_ROOT))
+        except (ValueError, TypeError):
+            display_path = str(file_path)
+    else:
+        display_path = "unknown"
+
     error_message = (
-        f"Error occurred in python script: [{file_name.relative_to(PROJECT_ROOT)}] "
+        f"Error occurred in python script: [{display_path}] "
         f"line number: [{line_number}] "
         f"error message: [{str(error)}]"
     )
