@@ -1,2 +1,5 @@
 [core]
     analytics = false
+    remote = local_storage
+['remote "local_storage"']
+    url = C:\dvc_remotes\ACRAS

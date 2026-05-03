@@ -147,8 +147,11 @@ MLFLOW_TRACKING_URI=http://127.0.0.1:5000
 
 ### 2. Launch the System
 ```powershell
-# Starts both the FastAPI Inference Service and the Streamlit Dashboard
+# Option A: Start everything (Inference, Dashboard, and MLflow)
 .\launch_acras.bat
+
+# Option B: Start only the MLflow Tracking Server
+.\launch_mlflow.bat
 ```
 
 ### 3. Monitoring

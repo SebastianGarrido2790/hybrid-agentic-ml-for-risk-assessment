@@ -13,6 +13,8 @@ Implementation details:
 
 from types import ModuleType
 
+from src.constants import PROJECT_ROOT
+
 
 def error_message_detail(error: Exception | str, error_detail: ModuleType) -> str:
     """
@@ -36,7 +38,7 @@ def error_message_detail(error: Exception | str, error_detail: ModuleType) -> st
         line_number = 0
 
     error_message = (
-        f"Error occurred in python script: [{file_name}] "
+        f"Error occurred in python script: [{file_name.relative_to(PROJECT_ROOT)}] "
         f"line number: [{line_number}] "
         f"error message: [{str(error)}]"
     )

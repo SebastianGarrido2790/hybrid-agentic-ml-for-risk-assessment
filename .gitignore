@@ -93,6 +93,8 @@ target/
 artifacts/
 logs/
 mlruns/
+mlruns_system/
+mlflow_system.db
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*

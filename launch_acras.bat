@@ -23,27 +23,33 @@ if %ERRORLEVEL% NEQ 0 (
 echo      Done.
 echo.
 
-:: Step 2: Launch FastAPI in a separate minimized window
-echo [2/3] Launching Risk Prediction API (FastAPI)...
+:: Step 2: Launch MLflow Tracking Server
+echo [2/4] Launching MLflow Tracking Server...
+echo      UI: http://127.0.0.1:5000
+start "ACRAS-MLflow" /min cmd /k "title ACRAS-MLflow && launch_mlflow.bat"
+
+:: Step 3: Launch FastAPI in a separate minimized window
+echo [3/4] Launching Risk Prediction API (FastAPI)...
 echo      Endpoint: http://localhost:8000
 :: Start the API window minimized to keep it tidy but accessible
 start "ACRAS-API" /min cmd /k "title ACRAS-API && uv run uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-:: Wait for API to warm up
+:: Wait for services to warm up
 echo.
-echo [WAIT] Stalling for API initialization (5s)...
+echo [WAIT] Stalling for service initialization (5s)...
 timeout /t 5 >nul
 
-:: Step 3: Launch Streamlit in the foreground
+:: Step 4: Launch Streamlit in the foreground
 echo.
-echo [3/3] Launching Intelligence Dashboard (Streamlit)...
+echo [4/4] Launching Intelligence Dashboard (Streamlit)...
 echo      URL: http://localhost:8501
 echo.
 echo ------------------------------------------------------------
-echo 💡 TIP: The API is running in the background (minimized).
+echo 💡 TIP: The API and MLflow are running in the background.
 echo    To stop EVERYTHING:
-echo    1. Close the "ACRAS-API" window in the taskbar.
-echo    2. Press Ctrl+C in this window.
+echo    1. Close the "ACRAS-API" window.
+echo    2. Close the "ACRAS-MLflow" window.
+echo    3. Press Ctrl+C in this window.
 echo ------------------------------------------------------------
 echo.
 

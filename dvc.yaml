@@ -1,12 +1,18 @@
 stages:
   data_augmentation:
-    cmd: python src/tools/synthetic_data_generator.py
+    cmd: python src/pipeline/stage_00_data_augmentation.py
     deps:
+      - src/pipeline/stage_00_data_augmentation.py
+      - config/config.yaml
+      - src/components/data_augmentation.py
       - src/tools/synthetic_data_generator.py
       - data/raw/financial_statements_training.csv
       - data/raw/pd_training.csv
       - data/raw/financial_statements_validation.csv
       - data/raw/pd_validation.csv
+    params:
+      - config/params.yaml:
+          - augmentation.n_samples
     outs:
       - data/processed/financial_statements_training.csv
       - data/processed/pd_training.csv

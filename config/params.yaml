@@ -16,3 +16,6 @@ mlflow:
 
 registration_params:
   min_roc_auc: 0.60
+
+augmentation:
+  n_samples: 100

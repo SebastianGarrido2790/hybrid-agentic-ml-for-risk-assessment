@@ -11,6 +11,14 @@ from typing import Any
 
 
 @dataclass(frozen=True)
+class DataAugmentationConfig:
+    root_dir: Path
+    raw_data_dir: Path
+    processed_data_dir: Path
+    n_samples: int
+
+
+@dataclass(frozen=True)
 class DataIngestionConfig:
     root_dir: Path
     source_data_dir: Path

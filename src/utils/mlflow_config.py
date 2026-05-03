@@ -71,6 +71,6 @@ def get_mlflow_uri(params_path: Path = PARAMS_FILE_PATH) -> str:
                 logger.warning(f"Error reading {params_path}: {e}")
 
     # Fallback for local
-    local_uri = "file:./mlruns"
+    local_uri = "http://127.0.0.1:5000"
     logger.info(f"[ENV={ENV}] Using fallback local MLflow URI: {local_uri}")
     return local_uri
