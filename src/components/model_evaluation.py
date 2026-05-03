@@ -1,4 +1,4 @@
-"""
+r"""
 Model Evaluation Component.
 
 This module handles:
@@ -6,6 +6,9 @@ This module handles:
 - Calculating performance metrics (Accuracy, Precision, Recall, F1, ROC-AUC).
 - Generating and saving evaluation plots.
 - Logging metrics, parameters, and models to MLflow.
+
+Requirements:
+    - MLflow server running: .\launch_mlflow.bat
 """
 
 import sys
@@ -144,25 +147,17 @@ class ModelEvaluation:
 
             # Only set registry URI if it is a valid remote URI
             mlflow_uri = self.config.mlflow_uri
-            if (
-                mlflow_uri
-                and str(mlflow_uri).strip()
-                and not str(mlflow_uri).startswith("file:")
-            ):
-                mlflow.set_registry_uri(str(mlflow_uri))
-                mlflow.set_tracking_uri(str(mlflow_uri))
-            else:
-                mlflow.set_tracking_uri("file:./mlruns")
+            # Set Tracking and Registry URI
+            mlflow.set_registry_uri(str(mlflow_uri))
+            mlflow.set_tracking_uri(str(mlflow_uri))
 
             # Experiment Setup
             try:
                 mlflow.set_experiment(self.config.experiment_name)
             except Exception as e:
                 logger.warning(
-                    f"Failed to set experiment on remote server: {e}. Falling back to local './mlruns'."
+                    f"Failed to set experiment on MLflow server: {e}. Pipeline will attempt to continue."
                 )
-                mlflow.set_registry_uri("")
-                mlflow.set_tracking_uri("file:./mlruns")
                 mlflow.set_experiment(self.config.experiment_name)
 
             tracking_uri = mlflow.get_tracking_uri()

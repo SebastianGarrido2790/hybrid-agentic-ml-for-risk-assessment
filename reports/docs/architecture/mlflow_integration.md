@@ -39,7 +39,7 @@ Priority 2: ENV-based defaults
     ↓ (if ENV=local or unset)
 Priority 3: config/params.yaml → mlflow.uri key
     ↓ (if params.yaml missing or mlflow.uri not defined)
-Priority 4: Local fallback → file:./mlruns
+Priority 4: Local fallback → http://127.0.0.1:5000 (Local Tracking Server)
 ```
 
 > **Production Constraint:** In `ENV=production`, the system **raises `RuntimeError`** if `MLFLOW_TRACKING_URI` is not set. This prevents silent local tracking that could lose production experiment data.
@@ -106,16 +106,14 @@ else:
     mlflow.sklearn.log_model(model, artifact_path)
 ```
 
-### MLflow URI Fallback Chain (Stage 05)
+### MLflow URI Resolution (Stage 05)
 
-If the configured `mlflow_uri` is a local file URI or is blank, Stage 05 redirects tracking to `file:./mlruns`:
+Stage 05 uses the centralized `get_mlflow_uri()` utility, which prioritizes the local server (`http://127.0.0.1:5000`) even in local-mode fallbacks to ensure Model Registry availability.
 
 ```python
-if mlflow_uri and not mlflow_uri.startswith("file:"):
-    mlflow.set_registry_uri(mlflow_uri)
-    mlflow.set_tracking_uri(mlflow_uri)
-else:
-    mlflow.set_tracking_uri("file:./mlruns")
+mlflow_uri = get_mlflow_uri()
+mlflow.set_registry_uri(mlflow_uri)
+mlflow.set_tracking_uri(mlflow_uri)
 ```
 
 If even setting the experiment fails (e.g., server connection timeout), it falls back again to `file:./mlruns` and retries locally.
@@ -168,8 +166,8 @@ This prevents a missing MLflow server from blocking the entire pipeline.
 ## 6. Viewing Experiments Locally
 
 ```bash
-# Start the MLflow UI (if tracking locally to ./mlruns)
-uv run mlflow server --host 127.0.0.1 --port 5000
+# Start the MLflow UI (using the production-ready local config)
+.\launch_mlflow.bat
 
 # Then open: http://127.0.0.1:5000
 ```

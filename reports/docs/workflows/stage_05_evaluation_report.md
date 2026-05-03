@@ -47,7 +47,7 @@ Location: `artifacts/model_evaluation/`
 *   **`roc_auc_curve.png`**: Visual diagnostics of classifier performance.
 
 ## Why this is "Robust MLOps"
-1.  **Fault-Tolerant Tracking**: The system detects if an MLflow server is available and falls back to local file-based tracking (`./mlruns`) if necessary, ensuring the pipeline never breaks due to external connectivity issues.
+1.  **Robust Tracking**: The system defaults to the local MLflow server (`http://127.0.0.1:5000`) with a SQLite backend, ensuring that even local experiments have access to the Model Registry.
 2.  **DVC Metrics**: By registering `metrics.json` as a DVC metric, we can use `dvc metrics diff` to compare performance across different iterations directly from the CLI.
 3.  **Automated Plotting**: Visual evidence of model quality is generated automatically, removing the need for manual notebook-based evaluation.
 4.  **Meaningful Registration**: Models are registered with unique versions and descriptive names, making it easier for the "Model Pusher" stage to identify candidates for deployment.

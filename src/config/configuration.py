@@ -13,6 +13,7 @@ from pathlib import Path
 
 from src.constants import CONFIG_FILE_PATH, PARAMS_FILE_PATH, SCHEMA_FILE_PATH
 from src.entity.config_entity import (
+    DataAugmentationConfig,
     DataIngestionConfig,
     DataTransformationConfig,
     DataValidationConfig,
@@ -36,6 +37,21 @@ class ConfigurationManager:
         self.schema = read_yaml(schema_filepath)
 
         create_directories([self.config.artifacts_root])
+
+    def get_data_augmentation_config(self) -> DataAugmentationConfig:
+        config = self.config.data_augmentation
+        params = self.params.augmentation
+
+        create_directories([config.root_dir])
+
+        data_augmentation_config = DataAugmentationConfig(
+            root_dir=Path(config.root_dir),
+            raw_data_dir=Path(config.raw_data_dir),
+            processed_data_dir=Path(config.processed_data_dir),
+            n_samples=params.n_samples,
+        )
+
+        return data_augmentation_config
 
     def get_data_ingestion_config(self) -> DataIngestionConfig:
         config = self.config.data_ingestion

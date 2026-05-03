@@ -16,7 +16,7 @@ The ACRAS MLOps pipeline is orchestrated by **DVC (Data Version Control)** via `
 
 | Principle | Application in ACRAS |
 | :--- | :--- |
-| **Auditability** | Regulated financial systems must prove which data + code version produced a risk score. DVC links `dvc.lock` to every artifact |
+| **Auditability** | Regulated financial systems must prove which data + code version produced a risk score. DVC links `dvc.lock` to every artifact and persists them in the **Remote Registry**. |
 | **Smart Caching** | If only `params.yaml` (model hyperparameters) changes, DVC skips Stages 00–03 and re-runs only from Stage 04 |
 | **Data Versioning** | Large CSVs and `.joblib` artifacts are tracked by DVC, keeping Git lightweight |
 | **Lineage** | Full traceable path: Raw CSVs → Synthetic Augmentation → Ingestion → Transformation → Training → Evaluation → MLflow Registry |
@@ -253,9 +253,10 @@ uv run dvc repro
 uv run dvc metrics show
 uv run dvc metrics diff HEAD~1
 
-# 6. Commit the new state (code changes + updated dvc.lock)
+# 6. Commit and Push the new state
 git add dvc.lock params.yaml
 git commit -m "Exp: Updated n_estimators=200, min_samples_leaf=5"
+uv run dvc push
 ```
 
 ---
@@ -269,3 +270,61 @@ git commit -m "Exp: Updated n_estimators=200, min_samples_leaf=5"
 | `config/schema.yaml` | Data contract enforced by Stage 02 validation |
 | `dvc.yaml` | The pipeline DAG definition (stages, deps, outs, params, metrics) |
 | `dvc.lock` | Locked hashes of all inputs/outputs for a given experiment run |
+
+---
+
+## 8. Data Registry & Remote Storage
+
+To ensure data persistence and collaborative reproducibility, ACRAS utilizes a **Data Registry** pattern. While Git tracks the code and the metadata (`dvc.lock`), the actual heavy datasets and models are stored in a centralized remote.
+
+### 8.1 Remote Configuration
+For this portfolio setup, we use a **Local-as-Remote** strategy to simulate production-grade cloud storage without external dependencies.
+
+| Property | Value |
+| :--- | :--- |
+| **Remote Name** | `local_storage` (Default) |
+| **Storage Type** | Local Filesystem (Simulated Cloud) |
+| **Path** | `C:\dvc_remotes\ACRAS` |
+| **Content Addressing** | MD5-based CAS (Content-Addressable Storage) |
+
+### 8.2 Collaborative Workflow
+The integration of a remote storage enables the following high-integrity lifecycle:
+
+1.  **Push**: After a successful `dvc repro`, the engineer runs `dvc push` to upload the new artifacts to the registry.
+2.  **Versioning**: The MD5 hashes in `dvc.lock` act as pointers to the exact file versions in the remote.
+3.  **Pull**: A collaborator (or a CI/CD agent) runs `git pull` followed by `dvc pull` to instantly reconstruct the exact experiment state, bypassing the need to re-run heavy training stages.
+
+## 9. View the Remote Storage
+
+To view your DVC remote configuration and the data it contains, you can use the following methods:
+
+### 1. View the Remote Configuration
+To see the name and URL of the remotes you have configured in the project:
+```powershell
+uv run dvc remote list
+```
+*This will show `local_storage  C:\dvc_remotes\ACRAS`.*
+
+### 2. View the Remote Storage (Physical Location)
+Since we configured a **local remote**, you can simply browse the directory using your file explorer or the terminal:
+```powershell
+ls C:\dvc_remotes\ACRAS
+```
+
+### 3. Understanding the Remote Structure
+DVC uses **Content-Addressable Storage (CAS)**. When you look inside `C:\dvc_remotes\ACRAS`, you won't see familiar filenames like `raw.csv`. Instead, you will see a structure of two-character folders (e.g., `0a/`, `1b/`).
+*   **Why?** DVC renames files based on their **MD5 hash**.
+*   **Verification**: If you want to see exactly what is tracked and what the hashes are, you can run:
+    ```powershell
+    uv run dvc list . data --dvc-only
+    ```
+
+### 4. Check Sync Status
+If you want to know if your local data is perfectly in sync with that remote:
+```powershell
+uv run dvc status -r local_storage
+```
+
+---
+**Pro-Tip for Portfolios**: 
+In a real production environment, this remote would be an **S3 bucket** or **Azure Blob Storage**. The command to view it would be the same (`dvc remote list`), but the URL would look like `s3://my-bucket/acras-data`. Using a local folder like `C:\dvc_remotes` is the best way to demonstrate you understand the **Data Registry** concept without needing a cloud subscription!
