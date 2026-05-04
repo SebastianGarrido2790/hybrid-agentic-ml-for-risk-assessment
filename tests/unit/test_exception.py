@@ -1,9 +1,16 @@
+"""
+Unit tests for the CustomException and error message handling utilities.
+These tests ensure that traceback information is correctly captured and formatted
+to aid in debugging automated MLOps pipelines.
+"""
+
 import sys
-import pytest
+
 from src.utils.exception import CustomException, error_message_detail
 
 
 def test_error_message_detail():
+    """Verify that error_message_detail correctly extracts file and line info."""
     try:
         raise ValueError("test error")
     except ValueError as e:
@@ -14,6 +21,7 @@ def test_error_message_detail():
 
 
 def test_custom_exception():
+    """Verify that CustomException correctly wraps an error message."""
     try:
         raise ValueError("inner error")
     except ValueError as e:
@@ -23,6 +31,8 @@ def test_custom_exception():
 
 
 def test_error_message_detail_no_traceback():
+    """Verify fallback behavior when no traceback is available."""
+
     # Mocking a scenario where traceback is None
     class MockSys:
         def exc_info(self):

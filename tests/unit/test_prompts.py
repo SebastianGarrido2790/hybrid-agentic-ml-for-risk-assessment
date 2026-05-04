@@ -1,6 +1,12 @@
+"""
+Unit tests for the system prompts module.
+Verifies that all required agentic instructions are correctly defined
+and adhere to the project's 'No Naked Prompts' policy.
+"""
+
 from src.agents.prompts import (
-    FINANCIAL_ANALYST_SYSTEM_PROMPT,
     DATA_SCIENTIST_SYSTEM_PROMPT,
+    FINANCIAL_ANALYST_SYSTEM_PROMPT,
     ORCHESTRATOR_SYSTEM_PROMPT,
 )
 
