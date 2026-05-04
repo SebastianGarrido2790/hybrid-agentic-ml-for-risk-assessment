@@ -48,3 +48,13 @@ def initialize_session_state() -> None:
         st.session_state.reasoning_log = []
     if "used_fallback_lite" not in st.session_state:
         st.session_state.used_fallback_lite = False
+
+
+def clear_assessment_state() -> None:
+    """Clear all assessment-related data from the session state."""
+    st.session_state.assessment_result = None
+    st.session_state.pdf_bytes = None
+    st.session_state.reasoning_log = []
+    st.session_state.used_fallback_lite = False
+    st.session_state.risk_score = 50.0
+    st.session_state.last_company_id = None
