@@ -2,251 +2,40 @@
 Streamlit User Interface for the Agentic Credit Risk Assessment System (ACRAS).
 
 This application serves as the user-facing frontend for the agentic reasoning engine.
-It allows Risk Managers to:
-1. Select a target company from the database.
-2. Trigger the Multi-Agent System (Financial Analyst -> Data Scientist -> CRO).
-3. Visualize the "Chain of Thought" (tool calls and reasoning steps).
-4. View a structured Risk Assessment Report and a Risk Score gauge.
-5. Download the report as a PDF.
 """
 
-import importlib
-import re
-from pathlib import Path
 from typing import cast
 
-import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 from langchain_core.messages import HumanMessage, SystemMessage
 
 import src.agents.config as config_module
 from src.agents.graph import app as agent_app
+from src.ui.components import render_header, render_sidebar, render_welcome_state
+from src.ui.data_loader import initialize_session_state, load_company_list
+from src.ui.styles import apply_custom_css, create_gauge_chart
+from src.ui.utils import extract_risk_score
 from src.utils.pdf_generator import generate_pdf_report
 
-# Page Config
+# 1. Configuration & Styling
 st.set_page_config(
     page_title="ACRAS - Intelligence Suite",
     layout="wide",
     page_icon="💎",
     initial_sidebar_state="expanded",
 )
+apply_custom_css()
+initialize_session_state()
 
-# --- Custom CSS for Premium Look ---
-st.markdown(
-    """
-<style>
-    /* Main Background */
-    .stApp {
-        background: radial-gradient(circle at top right, #1e293b, #0f172a);
-        color: #f8fafc;
-    }
-    
-    /* Sidebar styling */
-    section[data-testid="stSidebar"] {
-        background-color: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(10px);
-        border-right: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    /* Metric Cards */
-    div[data-testid="stMetricValue"] {
-        font-size: 28px;
-        color: #38bdf8;
-    }
-    
-    /* Buttons */
-    .stButton>button {
-        border-radius: 8px;
-        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
-        border: none;
-        color: white;
-        transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    }
-
-    /* Expander styling */
-    .streamlit-expanderHeader {
-        background-color: rgba(255,255,255,0.05) !important;
-        border-radius: 8px !important;
-    }
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
-
-# Title and Header
-st.title("🏦 ACRAS Intelligence Suite")
-col_title, col_info = st.columns([3, 1])
-with col_title:
-    st.markdown("#### *Advanced Agentic Credit Risk & Analysis System*")
-
-with col_info:
-    # Force reload of config module to reflect file changes in UI instantly
-    importlib.reload(config_module)
-    settings = config_module.get_agent_settings()
-
-    provider = settings.DEFAULT_LLM_PROVIDER.upper()
-    model = (
-        settings.HF_MODEL
-        if settings.DEFAULT_LLM_PROVIDER == "huggingface"
-        else settings.GEMINI_POWER_MODEL
-    )
-    st.markdown(
-        f"""
-        <div style="background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 5px; border-left: 3px solid #3b82f6; font-size: 0.8em;">
-            <b>Active Intelligence:</b> {provider}<br>
-            <span style="color: #94a3b8;">{model}</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-st.markdown("---")
-
-
-# --- Load Company Data ---
-@st.cache_data
-def load_company_list():
-    try:
-        base_dir = Path(__file__).resolve().parent.parent.parent
-        data_path = base_dir / "artifacts" / "data_ingestion" / "val.csv"
-
-        if not data_path.exists():
-            return pd.DataFrame()
-
-        df = pd.read_csv(data_path)
-        if "id_empresa" not in df.columns:
-            return pd.DataFrame()
-
-        return df.drop_duplicates(subset=["id_empresa"])
-    except Exception as e:
-        st.error(f"Failed to load company database: {e}")
-        return pd.DataFrame()
-
-
+# 2. Data Loading
 df_companies = load_company_list()
+settings = config_module.get_agent_settings()
 
-# --- Session State Initialization ---
-if "assessment_result" not in st.session_state:
-    st.session_state.assessment_result = None
-if "risk_score" not in st.session_state:
-    st.session_state.risk_score = 50.0
-if "last_company_id" not in st.session_state:
-    st.session_state.last_company_id = None
-if "pdf_bytes" not in st.session_state:
-    st.session_state.pdf_bytes = None
-if "reasoning_log" not in st.session_state:
-    st.session_state.reasoning_log = []
-if "used_fallback_lite" not in st.session_state:
-    st.session_state.used_fallback_lite = False
+# 3. UI Layout
+render_header()
+selected_id, submit_btn = render_sidebar(df_companies)
 
-# --- Sidebar ---
-with st.sidebar:
-    st.markdown("### 📊 Control Panel")
-
-    if not df_companies.empty:
-        company_options = df_companies["id_empresa"].unique()
-        selected_id = st.selectbox("🎯 Target Entity ID", company_options)
-
-        # Show detailed info cards in sidebar
-        company_row = df_companies[df_companies["id_empresa"] == selected_id].iloc[0]
-
-        st.markdown("---")
-        st.metric("Annual Revenue", f"${company_row['ingresos']:,.0f}")
-        st.metric("EBITDA", f"${company_row['ebitda']:,.0f}")
-        st.metric("Bureau Score", int(company_row["score_buro"]))
-
-    else:
-        st.error("Database not found.")
-        selected_id = None
-
-    st.markdown("---")
-    st.markdown("🚀 **Engine Controls**")
-
-    col_reset, col_submit = st.columns(2)
-
-    with col_submit:
-        submit_btn = st.button("Initiate", type="primary", width="stretch")
-
-    with col_reset:
-        if st.button("Reset", width="stretch"):
-            st.session_state.assessment_result = None
-            st.session_state.risk_score = 50.0
-            st.session_state.last_company_id = None
-            st.session_state.pdf_bytes = None
-            st.session_state.reasoning_log = []
-            st.rerun()
-
-    st.caption("Version 1.1 - Persistence Enabled")
-
-
-# --- Helper Functions ---
-def extract_risk_score(text: str):
-    """
-    Extracts the final risk score from the text.
-    Takes the LAST occurrence of 'Risk Score' to avoid picking up
-    intermediate mentions of 'Bureau Score' or other metrics.
-    """
-    # Look for the specific system tag first, then fallback to general matches
-    system_tag_match = re.search(
-        r"SYSTEM FINAL RISK SCORE:\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE
-    )
-    if system_tag_match:
-        score = float(system_tag_match.group(1))
-        # Handle cases where model spits out 725 instead of 7.25
-        if score > 100:
-            score = score / 100
-        return min(max(score, 0.0), 100.0)
-
-    # Fallback to last occurrence of 'Score'
-    matches = re.findall(
-        r"(?:Risk\s+)?Score:\*{0,2}\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE
-    )
-    if matches:
-        score = float(matches[-1])
-        # Handle cases where score might be a probability (0-1)
-        if score <= 1.0 and "PD" in text:
-            score *= 100
-        return min(max(score, 0.0), 100.0)  # Clamp to 0-100
-    return 50.0
-
-
-def create_gauge_chart(score: float):
-    fig = go.Figure(
-        go.Indicator(
-            mode="gauge+number",
-            value=score,
-            domain={"x": [0, 1], "y": [0, 1]},
-            gauge={
-                "axis": {"range": [None, 100], "tickwidth": 1, "tickcolor": "#94a3b8"},
-                "bar": {"color": "#6366f1"},
-                "steps": [
-                    {"range": [0, 30], "color": "rgba(34, 197, 94, 0.2)"},
-                    {"range": [30, 70], "color": "rgba(234, 179, 8, 0.2)"},
-                    {"range": [70, 100], "color": "rgba(239, 68, 68, 0.2)"},
-                ],
-                "threshold": {
-                    "line": {"color": "#f8fafc", "width": 4},
-                    "thickness": 0.75,
-                    "value": score,
-                },
-            },
-        )
-    )
-    fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        font={"color": "#f8fafc", "family": "Inter, sans-serif"},
-        height=300,
-        margin=dict(l=20, r=20, t=50, b=20),
-    )
-    return fig
-
-
-# --- Main Flow ---
+# 4. Agent Execution Flow
 if submit_btn and selected_id:
     prompt = f"Please assess credit risk for Company ID {selected_id}."
     from src.agents.graph import AgentState
@@ -265,130 +54,108 @@ if submit_btn and selected_id:
     st.session_state.reasoning_log = []
     st.session_state.used_fallback_lite = False
 
-    # Layout: Report Left, Dashboard Right
-    col1, col2 = st.columns([1.5, 1])
+    st.markdown("### 📋 Intelligence Report")
+    with st.status("**Agent Cluster Synchronization**", expanded=True) as status:
+        try:
+            for step in agent_app.stream(initial_state):
+                for node_name, node_output in step.items():
+                    messages = node_output.get("messages", [])
+                    if not messages:
+                        continue
 
-    with col1:
-        st.markdown("### 📋 Intelligence Report")
+                    for msg in messages:
+                        # Identify Agent Label
+                        agent_map = {
+                            "financial_analyst": "📊 **Analyst**",
+                            "data_scientist": "🔬 **Scientist**",
+                            "orchestrator": "👔 **Director**",
+                        }
+                        agent_label = agent_map.get(node_name, "🤖 Agent")
 
-        with st.status("**Agent Cluster Synchronization**", expanded=True) as status:
-            try:
-                for step in agent_app.stream(initial_state):
-                    for node_name, node_output in step.items():
-                        messages = node_output.get("messages", [])
-                        if not messages:
+                        # Handle Fallback / Info Messages
+                        if isinstance(msg, SystemMessage) and any(
+                            icon in str(msg.content) for icon in ["🔄", "⚠️", "🚨"]
+                        ):
+                            log_txt = f"{agent_label} → {msg.content}"
+                            status.write(log_txt)
+                            if "2nd Fallback" in str(msg.content):
+                                st.session_state.used_fallback_lite = True
+                            st.session_state.reasoning_log.append(
+                                {"type": "info", "msg": log_txt}
+                            )
                             continue
 
-                        for msg in messages:
-                            # Identify Agent
-                            agent_label = "🤖 Agent"
-                            if node_name == "financial_analyst":
-                                agent_label = "📊 **Analyst**"
-                            elif node_name == "data_scientist":
-                                agent_label = "🔬 **Scientist**"
-                            elif node_name == "orchestrator":
-                                agent_label = "👔 **Director**"
-
-                            # Handle Fallback / Log Messages
-                            if isinstance(msg, SystemMessage) and any(
-                                icon in str(msg.content) for icon in ["🔄", "⚠️", "🚨"]
-                            ):
-                                log_txt = f"{agent_label} → {msg.content}"
-                                status.write(log_txt)
-
-                                # Track if the Lite fallback was triggered
-                                if "2nd Fallback" in str(msg.content):
-                                    st.session_state.used_fallback_lite = True
-
+                        # Handle Tool Calls
+                        if hasattr(msg, "tool_calls") and msg.tool_calls:
+                            for tc in msg.tool_calls:
+                                m_txt = f"{agent_label} → Executing `{tc['name']}`"
+                                status.write(m_txt)
                                 st.session_state.reasoning_log.append(
-                                    {"type": "info", "msg": log_txt}
+                                    {"type": "tool", "msg": m_txt}
                                 )
-                                continue
 
-                            # Handle standard model outputs
-                            if hasattr(msg, "tool_calls") and getattr(
-                                msg, "tool_calls", None
-                            ):
-                                for tc in getattr(msg, "tool_calls", []):
-                                    m_txt = f"{agent_label} → Executing `{tc['name']}`"
-                                    status.write(m_txt)
-                                    st.session_state.reasoning_log.append(
-                                        {"type": "tool", "msg": m_txt}
-                                    )
-                            elif msg.content:
-                                if node_name == "orchestrator":
-                                    st.session_state.assessment_result = str(
-                                        msg.content
-                                    )
-                                    st.session_state.risk_score = extract_risk_score(
-                                        st.session_state.assessment_result
-                                    )
-                                    st.session_state.last_company_id = selected_id
-                                    m_txt = (
-                                        f"{agent_label} → Compiling Final Directive..."
-                                    )
-                                    status.write(m_txt)
-                                    st.session_state.reasoning_log.append(
-                                        {"type": "info", "msg": m_txt}
-                                    )
-                                else:
-                                    m_txt = (
-                                        f"{agent_label} → Intelligence Update Captured."
-                                    )
-                                    status.write(m_txt)
-                                    st.session_state.reasoning_log.append(
-                                        {
-                                            "type": "expander",
-                                            "msg": m_txt,
-                                            "node_name": node_name,
-                                            "content": msg.content,
-                                        }
-                                    )
-                                    with st.expander(f"Access {node_name} logs"):
-                                        st.write(msg.content)
+                        # Handle Final Result (Orchestrator)
+                        elif msg.content:
+                            if node_name == "orchestrator":
+                                st.session_state.assessment_result = str(msg.content)
+                                st.session_state.risk_score = extract_risk_score(
+                                    st.session_state.assessment_result
+                                )
+                                st.session_state.last_company_id = selected_id
+                                m_txt = f"{agent_label} → Compiling Final Directive..."
+                                status.write(m_txt)
+                                st.session_state.reasoning_log.append(
+                                    {"type": "info", "msg": m_txt}
+                                )
+                            else:
+                                m_txt = f"{agent_label} → Intelligence Update Captured."
+                                status.write(m_txt)
+                                st.session_state.reasoning_log.append(
+                                    {
+                                        "type": "expander",
+                                        "msg": m_txt,
+                                        "node_name": node_name,
+                                        "content": msg.content,
+                                    }
+                                )
+                                with st.expander(f"Access {node_name} logs"):
+                                    st.write(msg.content)
 
-                # 4. Generate PDF automatically in memory (one-click download ready)
-                try:
-                    # Append provider nickname for clearer file tracking
-                    provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
-                    if st.session_state.get("used_fallback_lite"):
-                        provider_nick += "-lite"
+            # Generate PDF automatically in memory
+            try:
+                provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
+                if st.session_state.get("used_fallback_lite"):
+                    provider_nick += "-lite"
 
-                    filename = f"ACRAS_Report_{selected_id}_{provider_nick}.pdf"
-
-                    pdf_bytes = generate_pdf_report(
-                        str(st.session_state.assessment_result),
-                        filename=filename,
-                        save_to_disk=False,  # Explicitly disable
-                    )
-                    st.session_state.pdf_bytes = pdf_bytes
-                except Exception as pdf_err:
-                    st.session_state.reasoning_log.append(
-                        {"type": "info", "msg": f"⚠️ PDF readiness failed: {pdf_err}"}
-                    )
-
-                status.update(
-                    label="✨ **Analysis Synthesized**",
-                    state="complete",
-                    expanded=False,
+                filename = f"ACRAS_Report_{selected_id}_{provider_nick}.pdf"
+                pdf_bytes = generate_pdf_report(
+                    str(st.session_state.assessment_result),
+                    filename=filename,
+                    save_to_disk=False,
                 )
-                st.rerun()  # Rerun to enter the "Results Display" state permanently
+                st.session_state.pdf_bytes = pdf_bytes
+            except Exception as pdf_err:
+                st.session_state.reasoning_log.append(
+                    {"type": "info", "msg": f"⚠️ PDF readiness failed: {pdf_err}"}
+                )
 
-            except Exception as e:
-                status.update(label="🚨 **Critical Failure**", state="error")
-                st.error(f"Stack Trace: {e}")
+            status.update(
+                label="✨ **Analysis Synthesized**", state="complete", expanded=False
+            )
+            st.rerun()
 
-# Display Results from Session State
+        except Exception as e:
+            status.update(label="🚨 **Critical Failure**", state="error")
+            st.error(f"Stack Trace: {e}")
+
+# 5. Results Display
 if st.session_state.assessment_result:
-    col1, col2 = st.columns([1.5, 1])
+    col_rep, col_dash = st.columns([1.5, 1])
 
-    with col1:
+    with col_rep:
         st.markdown(f"### 📋 Analysis for Company {st.session_state.last_company_id}")
-
         if st.session_state.reasoning_log:
-            with st.expander(
-                "🔍 **Agent Cluster Synchronization Logs**", expanded=False
-            ):
+            with st.expander("🔍 **Agent Cluster Synchronization Logs**"):
                 for log in st.session_state.reasoning_log:
                     if log["type"] == "expander":
                         st.write(log["msg"])
@@ -396,15 +163,14 @@ if st.session_state.assessment_result:
                             st.write(log["content"])
                     else:
                         st.write(log["msg"])
-
         st.markdown(st.session_state.assessment_result)
 
-    with col2:
+    with col_dash:
         st.markdown("### ⚡ Analytics Dashboard")
         score = st.session_state.risk_score
         st.plotly_chart(create_gauge_chart(score), width="stretch")
 
-        # Decision Logic Box
+        # Decision Logic
         if score >= 70:
             st.error(f"### 🚩 REJECT\nRisk Level: **High** ({score:.1f})")
         elif score >= 30:
@@ -412,37 +178,25 @@ if st.session_state.assessment_result:
         else:
             st.success(f"### ✅ APPROVE\nRisk Level: **Low** ({score:.1f})")
 
-        # Document Action
+        # Download Action
         st.markdown("---")
         if st.session_state.get("pdf_bytes"):
-            try:
-                provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
-                if st.session_state.get("used_fallback_lite"):
-                    provider_nick += "-lite"
+            provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
+            if st.session_state.get("used_fallback_lite"):
+                provider_nick += "-lite"
 
-                st.download_button(
-                    label="📥 Download Executive PDF",
-                    data=cast(bytes, st.session_state.pdf_bytes),
-                    file_name=f"ACRAS_Report_{st.session_state.last_company_id}_{provider_nick}.pdf",
-                    mime="application/pdf",
-                    width="stretch",
-                    use_container_width=True,
-                )
-            except Exception as e:
-                st.error(f"Error preparing download: {e}")
+            st.download_button(
+                label="📥 Download Executive PDF",
+                data=cast(bytes, st.session_state.pdf_bytes),
+                file_name=f"ACRAS_Report_{st.session_state.last_company_id}_{provider_nick}.pdf",
+                mime="application/pdf",
+                width="stretch",
+            )
         else:
             st.warning("⚠️ Report preparation partial. PDF not available.")
 
-elif not submit_btn:
-    # Welcome State
-    st.info("👈 Select a Company ID from the Control Panel to begin the assessment.")
-
-    # Showcase stats
-    if not df_companies.empty:
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Database Coverage", len(df_companies), "Records")
-        c2.metric("Median Revenue", f"${df_companies['ingresos'].median():,.0f}")
-        c3.metric("System Status", "Ready", delta="Optimal", delta_color="normal")
+elif not submit_btn and not st.session_state.assessment_result:
+    render_welcome_state(df_companies)
 
 elif submit_btn and not selected_id:
     st.warning("Please select a target entity.")

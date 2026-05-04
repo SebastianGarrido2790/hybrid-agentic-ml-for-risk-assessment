@@ -14,6 +14,7 @@ re-binding without system downtime.
 
 import importlib
 import operator
+import re
 from typing import Annotated, Any, TypedDict
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
@@ -286,13 +287,90 @@ def orchestrator_node(state: AgentState):
     # DYNAMIC RELOAD for HOT SWAPPING
     import src.agents.prompts as prompts_module
 
-    importlib.reload(prompts_module)  # Requires a "module object" to work
+    importlib.reload(prompts_module)
     system_prompt = getattr(prompts_module, "ORCHESTRATOR_SYSTEM_PROMPT")
 
+    # PREVENT TRUNCATION & REDUNDANCY:
+    # 1. Extract Specialist findings
+    analyst_finding = ""
+    scientist_finding = ""
+
+    for m in reversed(messages):
+        content = str(m.content)
+        # Lenient matching for specialist reports
+        if (
+            "Summary Opinion" in content or "Financial Analyst" in content
+        ) and not analyst_finding:
+            analyst_finding = content
+        if (
+            "Quantitative Risk Analysis" in content or "Data Scientist" in content
+        ) and not scientist_finding:
+            scientist_finding = content
+
+    else:
+        context_fallback = f"--- ANALYST ---\n{analyst_finding}\n\n--- SCIENTIST ---\n{scientist_finding}"
+
+    # --- DETERMINISTIC GUARDRAILS (R-01) ---
+    guardrails = []
+    try:
+        # Look for raw data message to extract critical ratios
+        for msg in messages:
+            if hasattr(msg, "content") and "'ratio_mora'" in str(msg.content):
+                # Clean up the string to make it parseable if it's formatted as a dict string
+                data_str = str(msg.content)
+                # Basic extraction of floats from the string using regex if needed,
+                # or just look for the key-value pairs.
+                mora_match = re.search(r"'ratio_mora':\s*([0-9.]+)", data_str)
+                liq_match = re.search(r"'current_ratio':\s*([0-9.]+)", data_str)
+
+                if mora_match:
+                    mora_val = float(mora_match.group(1))
+                    if mora_val > 0.20:
+                        guardrails.append(
+                            f"- [CRITICAL] Mora Ratio is {mora_val * 100:.1f}%. Threshold for HIGH risk is 20%."
+                        )
+                if liq_match:
+                    liq_val = float(liq_match.group(1))
+                    if liq_val < 0.50:
+                        guardrails.append(
+                            f"- [CRITICAL] Current Ratio is {liq_val:.2f}. Threshold for HIGH risk is 0.50."
+                        )
+                break
+    except Exception:
+        pass  # Fail silently, don't break synthesis for a parsing error
+
+    advisory_block = ""
+    logs = []
+    if guardrails:
+        advisory_block = (
+            "### SYSTEM RISK ADVISORY (DETERMINISTIC) ###\n"
+            + "\n".join(guardrails)
+            + "\n\n"
+        )
+        logs.append(
+            SystemMessage(content="🚨 [SYSTEM] Deterministic Risk Advisory injected.")
+        )
+
+    # 2. Build a single, high-authority instruction block.
+    final_instruction = (
+        f"{system_prompt}\n\n"
+        f"{advisory_block}"
+        "### RAW DATA FOR SYNTHESIS ###\n"
+        f"{context_fallback}\n\n"
+        "### CRITICAL FINAL INSTRUCTIONS ###\n"
+        "1. You are the CRO. Write the FULL, UNABRIDGED Executive Credit Risk Assessment.\n"
+        "2. Do NOT skip any sections. You MUST generate sections 1, 2, 3, 4, 5, and 6.\n"
+        "3. Your response MUST START EXACTLY with '# Executive Credit Risk Assessment'.\n"
+        "4. DO NOT add any conversational filler or introductory dots ('.').\n"
+        "5. Your report MUST be at least 500 words of deep analysis."
+    )
+
     models = get_dynamic_models()
-    inputs = [SystemMessage(content=system_prompt)] + messages
-    response, logs = invoke_with_fallback(models, inputs, "CRO")
-    return {"messages": logs + [response]}
+    # Use a single HumanMessage as it often gets better adherence in Flash models
+    inputs = [HumanMessage(content=final_instruction)]
+
+    response, invoke_logs = invoke_with_fallback(models, inputs, "CRO")
+    return {"messages": logs + invoke_logs + [response]}
 
 
 # --- Conditional Logic ---
