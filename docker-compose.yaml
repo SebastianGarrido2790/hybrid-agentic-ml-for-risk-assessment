@@ -1,27 +1,86 @@
 services:
+  # --- MLflow Tracking Server ---
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: acras-production-suite:v2.2
+    container_name: acras-mlflow
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow_system.db:/app/mlflow_system.db
+      - ./artifacts/mlflow_storage:/app/artifacts/mlflow_storage
+    command: ["mlflow", "server", "--backend-store-uri", "sqlite:///app/mlflow_system.db", "--default-artifact-root", "/app/artifacts/mlflow_storage", "--host", "0.0.0.0", "--port", "5000"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health", "||", "exit 0"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # --- FastAPI Inference Service (Brawn) ---
   api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: acras-prediction-service:v2
+    image: acras-production-suite:v2.2
     container_name: acras-api
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
-      # Bind mounts for rapid development (no rebuilds for code changes)
       - ./src:/app/src
       - ./config:/app/config
       - ./artifacts:/app/artifacts
       - ./logs:/app/logs
+    env_file:
+      - .env
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
-    # Explicitly override both to ensure clean hot-reload in development
-    entrypoint: ["/app/.venv/bin/python", "-m", "uvicorn", "src.app.main:app"]
-    command: ["--host", "0.0.0.0", "--port", "8000", "--reload"]
+      - MLFLOW_TRACKING_URI=http://acras-mlflow:5000
+    command: ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    depends_on:
+      - mlflow
     healthcheck:
-      test:
-        ["CMD", "curl", "-f", "http://localhost:8000/health", "||", "exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health", "||", "exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
+
+  # --- Modular Streamlit Dashboard (Brain Orchestrator) ---
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: acras-production-suite:v2.2
+    container_name: acras-ui
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./artifacts:/app/artifacts
+      - ./reports:/app/reports
+    env_file:
+      - .env
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - ML_API_URL=http://acras-api:8000/predict
+      - MLFLOW_TRACKING_URI=http://acras-mlflow:5000
+    command: ["streamlit", "run", "src/ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health", "||", "exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  default:
+    name: acras-network
