@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Status-Production--Ready-brightgreen?style=for-the-badge&logo=github" alt="Production Ready">
   <img src="https://img.shields.io/badge/Architecture-Agentic--FTI-blue?style=for-the-badge&logo=fastapi" alt="Agentic FTI Architecture">
   <img src="https://img.shields.io/badge/Tech-LangGraph_|_DVC_|_MLflow-blueviolet?style=for-the-badge&logo=python" alt="Tech Stack">
-  <img src="https://img.shields.io/badge/Security-Strict--Typing-orange?style=for-the-badge&logo=pydantic" alt="Strict Typing">
+  <img src="https://img.shields.io/badge/QA-41%25_Coverage_|_0_Errors-success?style=for-the-badge&logo=pytest" alt="QA Metrics">
 </div>
 
 ---
@@ -26,13 +26,13 @@ Powered by **LangGraph**, ACRAS orchestrates a specialized cluster of AI agents 
 
 1.  **📊 Financial Analyst Agent**: The auditor. Processes raw financial statements, calculates deterministic ratios (Liquidity, Solvency), and ensures data integrity.
 2.  **🔬 Risk Data Scientist Agent**: The modeler. Interfaces with our **Inference Pipeline** (Proprietary ML models) to generate Probability of Default (PD) and risk classifications.
-3.  **👔 Chief Risk Officer (Director)**: The synthesizer. Compiles all quantitative metrics and qualitative reasoning into an executive-grade directive.
+3.  **👔 Chief Risk Officer (Director)**: The synthesizer. Compiles all quantitative metrics and qualitative reasoning into an executive-grade directive using **High-Integrity Synthesis** to eliminate analytical bias.
 
 ---
 
 ## 🎨 Professional Interface & Experience
 
-The system features a state-of-the-art **Streamlit Dashboard** that provides full observability into the Agent Cluster's reasoning process.
+The system features a state-of-the-art **Modular Streamlit Dashboard** that provides full observability into the Agent Cluster's reasoning process. The UI has been fully decoupled into specialized components for production readiness and easier maintenance.
 
 <div align="center">
   <table border="0">
@@ -77,7 +77,19 @@ ACRAS is designed for 100% reliability in production through a multi-layered **A
 
 ---
 
-## 📊 Executive Reporting
+## 📂 Documentation & Architecture
+
+ACRAS is fully documented for both technical auditors and business stakeholders.
+
+| Document | Description |
+| :--- | :--- |
+| [🧠 Agentic Reasoning Engine](reports/docs/architecture/agentic_reasoning_engine.md) | Deep dive into the LangGraph orchestration and 3-tier fallback logic. |
+| [✅ System Validation Report](reports/docs/evaluations/acras_system_validation_report.md) | Empirical results for Company 1090, confirming High-Integrity Synthesis. |
+| [💻 Codebase Review](reports/docs/evaluations/codebase_review.md) | Structural assessment of the MLOps FTI pattern implementation. |
+
+---
+
+## 📄 Executive Reporting Examples
 
 The system generates board-ready PDF reports that combine technical precision with business clarity.
 
@@ -152,9 +164,13 @@ MLFLOW_TRACKING_URI=http://127.0.0.1:5000
 
 # Option B: Start only the MLflow Tracking Server
 .\launch_mlflow.bat
+
+# Option C: Production Deployment via Docker Compose
+docker-compose up --build
 ```
 
 ### 3. Monitoring
+- **Streamlit Dashboard**: Visit `http://localhost:8501` for the full agentic UI.
 - **MLflow UI**: Visit `http://localhost:5000` to inspect experiment metrics.
 - **API Docs**: Visit `http://localhost:8000/docs` for the interactive Swagger UI.
 
@@ -165,10 +181,10 @@ MLFLOW_TRACKING_URI=http://127.0.0.1:5000
 ACRAS implements a rigorous **Multi-Point Validation** strategy centered around four critical pillars of system health.
 
 ### The 4 Pillars of Validation
-1.  **Static Logic & Type Safety**: 100% type hint coverage enforced via `pyright` and modular linting with `ruff`.
-2.  **Functional Integrity**: Comprehensive unit testing with `pytest`, requiring a minimum **40% coverage gate** for all core modules.
+1.  **Static Logic & Type Safety**: Strict type hint coverage enforced via `pyright` (**0 errors**) and modular linting with `ruff`.
+2.  **Functional Integrity**: Comprehensive unit testing with `pytest`, currently at **41% coverage**, exceeding the baseline production gate.
 3.  **Pipeline Synchronization**: Automated `DVC` status checks to ensure data artifacts and model versions are perfectly in sync with the code.
-4.  **API Resilience**: Real-time health-check validation of the inference microservice.
+4.  **Inference Stability**: Hardened orchestrator with **Deterministic Risk Guardrails** to eliminate "optimistic bias" in high-risk profiles.
 
 ### Single-Command Validation
 Developers can run the full battery of tests using the provided validation script:

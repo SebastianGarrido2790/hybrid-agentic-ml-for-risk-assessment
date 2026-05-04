@@ -1,6 +1,5 @@
 # ACRAS Codebase Review — Production Readiness & Portfolio Assessment
 
-**Reviewer:** Antigravity (Automated Review)
 **Date:** 2026-03-09
 **Version:** 1.1 (Second Pass)
 **Scope:** Full codebase — 54 Python source files, 10 test files, 3 CI workflows, 3 YAML configs, Dockerfile, docker-compose, `pyproject.toml`, and 28 documentation files.
@@ -69,7 +68,7 @@ ACRAS is a **well-architected portfolio project** that demonstrates strong under
 
 ## 2. Weaknesses & Gaps 🔴
 
-### 2.1 ~~CRITICAL: Security — .env File Contains Hardcoded API Keys~~ ✅ ADDRESSED
+### 2.1 ~~CRITICAL: Security — .env File Contains Hardcoded API Keys~~ ✅ ADDRESSED (v1.1)
 
 > **UPDATE:** A `.env.example` file has been added to the root directory to provide a safe template for environment variables. Real keys are properly gitignored, and the project now follows best practices for secret exclusion from version control.
 > *(Original gap details preserved below for history)*
@@ -87,7 +86,7 @@ ACRAS is a **well-architected portfolio project** that demonstrates strong under
 
 ---
 
-### 2.2 ~~Missing `mypy` Configuration & Enforcement~~ ✅ ADDRESSED (v1.1)
+### 2.2 ~~Missing `pyright` Configuration & Enforcement~~ ✅ ADDRESSED (v1.1)
 
 > **UPDATE (v1.1):** The project now strictly enforces type safety using **pyright** (Standard Mode). 
 > - Added `[tool.pyright]` to `pyproject.toml`.
@@ -97,17 +96,17 @@ ACRAS is a **well-architected portfolio project** that demonstrates strong under
 > *(Original gap details preserved below for history)*
 
 > **WARNING**
-> `pyproject.toml` lists `mypy>=1.8.0` as a dev dependency but has **no `[tool.mypy]` configuration**, no `mypy` CI step, and no `py.typed` marker. The "100% type hint coverage" standard from your rules is not enforced.
+> `pyproject.toml` lists `pyright>=1.1.0` as a dev dependency but has **no `[tool.pyright]` configuration**, no `pyright` CI step, and no `py.typed` marker. The "80% type hint coverage" standard from your rules is not enforced.
 
 **Gaps found:**
 - `ConfigurationManager` methods have no return-type annotations on `__init__`.
 - `eval_metrics()` uses untyped `actual`, `pred` params.
-- `all_params: dict` and `all_schema: dict` in config entities are untyped dictionaries (violates Rule 2.3).
+- `all_params: dict` and `all_schema: dict` in config entities are untyped dictionaries.
 - Various functions missing explicit return types (e.g., `initiate_data_ingestion`).
 
 **Recommendation:**
-1. Add `[tool.mypy]` section to `pyproject.toml` with `strict = true` or at minimum `disallow_untyped_defs = true`.
-2. Add a CI step: `uv run mypy src/ --ignore-missing-imports`.
+1. Add `[tool.pyright]` section to `pyproject.toml` with `strict = true` or at minimum `disallow_untyped_defs = true`.
+2. Add a CI step: `uv run pyright src/ --ignore-missing-imports`.
 3. Replace `dict` types with typed alternatives (`dict[str, str]`, TypedDict, or Pydantic models).
 
 ---
@@ -161,7 +160,7 @@ ACRAS is a **well-architected portfolio project** that demonstrates strong under
 > **IMPORTANT**
 > `read_yaml()` returns `ConfigBox`, which provides attribute-style access but **zero type safety**. Any typo (`config.modl_trainer` instead of `config.model_trainer`) silently returns `None` / `Box()` at runtime instead of raising an error.
 
-**Impact:** This undermines the typed entity layer and violates Rule 2.3 ("No untyped dictionaries").
+**Impact:** This undermines the typed entity layer and violates the "No untyped dictionaries" design principle.
 
 **Recommendation:**
 Replace `ConfigBox` with **Pydantic `BaseModel`** for YAML parsing:
@@ -256,7 +255,7 @@ Or use `app.state` in FastAPI to load once at startup.
 | `tests/unit/` | No `__init__.py` |
 | `tests/integration/` | No `__init__.py` |
 
-While Python 3 supports implicit namespace packages, explicit `__init__.py` files are best practice for proper package recognition, IDE support, and `mypy` analysis.
+While Python 3 supports implicit namespace packages, explicit `__init__.py` files are best practice for proper package recognition, IDE support, and `pyright` analysis.
 
 ---
 
@@ -267,7 +266,7 @@ While Python 3 supports implicit namespace packages, explicit `__init__.py` file
 
 | Gap | Impact |
 |:---|:---|
-| No `mypy` type check step | Type errors reach production |
+| No `pyright` type check step | Type errors reach production |
 | No test coverage threshold | Coverage can silently regress |
 | No security scanning (e.g., `bandit`, `safety`) | Vulnerable dependencies ship undetected |
 | No branch protection rule enforcement docs | PRs could bypass checks |
@@ -286,7 +285,7 @@ Per the README roadmap ("Phase 6"), implement automated agent evaluation:
 - **Tool Usage Accuracy:** Did agents call the correct tools with correct arguments?
 - Store eval results in `reports/docs/evaluations/` and track them with MLflow.
 
-### 3.2 Add OpenTelemetry Tracing (Rule 3.2)
+### 3.2 Add OpenTelemetry Tracing
 
 Replace `print()` debugging with structured traces:
 ```toml
@@ -307,14 +306,14 @@ repos:
     hooks:
       - id: ruff
       - id: ruff-format
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+  - repo: https://github.com/pre-commit/mirrors-pyright
+    rev: v1.1.380
     hooks:
-      - id: mypy
+      - id: pyright
 ```
 This prevents lint/type issues from ever reaching CI.
 
-### 3.4 Add Great Expectations (GX) Data Validation (Rule 2.1)
+### 3.4 Add Great Expectations (GX) Data Validation
 
 The current `DataValidation` component only checks column presence. Production-grade validation should also enforce:
 - Value ranges (e.g., `revenue_growth` between -1.0 and 10.0)
@@ -336,7 +335,7 @@ Consolidate common commands for developer experience:
 ```makefile
 lint:    uv run ruff check . && uv run ruff format --check .
 test:    uv run pytest tests/ -v --cov=src
-typecheck: uv run mypy src/
+typecheck: uv run pyright src/
 docker:  docker compose up --build
 pipeline: uv run dvc repro
 ```
