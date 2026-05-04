@@ -33,7 +33,7 @@ def prepare_pdf_export(
             provider_nick += "-lite"
 
         filename = f"ACRAS_Report_{company_id}_{provider_nick}.pdf"
-        
+
         pdf_bytes = generate_pdf_report(
             assessment_result,
             filename=filename,
