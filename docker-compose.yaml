@@ -4,8 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: acras-production-suite:v2.1
+    image: acras-production-suite:v2.2
     container_name: acras-mlflow
+    restart: unless-stopped
     ports:
       - "5000:5000"
     volumes:
@@ -13,7 +14,7 @@ services:
       - ./artifacts/mlflow_storage:/app/artifacts/mlflow_storage
     command: ["mlflow", "server", "--backend-store-uri", "sqlite:///app/mlflow_system.db", "--default-artifact-root", "/app/artifacts/mlflow_storage", "--host", "0.0.0.0", "--port", "5000"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health", "||", "exit 0"] # MLflow health endpoint varies, exit 0 as fallback
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health", "||", "exit 0"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -23,8 +24,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: acras-production-suite:v2.1
+    image: acras-production-suite:v2.2
     container_name: acras-api
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
@@ -32,6 +34,8 @@ services:
       - ./config:/app/config
       - ./artifacts:/app/artifacts
       - ./logs:/app/logs
+    env_file:
+      - .env
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -50,8 +54,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: acras-production-suite:v2.1
+    image: acras-production-suite:v2.2
     container_name: acras-ui
+    restart: unless-stopped
     ports:
       - "8501:8501"
     volumes:
@@ -59,14 +64,13 @@ services:
       - ./config:/app/config
       - ./artifacts:/app/artifacts
       - ./reports:/app/reports
+    env_file:
+      - .env
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
       - ML_API_URL=http://acras-api:8000/predict
       - MLFLOW_TRACKING_URI=http://acras-mlflow:5000
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - HUGGINGFACEHUB_API_TOKEN=${HUGGINGFACEHUB_API_TOKEN}
-    # Streamlit configuration for running behind a proxy or in a container
     command: ["streamlit", "run", "src/ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
     depends_on:
       api:

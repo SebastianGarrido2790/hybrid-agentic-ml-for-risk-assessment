@@ -33,8 +33,8 @@ FROM python:3.10-slim-bookworm AS runtime
 # Metadata labels for container orchestration and compliance
 LABEL org.opencontainers.image.title="ACRAS - Agentic Credit Risk Assessment System" \
       org.opencontainers.image.description="Unified production image for the ACRAS Agent Cluster (FastAPI & Streamlit)" \
-      org.opencontainers.image.version="2.1"
-# Hardened Synthesis Version
+      org.opencontainers.image.version="2.2"
+# Hardened Synthesis Version (Production Elite)
 
 WORKDIR /app
 
@@ -43,10 +43,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.venv/bin:$PATH"
 
-# Install minimal runtime system dependencies (libcairo2 for xhtml2pdf)
+# Install minimal runtime system dependencies (libcairo2 + pango for xhtml2pdf)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libcairo2 \
+    libpangocairo-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root group and user for security

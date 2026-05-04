@@ -55,6 +55,30 @@ The script will:
 
 > **Tip:** To stop the full system, close the `ACRAS-API` window in the taskbar, then press `Ctrl+C` in the main terminal.
 
+### 2.3 Production Orchestration (Docker Compose)
+
+For a production-elite deployment, ACRAS uses a unified Docker environment to orchestrate the API, UI, and MLflow services.
+
+1. **Configure Environment**
+   Ensure your `.env` file contains the required keys:
+   ```dotenv
+   GOOGLE_API_KEY=your_key
+   HUGGINGFACEHUB_API_TOKEN=your_token
+   ```
+
+2. **Launch the Suite**
+   Run the following command from the project root:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Service Mapping**
+   - **Streamlit UI:** `http://localhost:8501`
+   - **FastAPI Backend:** `http://localhost:8000`
+   - **MLflow Server:** `http://localhost:5000`
+
+The suite uses **Docker Health Checks** to ensure the UI only initializes once the API is fully responsive, preventing "Connection Refused" errors during startup.
+
 ---
 
 ## 3. Global Hot-Swapping (Live Model Switching)
