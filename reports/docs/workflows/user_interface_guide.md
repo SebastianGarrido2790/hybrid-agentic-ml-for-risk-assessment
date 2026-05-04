@@ -1,13 +1,19 @@
 # ACRAS User Interface Guide
 
-**Version:** 1.1 — Persistence Enabled
-**Date:** 2026-03-08 | **Repository:** `SebastianGarrido2790/hybrid-agentic-ml-for-risk-assessment`
+**Version:** 1.3 — Hardened Synthesis
+**Date:** 2026-05-04 | **Repository:** `SebastianGarrido2790/hybrid-agentic-ml-for-risk-assessment`
 
 ---
 
 ## 1. Introduction
 
-The **ACRAS Intelligence Suite** is a Streamlit-based web application (`src/ui/app.py`) designed for Risk Managers. It provides a premium, dark-themed interactive dashboard to select a target company, trigger the multi-agent AI reasoning engine, and visualize a structured credit risk assessment in real-time.
+The **ACRAS Intelligence Suite** is a modular Streamlit application designed for Risk Managers. Following project modularity standards, the interface is decomposed into specialized modules to ensure maintainability and high-performance rendering:
+
+- **`src/ui/app.py`**: The primary orchestrator and entry point.
+- **`src/ui/components.py`**: Reusable UI elements (Headers, Sidebar, Welcome state).
+- **`src/ui/styles.py`**: Custom CSS tokens and Plotly visualization logic.
+- **`src/ui/data_loader.py`**: Dataset ingestion and session state initialization.
+- **`src/ui/utils.py`**: Helper functions for risk score extraction and logic.
 
 The application title bar reads:
 > 🏦 **ACRAS Intelligence Suite** — *Advanced Agentic Credit Risk & Analysis System*
@@ -115,6 +121,7 @@ While an assessment is running, the left column (`col1`) renders a `st.status` b
 - **Tool call logs:** `📊 **Analyst** → Executing \`fetch_company_data\``
 - **Fallback logs:** `🔄 Falling back to 1st Fallback (gemini-2.5-flash)...`
 - **Warning logs:** `⚠️ Primary (qwen/qwen2.5-7b-instruct) failed.`
+- **Guardrail logs:** `🚨 [SYSTEM] Deterministic Risk Advisory injected.` (if critical thresholds are breached).
 - **Agent response logs:** `📊 **Analyst** → Intelligence Update Captured.` followed by an inline expander showing the agent's raw output.
 - **Final log:** `👔 **Director** → Compiling Final Directive...`
 
@@ -131,7 +138,7 @@ After the `st.rerun()`, the layout switches to a **two-column layout** `[1.5, 1]
 
 **Right Column — Analytics Dashboard**
 - Header: `### ⚡ Analytics Dashboard`
-- **Risk Gauge:** A Plotly `go.Indicator` gauge chart (0–100 scale) with three color bands:
+- **Risk Gauge:** A Plotly `go.Indicator` gauge chart (0–100 scale) with three color bands. Following Streamlit's latest API standards, charts are rendered with `width='stretch'` for maximum responsive fit.
   - 🟢 **0–30:** Low Risk (green zone)
   - 🟡 **30–70:** Moderate Risk (yellow zone)
   - 🔴 **70–100:** High Risk (red zone)
@@ -165,9 +172,10 @@ START → financial_analyst ⇆ financial_tools → data_scientist ⇆ ml_tools 
 | :--- | :--- | :--- | :--- |
 | `📊 **Analyst**` | `financial_analyst` | Financial Health | Liquidity/Solvency ratios, key metric tables, per-metric risk ratings. |
 | `🔬 **Scientist**` | `data_scientist` | ML Prediction | Probability of Default (PD), ML feature interpretation, quantitative tiering. |
-| `👔 **Director**` | `orchestrator` | Executive Synthesis | Final executive report, 6-metric KPI dashboard, and the final Approve/Reject directive. |
+| `👔 **Director**` | `orchestrator` | Executive Synthesis | High-authority synthesis of all specialist findings into a mandatory 6-section report. Incorporates **Deterministic Risk Guardrails** if critical ratios (Delinquency > 20% or Liquidity < 0.5) are detected. |
 
 The node name shown in the log expanders matches the internal graph node key (e.g., `Access financial_analyst logs`).
+The Orchestrator uses a **High-Adherence Prompting** pattern that merges role instructions and specialist findings into a single turn to prevent response truncation.
 
 ---
 
@@ -189,7 +197,7 @@ When the **2nd Fallback** is triggered, the session flag `used_fallback_lite` is
 
 Once the assessment is complete:
 1. The PDF is automatically generated in-memory immediately after the Director's response is captured.
-2. The **📥 Download Executive PDF** button appears in the **right column** of the Analytics Dashboard.
+2. The **📥 Download Executive PDF** button appears in the **right column** of the Analytics Dashboard. Following modern UI standards, this button uses `width='stretch'` to align with the gauge dashboard.
 3. Clicking it downloads the report as `ACRAS_Report_{company_id}_{provider}.pdf`.
 
 > **Note:** If a runtime error occurs during PDF generation, a warning replaces the button. The textual report in the left column remains fully accessible for copy-paste.

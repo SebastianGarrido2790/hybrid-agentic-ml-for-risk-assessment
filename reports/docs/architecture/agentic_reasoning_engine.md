@@ -2,9 +2,9 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 2.0
-**Date:** 2026-03-07
-**Status:** Production
+**Version:** 2.1
+**Date:** 2026-05-04
+**Status:** Production (Hardened)
 
 ---
 
@@ -14,7 +14,7 @@ The **Agentic Reasoning Engine** (ARE) is the cognitive core of the ACRAS system
 
 The Engine separates reasoning from computation: LLM agents act as **the Brain** (probability, synthesis, language generation), while typed deterministic Python tools act as **the Hands** (math, data retrieval, ML API calls). This separation prevents LLM hallucinations in high-stakes financial calculations.
 
-A **3-Tier Dynamic Fallback Strategy** and **Live Hot-Swapping** (via `importlib.reload`) make the engine production-grade: maximally resilient to provider outages and configurable at runtime without any restart.
+A **3-Tier Dynamic Fallback Strategy**, **Live Hot-Swapping** (via `importlib.reload`), and **High-Adherence Orchestration** (via isolated context injection) make the engine production-grade: maximally resilient to provider outages, configurable at runtime, and immune to structural truncation.
 
 ---
 
@@ -125,13 +125,14 @@ The graph consists of five nodes: three agent nodes and two deterministic tool n
 - **Role:** Chief Risk Officer — final synthesis into an executive-grade report.
 - **Tools bound:** None. This agent receives the full conversation history and synthesizes it.
 - **Output Structure:** A complete 6-section Executive Credit Risk Assessment, including a final `SYSTEM FINAL RISK SCORE: [0–100]` that can be parsed by downstream systems (e.g., the PDF generator, Streamlit UI).
+- **Hardening (v1.1+):** Employs **High-Adherence Synthesis** by merging specialists' findings into a single, high-authority `HumanMessage`. This bypasses model redundancy assumptions and forces the model to generate a complete report even if specialists provided extensive history.
 - **Terminal Node:** Routes directly to `END`.
 
 ---
 
 ### 3.5 Deterministic Tools — `src/agents/tools/`
 
-Following Rule 1.2 (Brain vs. Hands), all computation is delegated to deterministic tools. The LLM never performs arithmetic.
+Following Brain vs. Hands design principles, all computation is delegated to deterministic tools. The LLM never performs arithmetic.
 
 #### `lookup_tool.py` — `fetch_company_data`
 
@@ -164,7 +165,7 @@ All tools guard against division by zero, returning a descriptive error string.
 
 ### 3.6 System Prompts — `prompts.py`
 
-Following the **No Naked Prompts policy** (Rule 1.5), all system prompts are centralized in `prompts.py`, completely segregated from the execution logic in `graph.py`. This module is reloaded dynamically on each graph node invocation to support live prompt tuning without restarts.
+Following the **No Naked Prompts policy**, all system prompts are centralized in `prompts.py`, completely segregated from the execution logic in `graph.py`. This module is reloaded dynamically on each graph node invocation to support live prompt tuning without restarts.
 
 | Prompt Constant | Agent | Key Constraint |
 | :--- | :--- | :--- |
@@ -240,7 +241,9 @@ The choice of LLM per role is deliberately strategic. See `decisions/gemini_mode
 | :--- | :--- | :--- |
 | **Financial Analyst** | `gemini-2.5-flash` | High context window for large financial records; cost-efficient for text processing |
 | **Risk Data Scientist** | `Qwen2.5-7B-Instruct` (HF) | Exceptional strict JSON/tool-calling; no hallucination on `PredictionInput` schema |
-| **CRO / Orchestrator** | `gemini-2.5-flash` | Strong synthesis and report generation; handles long conversation histories |
+| **CRO / Orchestrator** | `gemini-2.5-flash` | Strong synthesis and report generation; superior structural adherence for complex outputs |
+
+> **Validation Note (Co. 1090):** Qwen-7B exhibits a **conservative/optimistic bias** in high-stress scenarios (rating a severe risk profile as "Moderate"). `gemini-2.5-flash` is the verified production standard for analytical calibration.
 
 ---
 
@@ -280,6 +283,7 @@ DEFAULT_LLM_PROVIDER=huggingface   # or "gemini"; omit for live hot-swapping
 | Agent pattern | Sequential Relay (not parallel) | Risk scoring requires ordered context accumulation; Analyst findings feed the Scientist |
 | Tool execution | `ToolNode` (pre-built) | Standard LangGraph pattern; cleanly maps `tool_calls` to `ToolMessage` objects |
 | Fallback strategy | `importlib.reload` per node | Enables hot-swapping without restart; state is always based on current config |
-| Math delegation | Pydantic-validated deterministic tools | Eliminates LLM hallucinations on financial ratios per Rule 1.2 |
-| Prompt management | Centralized `prompts.py` + dynamic reload | Supports live prompt tuning (Rule 1.5, No Naked Prompts) |
+| Math delegation | Pydantic-validated deterministic tools | Eliminates LLM hallucinations on financial ratios per Brain vs. Hands |
+| Prompt management | Centralized `prompts.py` + dynamic reload | Supports live prompt tuning (No Naked Prompts) |
+| Synthesis adherence | **High-Adherence Orchestration** | Isolates findings into a terminal high-authority message to prevent truncation |
 | Data leakage prevention | `target`/`default_probability` excluded in lookup tool | Prevents agent from seeing ground truth label during inference |
