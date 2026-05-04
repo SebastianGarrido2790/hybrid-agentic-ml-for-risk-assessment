@@ -86,13 +86,15 @@ if submit_btn and selected_id:
                             continue
 
                         # Handle Tool Calls
-                        if hasattr(msg, "tool_calls") and msg.tool_calls:
-                            for tc in msg.tool_calls:
-                                m_txt = f"{agent_label} → Executing `{tc['name']}`"
-                                status.write(m_txt)
-                                st.session_state.reasoning_log.append(
-                                    {"type": "tool", "msg": m_txt}
-                                )
+                        if hasattr(msg, "tool_calls"):
+                            t_calls = getattr(msg, "tool_calls", None)
+                            if t_calls:
+                                for tc in t_calls:
+                                    m_txt = f"{agent_label} → Executing `{tc['name']}`"
+                                    status.write(m_txt)
+                                    st.session_state.reasoning_log.append(
+                                        {"type": "tool", "msg": m_txt}
+                                    )
 
                         # Handle Final Result (Orchestrator)
                         elif msg.content:

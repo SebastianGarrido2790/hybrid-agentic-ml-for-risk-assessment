@@ -367,7 +367,7 @@ def orchestrator_node(state: AgentState):
 
     models = get_dynamic_models()
     # Use a single HumanMessage as it often gets better adherence in Flash models
-    inputs = [HumanMessage(content=final_instruction)]
+    inputs: list[BaseMessage] = [HumanMessage(content=final_instruction)]
 
     response, invoke_logs = invoke_with_fallback(models, inputs, "CRO")
     return {"messages": logs + invoke_logs + [response]}

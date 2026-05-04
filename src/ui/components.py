@@ -41,7 +41,7 @@ def render_header() -> None:
     st.markdown("---")
 
 
-def render_sidebar(df_companies: pd.DataFrame) -> Any | None:
+def render_sidebar(df_companies: pd.DataFrame) -> tuple[Any, bool]:
     """
     Render the sidebar with company selection and engine controls.
 
