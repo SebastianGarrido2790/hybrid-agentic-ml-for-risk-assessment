@@ -12,10 +12,14 @@ from langchain_core.messages import HumanMessage, SystemMessage
 import src.agents.config as config_module
 from src.agents.graph import app as agent_app
 from src.ui.components import render_header, render_sidebar, render_welcome_state
-from src.ui.data_loader import initialize_session_state, load_company_list
+from src.ui.data_loader import (
+    clear_assessment_state,
+    initialize_session_state,
+    load_company_list,
+)
+from src.ui.export import prepare_pdf_export, render_download_section
 from src.ui.styles import apply_custom_css, create_gauge_chart
 from src.ui.utils import extract_risk_score
-from src.utils.pdf_generator import generate_pdf_report
 
 # 1. Configuration & Styling
 st.set_page_config(
@@ -48,11 +52,8 @@ if submit_btn and selected_id:
         },
     )
 
-    # Clear previous result while running
-    st.session_state.assessment_result = None
-    st.session_state.pdf_bytes = None
-    st.session_state.reasoning_log = []
-    st.session_state.used_fallback_lite = False
+    # Clear previous result while running to ensure state integrity
+    clear_assessment_state()
 
     st.markdown("### 📋 Intelligence Report")
     with st.status("**Agent Cluster Synchronization**", expanded=True) as status:
@@ -123,23 +124,13 @@ if submit_btn and selected_id:
                                 with st.expander(f"Access {node_name} logs"):
                                     st.write(msg.content)
 
-            # Generate PDF automatically in memory
-            try:
-                provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
-                if st.session_state.get("used_fallback_lite"):
-                    provider_nick += "-lite"
-
-                filename = f"ACRAS_Report_{selected_id}_{provider_nick}.pdf"
-                pdf_bytes = generate_pdf_report(
-                    str(st.session_state.assessment_result),
-                    filename=filename,
-                    save_to_disk=False,
-                )
-                st.session_state.pdf_bytes = pdf_bytes
-            except Exception as pdf_err:
-                st.session_state.reasoning_log.append(
-                    {"type": "info", "msg": f"⚠️ PDF readiness failed: {pdf_err}"}
-                )
+            # Generate PDF automatically in memory via the export module
+            st.session_state.pdf_bytes = prepare_pdf_export(
+                assessment_result=str(st.session_state.assessment_result),
+                company_id=str(selected_id),
+                provider=settings.DEFAULT_LLM_PROVIDER,
+                used_fallback_lite=st.session_state.used_fallback_lite,
+            )
 
             status.update(
                 label="✨ **Analysis Synthesized**", state="complete", expanded=False
@@ -180,22 +171,13 @@ if st.session_state.assessment_result:
         else:
             st.success(f"### ✅ APPROVE\nRisk Level: **Low** ({score:.1f})")
 
-        # Download Action
-        st.markdown("---")
-        if st.session_state.get("pdf_bytes"):
-            provider_nick = settings.DEFAULT_LLM_PROVIDER.lower()
-            if st.session_state.get("used_fallback_lite"):
-                provider_nick += "-lite"
-
-            st.download_button(
-                label="📥 Download Executive PDF",
-                data=cast(bytes, st.session_state.pdf_bytes),
-                file_name=f"ACRAS_Report_{st.session_state.last_company_id}_{provider_nick}.pdf",
-                mime="application/pdf",
-                width="stretch",
-            )
-        else:
-            st.warning("⚠️ Report preparation partial. PDF not available.")
+        # Modularized Download Section
+        render_download_section(
+            pdf_bytes=st.session_state.pdf_bytes,
+            company_id=str(st.session_state.last_company_id),
+            provider=settings.DEFAULT_LLM_PROVIDER,
+            used_fallback_lite=st.session_state.used_fallback_lite,
+        )
 
 elif not submit_btn and not st.session_state.assessment_result:
     render_welcome_state(df_companies)
