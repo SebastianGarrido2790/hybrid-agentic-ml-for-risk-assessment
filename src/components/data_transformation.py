@@ -89,9 +89,7 @@ class DataTransformation:
 
             # 2. Identify Columns
             target_col = self.config.target_column
-            cols_to_drop = [
-                c for c in self.config.cols_to_drop if c != target_col
-            ]
+            cols_to_drop = [c for c in self.config.cols_to_drop if c != target_col]
             categorical_cols = []  # No categorical columns in current raw data
 
             # Set instance variables so they are available for get_data_transformer_object

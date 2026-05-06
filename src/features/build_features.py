@@ -11,9 +11,7 @@ import numpy as np
 import pandas as pd
 
 
-def engineer_features(
-    df: pd.DataFrame, insolvent_cap: float = 10.0
-) -> pd.DataFrame:
+def engineer_features(df: pd.DataFrame, insolvent_cap: float = 10.0) -> pd.DataFrame:
     """
     Transforms raw merged data into predictive features.
 
