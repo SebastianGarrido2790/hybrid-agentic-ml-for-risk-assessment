@@ -17,9 +17,6 @@ import operator
 import re
 from typing import Annotated, Any, TypedDict
 
-from src.config.configuration import ConfigurationManager
-from src.utils.logger import get_logger
-
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -32,6 +29,8 @@ from src.agents.tools.finance_tool import (
 )
 from src.agents.tools.lookup_tool import fetch_company_data
 from src.agents.tools.ml_api_tool import get_credit_risk_score
+from src.config.configuration import ConfigurationManager
+from src.utils.logger import get_logger
 
 
 # --- State Definition ---

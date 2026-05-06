@@ -23,10 +23,10 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
-from src.utils.logger import get_logger
 
 from src.app.api.endpoints import router as api_router
 from src.config.configuration import ConfigurationManager
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__, headline="main.py")
 
