@@ -49,6 +49,7 @@ def test_ingestion_validation_integration(
         val_size=0.2,
         random_state=42,
         target_column="target",  # Doesn't matter for this test as we mocking/using sample data which might not have it
+        insolvent_cap=0.4,
     )
 
     # Patching feature engineering to avoid complexity of real engineering logic
@@ -57,7 +58,7 @@ def test_ingestion_validation_integration(
 
     with patch("src.components.data_ingestion.engineer_features") as mock_eng:
         # Mock engineer to just return the merged dataframe with a dummy target
-        def side_effect(df):
+        def side_effect(df, **kwargs):
             df["target"] = 0
             return df
 

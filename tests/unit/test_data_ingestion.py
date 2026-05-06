@@ -27,6 +27,7 @@ def data_ingestion_config():
         val_size=0.2,
         random_state=42,
         target_column="custom_target",
+        insolvent_cap=0.4,
     )
 
 

@@ -27,6 +27,7 @@ def model_trainer_config():
         class_weight="balanced",
         n_jobs=-1,
         random_state=42,
+        target_column="target",
     )
 
 

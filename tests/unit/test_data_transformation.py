@@ -22,6 +22,8 @@ def data_transformation_config():
         root_dir=Path("artifacts/data_transformation"),
         data_path=Path("artifacts/data_ingestion"),
         preprocessor_path=Path("artifacts/data_transformation/preprocessor.pkl"),
+        cols_to_drop=["id_empresa", "ano", "default_probability"],
+        target_column="target",
     )
 
 
