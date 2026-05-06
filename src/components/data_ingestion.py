@@ -107,12 +107,16 @@ class DataIngestion:
             # 1. Process Training Data
             df_train_raw = self._load_and_merge_raw_data(train_fin_path, train_pd_path)
             # Use imported function instead of method
-            df_train = engineer_features(df_train_raw)
+            df_train = engineer_features(
+                df_train_raw, insolvent_cap=self.config.insolvent_cap
+            )
 
             # 2. Process Validation Data
             df_val_raw = self._load_and_merge_raw_data(val_fin_path, val_pd_path)
             # Use imported function instead of method
-            df_val = engineer_features(df_val_raw)
+            df_val = engineer_features(
+                df_val_raw, insolvent_cap=self.config.insolvent_cap
+            )
 
             # 3. Consolidate and Re-Split?
             # The params.yaml specifies split sizes. It's safer to concat and use standard split logic

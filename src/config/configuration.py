@@ -17,9 +17,11 @@ from src.entity.config_entity import (
     DataIngestionConfig,
     DataTransformationConfig,
     DataValidationConfig,
+    FeatureParamsConfig,
     ModelEvaluationConfig,
     ModelRegistrationConfig,
     ModelTrainerConfig,
+    RiskParamsConfig,
 )
 from src.utils.common import create_directories, read_yaml
 from src.utils.mlflow_config import get_mlflow_uri
@@ -69,6 +71,7 @@ class ConfigurationManager:
             val_size=params.val_size,
             random_state=params.random_state,
             target_column=self.schema.target_column,
+            insolvent_cap=self.params.feature_params.insolvent_cap,
         )
 
         return data_ingestion_config
@@ -90,6 +93,7 @@ class ConfigurationManager:
 
     def get_data_transformation_config(self) -> DataTransformationConfig:
         config = self.config.data_transformation
+        target_column = self.schema.target_column
 
         create_directories([config.root_dir])
 
@@ -97,6 +101,8 @@ class ConfigurationManager:
             root_dir=Path(config.root_dir),
             data_path=Path(config.data_path),
             preprocessor_path=Path(config.preprocessor_path),
+            cols_to_drop=config.cols_to_drop,
+            target_column=target_column,
         )
 
         return data_transformation_config
@@ -117,6 +123,7 @@ class ConfigurationManager:
             class_weight=params.class_weight,
             n_jobs=params.n_jobs,
             random_state=self.params.data_split.random_state,
+            target_column=self.schema.target_column,
         )
 
         return model_trainer_config
@@ -159,3 +166,18 @@ class ConfigurationManager:
         )
 
         return model_registration_config
+
+    def get_risk_params_config(self) -> RiskParamsConfig:
+        params = self.params.risk_thresholds
+        return RiskParamsConfig(
+            low_threshold=params.low,
+            high_threshold=params.high,
+            mora_critical=params.mora_critical,
+            current_ratio_critical=params.current_ratio_critical,
+        )
+
+    def get_feature_params_config(self) -> FeatureParamsConfig:
+        params = self.params.feature_params
+        return FeatureParamsConfig(
+            insolvent_cap=params.insolvent_cap,
+        )

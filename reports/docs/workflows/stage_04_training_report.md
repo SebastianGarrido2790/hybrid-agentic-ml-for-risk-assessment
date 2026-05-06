@@ -40,7 +40,17 @@ All model parameters are centralized in `config/params.yaml`:
 Location: `artifacts/model_trainer/`
 *   `model.pkl`: The serialized model object (Random Forest).
 
+## Operational Hardening (v2.0)
+The training phase now adheres to strict production engineering standards:
+
+### 1. Enterprise Logging
+*   **Performance Tracking**: The trainer now logs model fit duration and sample counts using the `get_logger(__name__)` utility.
+*   **Configuration Echo**: All hyperparameters used in the run are logged at the `INFO` level, providing a searchable history of model configurations in the central log file.
+
+### 2. Exception Management
+*   **Safe Serialization**: Potential I/O errors during model saving (`joblib.dump`) are now caught by `CustomException`, ensuring that disk-full or permission errors are reported with full traceback context.
+
 ## Why this is "Robust MLOps"
-1.  **Hyperparameter Decoupling**: Hardcoded parameters are forbidden. The `ModelTrainer` receives hyperparameters solely through the `ModelTrainerConfig` entity, populated from `config/params.yaml`.
-2.  **Imbalance Handling**: Using `class_weight='balanced'` ensures the model doesn't simply predict "No Default" for everyone to achieve high accuracy, which would be disastrous for a risk system.
-3.  **Audit Ready**: Every training run is linked to specific data versions through DVC, ensuring a 1:1 mapping between data, code, and the final model weights.
+1.  **Hyperparameter Decoupling**: Hardcoded parameters are forbidden. The `ModelTrainer` receives configuration solely through the `ConfigurationManager`.
+2.  **Imbalance Handling**: Using `class_weight='balanced'` ensures the model remains effective for high-risk detection.
+3.  **Audit Ready**: Every training run is linked to specific data versions through DVC and now includes a searchable structured log of every execution parameter.

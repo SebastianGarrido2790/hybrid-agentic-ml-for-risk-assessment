@@ -17,6 +17,9 @@ import operator
 import re
 from typing import Annotated, Any, TypedDict
 
+from src.config.configuration import ConfigurationManager
+from src.utils.logger import get_logger
+
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -38,6 +41,7 @@ class AgentState(TypedDict):
 
 
 # --- Tool Sets ---
+logger = get_logger(__name__)
 financial_tools_list = [
     fetch_company_data,
     calculate_debt_to_equity,
@@ -71,7 +75,8 @@ def get_dynamic_models(
     # 1. Primary
     try:
         m_primary = factory_module.get_llm()
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Primary model initialization failed: {e}")
         m_primary = None
 
     # 2. Fallback 1 (Dynamic switch)
@@ -82,7 +87,8 @@ def get_dynamic_models(
             )
         else:
             m_fb1 = factory_module.get_llm(provider="huggingface")
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Fallback-1 model initialization failed: {e}")
         m_fb1 = None
 
     # 3. Fallback 2 (Lite)
@@ -90,7 +96,8 @@ def get_dynamic_models(
         m_fb2 = factory_module.get_llm(
             provider="gemini", model_name=current_settings.GEMINI_LITE_MODEL
         )
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Fallback-2 model initialization failed: {e}")
         m_fb2 = None
 
     raw_models = [m_primary, m_fb1, m_fb2]
@@ -108,20 +115,25 @@ def bind_tools_to_all(
     """Refactored helper for dynamic binding"""
     bound = []
     for m in fallback_models:
-        if m:
-            try:
-                if tool_choice:
-                    bound.append(m.bind_tools(tools, tool_choice=tool_choice))
-                else:
-                    bound.append(m.bind_tools(tools))
-            except Exception:
-                # Some models might fail if tool_choice is forced improperly
-                try:
-                    bound.append(m.bind_tools(tools))
-                except Exception:
-                    bound.append(m)
-        else:
+        if not m:
             bound.append(None)
+            continue
+
+        try:
+            # Attempt binding with tool_choice if provided
+            if tool_choice:
+                bound.append(m.bind_tools(tools, tool_choice=tool_choice))
+            else:
+                bound.append(m.bind_tools(tools))
+        except Exception as e:
+            logger.warning(f"Model {m} failed tool binding (choice={tool_choice}): {e}")
+            try:
+                # Fallback to simple binding without tool_choice
+                logger.info(f"Retrying binding for {m} without tool_choice...")
+                bound.append(m.bind_tools(tools))
+            except Exception as e2:
+                logger.error(f"Critical failure binding tools to {m}: {e2}")
+                bound.append(m)
     return bound
 
 
@@ -196,7 +208,7 @@ def invoke_with_fallback(
                         text_parts.append(part)
                 response.content = "".join(text_parts)
 
-            print(f"🤖 {agent_name} -> Calling {tier_name} ({model_info})...")
+            logger.info(f"🤖 {agent_name} -> Calling {tier_name} ({model_info})...")
             if i > 0:
                 logs.append(
                     SystemMessage(
@@ -209,7 +221,7 @@ def invoke_with_fallback(
         except Exception as e:
             error_msg = f"Tier {i + 1} ({tier_name} - {model_info}) failed: {str(e)}"
             # Safe print for Windows terminal (cp1252)
-            print(f"! {agent_name}: {error_msg}")
+            logger.warning(f"! {agent_name}: {error_msg}")
             # Keep emoji for Streamlit UI parsing
             logs.append(SystemMessage(content=f"⚠️ {tier_name} ({model_info}) failed."))
             state_errors.append(error_msg)
@@ -323,21 +335,24 @@ def orchestrator_node(state: AgentState):
                 mora_match = re.search(r"'ratio_mora':\s*([0-9.]+)", data_str)
                 liq_match = re.search(r"'current_ratio':\s*([0-9.]+)", data_str)
 
+                config_mgr = ConfigurationManager()
+                risk_params = config_mgr.get_risk_params_config()
+
                 if mora_match:
                     mora_val = float(mora_match.group(1))
-                    if mora_val > 0.20:
+                    if mora_val > risk_params.mora_critical:
                         guardrails.append(
-                            f"- [CRITICAL] Mora Ratio is {mora_val * 100:.1f}%. Threshold for HIGH risk is 20%."
+                            f"- [CRITICAL] Mora Ratio is {mora_val * 100:.1f}%. Threshold for HIGH risk is {risk_params.mora_critical * 100:.0f}%."
                         )
                 if liq_match:
                     liq_val = float(liq_match.group(1))
-                    if liq_val < 0.50:
+                    if liq_val < risk_params.current_ratio_critical:
                         guardrails.append(
-                            f"- [CRITICAL] Current Ratio is {liq_val:.2f}. Threshold for HIGH risk is 0.50."
+                            f"- [CRITICAL] Current Ratio is {liq_val:.2f}. Threshold for HIGH risk is {risk_params.current_ratio_critical:.2f}."
                         )
                 break
-    except Exception:
-        pass  # Fail silently, don't break synthesis for a parsing error
+    except Exception as e:
+        logger.warning(f"Deterministic guardrail extraction failed: {e}")
 
     advisory_block = ""
     logs = []

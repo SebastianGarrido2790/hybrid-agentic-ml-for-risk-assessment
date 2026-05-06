@@ -20,11 +20,15 @@ from contextlib import asynccontextmanager
 
 import joblib
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
+from src.utils.logger import get_logger
 
 from src.app.api.endpoints import router as api_router
 from src.config.configuration import ConfigurationManager
+
+logger = get_logger(__name__, headline="main.py")
 
 # Global variables for model and preprocessor NO LONGER USED
 # State is stored in app.state
@@ -50,10 +54,7 @@ async def lifespan(app: FastAPI):
 
         yield
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
-        print(f"CRITICAL ERROR loading artifacts: {e}")
+        logger.critical(f"CRITICAL ERROR loading artifacts: {e}", exc_info=True)
         # Build might fail if artifacts are missing, which is expected behavior for a container checks
         raise e
     finally:
@@ -72,6 +73,19 @@ Instrumentator().instrument(app).expose(app)
 
 # Include Router
 app.include_router(api_router)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Global exception handler to prevent internal stack trace leakage.
+    Logs the full error internally and returns a generic 500 response.
+    """
+    logger.critical(f"Unhandled Exception at {request.url}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An internal server error occurred. Please contact support."},
+    )
 
 
 if __name__ == "__main__":

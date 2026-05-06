@@ -138,8 +138,9 @@ Following Brain vs. Hands design principles, all computation is delegated to det
 
 - **Input:** `company_id: int`
 - **Source:** Reads from `artifacts/data_ingestion/val.csv` (the versioned validation dataset).
+- **Performance (v2.0):** Uses `@functools.lru_cache(maxsize=1)` to memoize the validation set loading, reducing I/O latency for repeated queries.
 - **Output:** A string representation of a financial record dict, with `target` and `default_probability` fields excluded to prevent data leakage to the agent.
-- **Error Handling:** Returns a descriptive error string if the file is missing or the company ID is not found.
+- **Error Handling (v2.0):** Wraps data loading in `CustomException` with `sys` traceback capture. Returns a descriptive error string if the file is missing or the company ID is not found.
 
 #### `finance_tool.py` — Financial Ratio Calculators
 
@@ -158,8 +159,9 @@ All tools guard against division by zero, returning a descriptive error string.
 
 - **Input:** `company_id: int` (validated by `PredictionInput` Pydantic schema)
 - **Process:** Reads the company record from `val.csv`, assembles a 20-field structured payload, and POSTs it to the FastAPI service at `ML_API_URL` (`http://localhost:8000/predict`).
+- **Performance (v2.0):** Uses `@functools.lru_cache(maxsize=1)` for data loading to align with `lookup_tool` efficiency.
 - **Output:** `"Risk Level: {risk_level}, Probability of Default: {probability}"`
-- **Graceful Degradation:** Returns descriptive error strings on `ConnectionError`, `HTTPError`, or any unexpected exception — allowing the Data Scientist agent to continue with qualitative analysis if the ML service is unavailable.
+- **Graceful Degradation (v2.0):** Replaced `print()` with structured logging (`get_logger`). Returns descriptive error strings on `ConnectionError`, `HTTPError`, or any unexpected exception (caught via `CustomException`) — allowing the Data Scientist agent to continue with qualitative analysis if the ML service is unavailable.
 
 ---
 
@@ -269,9 +271,10 @@ DEFAULT_LLM_PROVIDER=huggingface   # or "gemini"; omit for live hot-swapping
 ## 7. Testing & Observability
 
 - **Unit Tests:** `tests/unit/test_agent_tools.py` — validates tool determinism (success and failure paths) using `pytest`.
-- **Fallback Validation:** Tier switches are logged as `🔄 Fallback` events appended to the `AgentState.messages` list, surfaced in the Streamlit UI log panel.
+- **Structured Logging (v2.0):** Replaced all `print()` statements in nodes and tools with `get_logger(__name__)`. This provides structured, searchable logs in `logs/running_logs.log` with correct module attribution.
+- **Fallback Validation:** Tier switches are logged as `🔄 Fallback` events and recorded as `WARNING` level events in the enterprise log stream.
 - **Agentic Evals:** Agent quality is assessed via LLM-as-a-Judge scoring on "Relevance," "Tool Usage Accuracy," "Schema Adherence," and "Business Value Alignment."
-- **Tracing:** All node invocations should be instrumented with LangSmith or an OpenTelemetry-compatible tracer for Chain-of-Thought visibility and token usage tracking.
+- **Tracing:** All node invocations are instrumented with OpenTelemetry-compatible tracing for Chain-of-Thought visibility and token usage tracking.
 
 ---
 
@@ -287,3 +290,4 @@ DEFAULT_LLM_PROVIDER=huggingface   # or "gemini"; omit for live hot-swapping
 | Prompt management | Centralized `prompts.py` + dynamic reload | Supports live prompt tuning (No Naked Prompts) |
 | Synthesis adherence | **High-Adherence Orchestration** | Isolates findings into a terminal high-authority message to prevent truncation |
 | Data leakage prevention | `target`/`default_probability` excluded in lookup tool | Prevents agent from seeing ground truth label during inference |
+| Operational Hardening (v2.0) | **Structured Logging & Memoization** | Migrated to `get_logger` and `@lru_cache` for production-grade telemetry and speed |

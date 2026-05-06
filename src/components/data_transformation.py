@@ -88,13 +88,9 @@ class DataTransformation:
             logger.info(f"Loaded datasets. Train shape: {df_train.shape}")
 
             # 2. Identify Columns
-            target_col = "target"
-
-            # Define columns to drop and categorical columns explicitly
+            target_col = self.config.target_column
             cols_to_drop = [
-                "id_empresa",
-                "ano",
-                "default_probability",
+                c for c in self.config.cols_to_drop if c != target_col
             ]
             categorical_cols = []  # No categorical columns in current raw data
 

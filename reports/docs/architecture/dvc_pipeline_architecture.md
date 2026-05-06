@@ -20,6 +20,7 @@ The ACRAS MLOps pipeline is orchestrated by **DVC (Data Version Control)** via `
 | **Smart Caching** | If only `params.yaml` (model hyperparameters) changes, DVC skips Stages 00–03 and re-runs only from Stage 04 |
 | **Data Versioning** | Large CSVs and `.joblib` artifacts are tracked by DVC, keeping Git lightweight |
 | **Lineage** | Full traceable path: Raw CSVs → Synthetic Augmentation → Ingestion → Transformation → Training → Evaluation → MLflow Registry |
+| **Observability (v2.0)** | Every stage now emits **Structured Logs** (`get_logger`) and uses **Standardized Exceptions** (`CustomException`) for elite-grade auditability. |
 
 ---
 
@@ -154,6 +155,7 @@ flowchart TD
 | **Params** | `data_split.test_size`, `data_split.val_size`, `data_split.random_state` |
 | **Input** | `data/processed/*.csv` |
 | **Output** | `artifacts/data_ingestion/{train,val,test}.csv` |
+| **Operational Hardening (v2.0)** | Replaced `print()` with `get_logger`; implemented `@lru_cache` for I/O efficiency; moved columns-to-drop to `params.yaml`. |
 | **Purpose** | Merges financial statements with PD records. Runs feature engineering (computed ratios). Splits into stratified Train/Val/Test sets. **`val.csv` is the live database used by the agent's `lookup_tool` and `ml_api_tool`.** |
 
 ### Stage 02: Data Validation
@@ -163,6 +165,7 @@ flowchart TD
 | **Script** | `src/pipeline/stage_02_data_validation.py` |
 | **Input** | `artifacts/data_ingestion/train.csv`, `config/schema.yaml` |
 | **Output** | `artifacts/data_validation/status.txt` |
+| **Operational Hardening (v2.0)** | Integrated `CustomException` to ensure schema violations are logged with full traceback before pipeline termination. |
 | **Purpose** | Enforces the data contract defined in `schema.yaml`. Validates column names, types, and presence of required fields. Downstream Stage 03 depends on `status.txt` to prevent transformation of corrupt data. |
 
 ### Stage 03: Data Transformation
@@ -173,6 +176,7 @@ flowchart TD
 | **Component** | `src/components/data_transformation.py` |
 | **Input** | `artifacts/data_ingestion/{train,val,test}.csv`, `artifacts/data_validation/status.txt` |
 | **Output** | `artifacts/data_transformation/{train,val,test}.csv`, **`preprocessor.pkl`** |
+| **Operational Hardening (v2.0)** | Standardized on structured logging for transformation metrics (outliers handled, missing values imputed). |
 | **Purpose** | Fits a scaler on `train.csv` (preventing data leakage) then transforms all three splits. **The `preprocessor.pkl` is the exact same artifact loaded by the FastAPI service at startup**, eliminating training-serving skew. |
 
 ### Stage 04: Model Training
@@ -184,6 +188,7 @@ flowchart TD
 | **Params** | `model_params.n_estimators`, `model_params.min_samples_leaf`, `model_params.class_weight`, `model_params.n_jobs`, `data_split.random_state` |
 | **Input** | `artifacts/data_transformation/train.csv`, `artifacts/data_transformation/val.csv` |
 | **Output** | **`artifacts/model_trainer/acras_rf_model.joblib`** |
+| **Operational Hardening (v2.0)** | Hyperparameters and training duration are now part of the structured log stream for improved auditability. |
 | **Purpose** | Trains a `RandomForestClassifier` with hyperparameters sourced from `params.yaml`. Model is serialized with `joblib`. This artifact is loaded by the FastAPI prediction service at startup. |
 
 ### Stage 05: Model Evaluation
@@ -195,6 +200,7 @@ flowchart TD
 | **Input** | `artifacts/data_transformation/test.csv`, `artifacts/model_trainer/acras_rf_model.joblib` |
 | **Output** | `artifacts/model_evaluation/metrics.json` (DVC metric, `cache: false`), `roc_auc_curve.png` |
 | **Metrics Tracked** | `accuracy`, `precision`, `recall`, `f1_score`, `roc_auc` |
+| **Operational Hardening (v2.0)** | Evaluation scores are now logged at `INFO` level to the centralized log file, enabling CLI-based monitoring without artifact inspection. |
 | **MLflow Logging** | Logs params, all 5 metrics, ROC plot artifact, and model object. Fault-tolerant: pipeline continues even if MLflow server is unavailable. |
 | **Purpose** | Evaluates on the held-out test set. Generates the ROC curve. As a DVC metric (`cache: false`), `metrics.json` is tracked by Git for `dvc metrics show` and `dvc metrics diff` comparisons across experiments. |
 
@@ -207,6 +213,7 @@ flowchart TD
 | **Input** | `artifacts/model_trainer/acras_rf_model.joblib`, `artifacts/model_evaluation/metrics.json` |
 | **Threshold Gate** | `min_roc_auc` from params. If `roc_auc < threshold`, registration is **skipped** with a warning. |
 | **Output** | MLflow Model Registry (registered as `acras_risk_model`) |
+| **Operational Hardening (v2.0)** | Registry events (success/skipping/connection failure) are fully documented in the structured log stream with module-level attribution. |
 | **Purpose** | The quality gate. Only promotes models that pass the performance threshold to the centralized MLflow Model Registry. Gracefully degrades to local artifact storage if the MLflow server is unreachable. |
 
 ---

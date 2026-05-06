@@ -38,7 +38,7 @@ class ModelTrainer:
             # val_data = pd.read_csv(self.config.val_data_path) # Validation done in next stage (Evaluation) or used for early stopping if supported
 
             # Prepare X and y
-            target_col = "target"
+            target_col = self.config.target_column
             X_train = train_data.drop(columns=[target_col])
             y_train = train_data[target_col]
 

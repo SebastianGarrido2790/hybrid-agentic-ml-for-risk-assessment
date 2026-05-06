@@ -33,8 +33,10 @@ flowchart TD
         API --> Schema["PredictionInput (schemas.py)\nBi-directional alias: Spanish ↔ English"]
         Schema --> Preproc["app.state.preprocessor\n(StandardScaler / RobustScaler .pkl)"]
         Preproc --> Model["app.state.model\n(acras_rf_model.joblib)"]
-        Model --> Logic["Risk Level Logic\n< 0.3 → Low | 0.3–0.7 → Medium | ≥ 0.7 → High"]
+        Model --> Logic["Risk Level Logic\n(Thresholds from params.yaml)"]
         Logic -->|"PredictionOutput JSON"| Agent
+        
+        API -.-> GEH["Global Exception Handler\n(Sanitized 500 Responses)"]
     end
 
     subgraph BOOT["Lifespan Startup (one-time)"]
@@ -117,15 +119,17 @@ The `PredictionInput` schema uses **Pydantic aliases** to accept both English (a
 | `probability` | `float` | Probability of Default (`0.0` to `1.0`) |
 | `risk_level` | `str` | Interpreted risk: `Low`, `Medium`, or `High` |
 
-### 4.3 Risk Level Thresholds — `endpoints.py`
+### 4.3 Risk Level Thresholds (v2.0)
 
-The `risk_level` field is determined by the following deterministic thresholds applied to the raw probability output:
+Risk levels are no longer hardcoded. They are determined by deterministic thresholds defined in `config/params.yaml` (e.g., `risk_thresholds.low_limit`), injected via `ConfigurationManager`.
 
-| Probability of Default | Risk Level |
-| :--- | :--- |
-| `PD < 0.30` | `Low` |
-| `0.30 ≤ PD < 0.70` | `Medium` |
-| `PD ≥ 0.70` | `High` |
+| Probability of Default (PD) | Risk Level | Config Source |
+| :--- | :--- | :--- |
+| `PD < low_limit` | `Low` | `params.yaml` |
+| `low_limit ≤ PD < high_limit` | `Medium` | `params.yaml` |
+| `PD ≥ high_limit` | `High` | `params.yaml` |
+
+This decoupling allows risk policy changes to be applied instantly across both the Training/Evaluation pipeline and the Live API without code changes.
 
 ### 4.4 Inference Pipeline (per-request)
 
@@ -147,9 +151,9 @@ The `risk_level` field is determined by the following deterministic thresholds a
 
 | Method | Path | Description | Input | Success | Error |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Service liveness check | None | `200 {"status": "ok", "service": "ACRAS-API"}` | `503` if artifacts missing |
-| `POST` | `/predict` | Credit risk prediction | `PredictionInput` JSON | `200 PredictionOutput` JSON | `422` on schema/inference error, `503` if not initialized |
-| `GET` | `/metrics` | Prometheus metrics scrape | None | Prometheus text format | — |
+| `GET` | `/health` | Service liveness check | None | `200 {"status": "ok"}` | `503` if artifacts missing |
+| `POST` | `/predict` | Credit risk prediction | `PredictionInput` JSON | `200 PredictionOutput` | `422` (Schema), `500` (Sanitized) |
+| `GET` | `/metrics` | Prometheus metrics scrape | None | Text format | — |
 
 ---
 
@@ -306,4 +310,5 @@ curl -X POST http://localhost:8000/predict \
 | HTTP Code | Cause | Resolution |
 | :--- | :--- | :--- |
 | `503 Service Unavailable` | Model/preprocessor artifacts not loaded at startup | Run DVC pipeline first; check artifact paths in `config.yaml` |
-| `422 Unprocessable Entity` | Input schema validation failed or inference raised an exception | Verify all 20 fields are present and correctly typed |
+| `422 Unprocessable Entity` | Input schema validation failed | Verify all 20 fields are present and correctly typed |
+| `500 Internal Server Error` | Unexpected runtime exception (Sanitized v2.0) | Checked in structured logs; response hides internal traceback for security |

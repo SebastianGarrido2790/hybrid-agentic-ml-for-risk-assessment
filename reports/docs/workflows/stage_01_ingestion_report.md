@@ -68,7 +68,24 @@ All artifacts are stored in `artifacts/data_ingestion/`:
 *   `val.csv`: Validation set used for schema check and tuning.
 *   `test.csv`: Hold-out test set for final performance reporting.
 
+## Operational Hardening (v2.0)
+The ingestion stage has been hardened with "Production-Elite" observability and resilience standards:
+
+### 1. Structured Logging
+Replaced all `print()` statements with the standardized `get_logger(__name__)` utility. This allows for:
+*   **Module-Level Filtering**: Logs are now tagged with `src.components.data_ingestion`.
+*   **Source Tracing**: Ingestion events are captured in the `RotatingFileHandler` for long-term auditing.
+
+### 2. Defensive Error Handling
+Implemented `CustomException` with `sys` traceback capture.
+*   **Missing Data Detection**: If a raw CSV file is missing or inaccessible, the system logs a high-fidelity error with the exact line number of the failure before terminating the pipeline gracefully.
+
+### 3. Memoized Performance
+Implemented `@functools.lru_cache` for the data loading helper.
+*   **I/O Efficiency**: Repeated calls to the same data source (e.g., during testing or multi-step analysis) now serve from memory instead of hitting the disk, reducing overall pipeline latency.
+
 ## Why this is "Robust MLOps"
 1.  **Elimination of Redundancy**: Aggregation logic ensures a strict 1:1 mapping per company, preventing data bloating and bias.
 2.  **Feature Consistency**: By moving translation and ratio calculation to the Ingestion stage, we ensure all downstream stages operate on a standardized, English-only schema.
 3.  **Reproducible Geometry**: Anchoring the 3-way split with a fixed `random_state` ensures that every pipeline run uses the exact same data partitions.
+4.  **Production Observability**: Transitioning from `print()` to structured logging ensures that ingestion telemetry is visible to enterprise monitoring stacks.

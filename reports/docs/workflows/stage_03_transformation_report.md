@@ -51,7 +51,18 @@ Location: `artifacts/data_transformation/`
 *   `train.csv`, `val.csv`, `test.csv`: Transformed datasets ready for model training.
 *   `preprocessor.pkl`: The serialized scikit-learn pipeline object.
 
+## Operational Hardening (v2.0)
+The transformation stage has been updated to support dynamic configuration and enterprise logging:
+
+### 1. Dynamic Configuration Extraction
+*   **Decoupled Logic**: Previously hardcoded columns to exclude (e.g., `cols_to_drop`) are now managed via `config/config.yaml`.
+*   **Maintenance**: Data scientists can now update the feature set and transformation targets without modifying the core `DataTransformation` component code.
+
+### 2. Structured Observability
+*   **Lifecycle Logging**: The component now logs critical transformation events (fitting, scaling, serialization) using the `get_logger(__name__)` utility, providing a clear audit trail for data prep.
+
 ## Why this is "Robust MLOps"
-*   **Elimination of Data Leakage**: Information from the validation/test sets does not influence the preprocessing parameters.
-*   **Training-Serving Symmetry**: The serialization of the `preprocessor.pkl` artifact ensures that the exact same transformation logic and statistical parameters used during training are applied during real-time inference.
-*   **Outlier Resilience**: The use of `RobustScaler` ensures that the model's feature space isn't destroyed by high-variance financial data.
+*   **Elimination of Data Leakage**: Information from validation/test sets does not influence preprocessing parameters.
+*   **Training-Serving Symmetry**: Serializing the `preprocessor.pkl` ensures the exact same logic is applied during inference.
+*   **Outlier Resilience**: Use of `RobustScaler` protects the model's feature space.
+*   **Configurable Schemas**: Moving feature selection to configuration allows for faster experimentation and higher system adaptability.

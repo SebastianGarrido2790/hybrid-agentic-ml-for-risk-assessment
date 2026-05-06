@@ -3,8 +3,12 @@ Lookup Tools for the Agentic Reasoning Engine.
 
 This module provides tools for fetching raw company data from internal
 CSV databases (e.g., validation datasets) for agents to analyze.
+
+`@lru_cache(maxsize=1)` decorator ensures the validation dataset (CSV) is loaded into
+memory only once and reused across all subsequent tool calls within the same process.
 """
 
+from functools import lru_cache
 from pathlib import Path
 
 import pandas as pd
@@ -21,6 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DATA_PATH = BASE_DIR / "artifacts" / "data_ingestion" / "val.csv"
 
 
+@lru_cache(maxsize=1)
+def _get_database() -> pd.DataFrame:
+    """Internal helper to load and cache the validation database."""
+    if not DATA_PATH.exists():
+        raise FileNotFoundError(f"Database file not found at {DATA_PATH}")
+    return pd.read_csv(DATA_PATH)
+
+
 @tool("fetch_company_data")
 def fetch_company_data(company_id: int) -> str:
     """
@@ -29,11 +41,8 @@ def fetch_company_data(company_id: int) -> str:
     Useful for the Financial Analyst to get raw data before calculating ratios.
     """
     try:
-        if not DATA_PATH.exists():
-            return f"Error: Database file not found at {DATA_PATH}"
-
-        # Load data (Lazy loading could be better for huge files, but this is small)
-        df = pd.read_csv(DATA_PATH)
+        # Load data with caching
+        df = _get_database()
 
         # Ensure ID is int
         record = df[df["id_empresa"] == company_id]

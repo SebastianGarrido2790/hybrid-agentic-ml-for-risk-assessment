@@ -59,8 +59,18 @@ The following screenshot illustrates a successful registration run in the MLflow
 
 ![MLflow UI Registration](../../figures/mlflow_ui.png)
 
+## Operational Hardening (v2.0)
+The registration stage has been hardened to ensure reliable model promotion:
+
+### 1. Standardized Logger Initialization
+*   **Contextual Logging**: Previously using a global logger, the component now uses `get_logger(__name__)`. This ensures that registration events are correctly attributed to `src.components.model_registration`, enabling precise log filtering by component.
+
+### 2. Robust Exception Management
+*   **Centralized Error Handling**: Bare `except` blocks have been replaced with specific `CustomException` handlers. 
+*   **Fail-Safe Connection**: Connection errors with the MLflow server are caught and logged with full traceback context. The "Gracious Fallback" is now explicitly logged as a `WARNING` or `ERROR`, ensuring that failure to register a model is visible in the structured log stream.
+
 ## Why this is "Robust MLOps"
-1.  **Centralized Governance**: By using a Model Registry, we move away from "local file" dependencies. The Prediction API can now pull models by name and version (e.g., `models:/ACRAS_RandomForest_v1/Staging`).
-2.  **Automated Versioning**: Every successful pipeline run automatically increments the model version, providing a clear audit trail of improvement.
-3.  **Performance Guarantees**: The quality gate ensures that we never accidentally promote a model that performs worse than a random guess.
-4.  **Decoupled Architecture**: Stage 06 can be run independently of the evaluation stage as long as the `metrics.json` artifact is present, allowing for manual re-registration if needed.
+1.  **Centralized Governance**: Pulls models by name and version from the Model Registry, removing "local file" dependencies.
+2.  **Automated Versioning**: Every successful run increments the model version for a clear audit trail.
+3.  **Performance Guarantees**: Quality gate prevents promotion of sub-threshold models.
+4.  **Resilient Execution**: Integration of `CustomException` and structured logging ensures that registry failures are documented and diagnostically accessible.

@@ -11,6 +11,19 @@ from typing import Any
 
 
 @dataclass(frozen=True)
+class RiskParamsConfig:
+    low_threshold: float
+    high_threshold: float
+    mora_critical: float
+    current_ratio_critical: float
+
+
+@dataclass(frozen=True)
+class FeatureParamsConfig:
+    insolvent_cap: float
+
+
+@dataclass(frozen=True)
 class DataAugmentationConfig:
     root_dir: Path
     raw_data_dir: Path
@@ -29,6 +42,7 @@ class DataIngestionConfig:
     val_size: float
     random_state: int
     target_column: str
+    insolvent_cap: float
 
 
 @dataclass(frozen=True)
@@ -44,6 +58,8 @@ class DataTransformationConfig:
     root_dir: Path
     data_path: Path
     preprocessor_path: Path
+    cols_to_drop: list[str]
+    target_column: str
 
 
 @dataclass(frozen=True)
@@ -57,6 +73,7 @@ class ModelTrainerConfig:
     class_weight: str
     n_jobs: int
     random_state: int
+    target_column: str
 
 
 @dataclass(frozen=True)

@@ -11,12 +11,15 @@ import numpy as np
 import pandas as pd
 
 
-def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+def engineer_features(
+    df: pd.DataFrame, insolvent_cap: float = 10.0
+) -> pd.DataFrame:
     """
     Transforms raw merged data into predictive features.
 
     Args:
         df (pd.DataFrame): Raw merged dataframe from Ingestion.
+        insolvent_cap (float): High risk cap for insolvent entities.
 
     Returns:
         pd.DataFrame: Dataframe with English column names and calculated ratios.
@@ -47,7 +50,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         df["debt_to_equity"] = np.where(
             df["patrimonio"] != 0,
             df["pasivos_totales"] / df["patrimonio"],
-            10.0,  # High risk cap for insolvent entities
+            insolvent_cap,  # High risk cap for insolvent entities
         )
 
     # Current Ratio: Liquidity (Current Assets / Current Liabilities)

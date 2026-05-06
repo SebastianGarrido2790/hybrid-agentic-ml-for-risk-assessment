@@ -8,8 +8,11 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Request, status
 
 from src.app.schemas import PredictionInput, PredictionOutput
+from src.config.configuration import ConfigurationManager
+from src.utils.logger import get_logger
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
@@ -54,9 +57,12 @@ async def predict(input_data: PredictionInput, request: Request):
         probability = float(model.predict_proba(transformed_data)[0][1])
 
         # Interpret Risk Level
-        if probability < 0.3:
+        config_mgr = ConfigurationManager()
+        risk_params = config_mgr.get_risk_params_config()
+
+        if probability < risk_params.low_threshold:
             risk_level = "Low"
-        elif probability < 0.7:
+        elif probability < risk_params.high_threshold:
             risk_level = "Medium"
         else:
             risk_level = "High"
@@ -66,8 +72,8 @@ async def predict(input_data: PredictionInput, request: Request):
         )
 
     except Exception as e:
-        print(f"Prediction Error: {str(e)}")
+        logger.error(f"Prediction Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Prediction failed: {str(e)}",
+            detail="Prediction failed due to an internal processing error.",
         )

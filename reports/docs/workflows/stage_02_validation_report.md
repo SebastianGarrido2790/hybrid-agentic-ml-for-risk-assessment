@@ -33,8 +33,19 @@ The outcome of the validation is written to a version-controlled file:
 *   **Schema**: Defined in `config/schema.yaml`.
 *   **Status File Path**: Managed via `config/config.yaml` (`data_validation.STATUS_FILE`).
 
+## Operational Hardening (v2.0)
+The validation stage now utilizes the project-wide observability stack:
+
+### 1. Structured Logging
+*   **Success/Failure Telemetry**: Validation outcomes are now logged at the `INFO` or `ERROR` level, ensuring that schema violations are visible in the central log file, not just the `status.txt` artifact.
+*   **Auditability**: Log entries now include the component name (`src.components.data_validation`), facilitating log aggregation and analysis.
+
+### 2. Standardized Exceptions
+*   **Failure Loudly**: Replaced unstructured error prints with `CustomException`. This ensures that if the data is structurally invalid, the pipeline fails with a clear, file/line-level traceback in the logs.
+
 ## Why this is "Robust MLOps"
-1.  **Contract-First Development**: By validating against a schema, we treat data as a contract. Any change in the data upstream (e.g., a field being renamed in the raw source) is caught immediately here.
-2.  **Safety in Automation**: In an automated CI/CD or DVC trigger environment, this stage prevents the consumption of "poisoned" or empty datasets by the model.
-3.  **Traceability**: The `status.txt` artifact provides a persistent record of the data health for every DVC experiment run, aiding in auditability.
-4.  **Early Failure**: Failing the pipeline at Stage 02 saves computational resources (and costs) by not proceeding to training if the data is structurally invalid.
+1.  **Contract-First Development**: By validating against a schema, we treat data as a contract. Any change in the data upstream is caught immediately.
+2.  **Safety in Automation**: Prevents the consumption of "poisoned" or empty datasets by the model.
+3.  **Traceability**: The `status.txt` artifact provides a persistent record of the data health for every DVC experiment run.
+4.  **Early Failure**: Failing at Stage 02 saves computational resources by not proceeding to training if the data is structurally invalid.
+5.  **Observability Integration**: Schema errors are no longer "silent" in the terminal; they are recorded as structured events for monitoring.

@@ -12,11 +12,13 @@ Requirements:
 """
 
 import json
+import sys
 
 import joblib
 import mlflow
 
 from src.entity.config_entity import ModelRegistrationConfig
+from src.utils.exception import CustomException
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -81,7 +83,7 @@ class ModelRegistration:
                     f"MLflow connection failed: {e}. Falling back to local artifact storage (no registry)."
                 )
             else:
-                logger.error(f"Error during model registration: {e}")
+                logger.error(CustomException(e, sys))
                 raise e
 
     def load_model(self) -> object:

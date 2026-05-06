@@ -19,3 +19,12 @@ registration_params:
 
 augmentation:
   n_samples: 100
+
+risk_thresholds:
+  low: 0.3
+  high: 0.7
+  mora_critical: 0.20
+  current_ratio_critical: 0.50
+
+feature_params:
+  insolvent_cap: 10.0

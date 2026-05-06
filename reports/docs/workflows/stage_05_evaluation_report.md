@@ -46,8 +46,18 @@ Location: `artifacts/model_evaluation/`
 *   **`metrics.json`**: Machine-readable evaluation scores (used by DVC).
 *   **`roc_auc_curve.png`**: Visual diagnostics of classifier performance.
 
+## Operational Hardening (v2.0)
+The evaluation stage now integrates with the global observability framework:
+
+### 1. Structured Metric Logging
+*   **Console & File Feed**: While metrics are saved to `metrics.json`, the evaluator now logs individual scores (Accuracy, Precision, Recall, ROC-AUC) at the `INFO` level using `get_logger(__name__)`.
+*   **Traceability**: This allows for quick verification of model quality directly from the log stream without needing to open JSON artifacts.
+
+### 2. Defensive Plotting
+*   **Error Handling**: The plotting logic for ROC-AUC is now wrapped in `CustomException` handlers, ensuring that visual failures (e.g., display errors or headless environment issues) are caught and logged with full context rather than silently failing the pipeline.
+
 ## Why this is "Robust MLOps"
-1.  **Robust Tracking**: The system defaults to the local MLflow server (`http://127.0.0.1:5000`) with a SQLite backend, ensuring that even local experiments have access to the Model Registry.
-2.  **DVC Metrics**: By registering `metrics.json` as a DVC metric, we can use `dvc metrics diff` to compare performance across different iterations directly from the CLI.
-3.  **Automated Plotting**: Visual evidence of model quality is generated automatically, removing the need for manual notebook-based evaluation.
-4.  **Meaningful Registration**: Models are registered with unique versions and descriptive names, making it easier for the "Model Pusher" stage to identify candidates for deployment.
+1.  **Robust Tracking**: Defaults to the local MLflow server with a SQLite backend for deep experiment history.
+2.  **DVC Metrics**: Registering `metrics.json` allows for CLI-based performance comparisons (`dvc metrics diff`).
+3.  **Automated Diagnostics**: Visual evidence of model quality is generated automatically, eliminating manual evaluation steps.
+4.  **Operational Visibility**: High-level metrics are now part of the structured log stream, providing real-time quality feedback during pipeline execution.
