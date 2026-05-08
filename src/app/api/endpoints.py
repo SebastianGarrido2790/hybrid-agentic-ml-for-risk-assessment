@@ -8,8 +8,8 @@ Includes rate-limiting configurations for request throttling.
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Request, status
 
-from src.app.schemas import PredictionInput, PredictionOutput
 from src.app.core.security import limiter
+from src.app.schemas import PredictionInput, PredictionOutput
 from src.config.configuration import ConfigurationManager
 from src.utils.logger import get_logger
 

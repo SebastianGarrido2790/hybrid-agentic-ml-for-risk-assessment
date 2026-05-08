@@ -17,8 +17,8 @@ from pathlib import Path
 import pandas as pd
 import requests
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
 from opentelemetry import trace
+from pydantic import BaseModel, Field
 
 from src.agents.config import get_agent_settings
 from src.utils.logger import get_logger
@@ -104,4 +104,6 @@ def get_credit_risk_score(company_id: int) -> str:
         except requests.exceptions.HTTPError as err:
             return f"Error: The ML Model API returned an error: {err}"
         except Exception as err:
-            return f"Error: An unexpected error occurred while querying the model: {err}"
+            return (
+                f"Error: An unexpected error occurred while querying the model: {err}"
+            )

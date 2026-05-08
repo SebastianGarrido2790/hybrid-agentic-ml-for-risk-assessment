@@ -22,20 +22,18 @@ from contextlib import asynccontextmanager
 
 import joblib
 import uvicorn
-
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from src.app.api.endpoints import router as api_router
 from src.app.core.security import SecurityHeadersMiddleware, limiter
 from src.config.configuration import ConfigurationManager
 from src.utils.logger import get_logger
 from src.utils.telemetry import configure_tracer
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
 logger = get_logger(__name__, headline="main.py")
 
