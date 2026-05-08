@@ -19,23 +19,15 @@ Usage:
 """
 
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
 
 import joblib
 import uvicorn
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-
-
-async def rate_limit_handler(request: Request, exc: Any) -> Response:
-    """
-    Type-safe wrapper for the slowapi rate limit handler.
-    """
-    return _rate_limit_exceeded_handler(request, exc)
 
 from src.app.api.endpoints import router as api_router
 from src.app.core.security import SecurityHeadersMiddleware, limiter
@@ -50,7 +42,7 @@ logger = get_logger(__name__, headline="main.py")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
+async def lifespan(app: FastAPI):
     """
     Context manager for loading the model and preprocessor on startup.
     This ensures we only load artifacts once, not per request.
@@ -97,7 +89,7 @@ FastAPIInstrumentor.instrument_app(app)
 
 # Global Security Configuration
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Include Router
