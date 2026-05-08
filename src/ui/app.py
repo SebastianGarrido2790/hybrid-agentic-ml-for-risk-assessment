@@ -87,18 +87,17 @@ if submit_btn and selected_id:
                             continue
 
                         # Handle Tool Calls
-                        if hasattr(msg, "tool_calls"):
-                            t_calls = getattr(msg, "tool_calls", None)
-                            if t_calls:
-                                for tc in t_calls:
-                                    m_txt = f"{agent_label} → Executing `{tc['name']}`"
-                                    status.write(m_txt)
-                                    st.session_state.reasoning_log.append(
-                                        {"type": "tool", "msg": m_txt}
-                                    )
+                        t_calls = getattr(msg, "tool_calls", [])
+                        if t_calls:
+                            for tc in t_calls:
+                                m_txt = f"{agent_label} → Executing `{tc['name']}`"
+                                status.write(m_txt)
+                                st.session_state.reasoning_log.append(
+                                    {"type": "tool", "msg": m_txt}
+                                )
 
                         # Handle Final Result (Orchestrator)
-                        elif msg.content:
+                        if msg.content and not t_calls:
                             if node_name == "orchestrator":
                                 st.session_state.assessment_result = str(msg.content)
                                 st.session_state.risk_score = extract_risk_score(

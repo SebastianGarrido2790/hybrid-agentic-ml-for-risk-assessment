@@ -37,7 +37,7 @@ def prepare_pdf_export(
         pdf_bytes = generate_pdf_report(
             assessment_result,
             filename=filename,
-            save_to_disk=False,
+            save_to_disk=True,
         )
         return cast(bytes, pdf_bytes)
     except Exception as e:
