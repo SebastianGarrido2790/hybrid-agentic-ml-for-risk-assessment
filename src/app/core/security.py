@@ -4,7 +4,7 @@ Security configuration for the FastAPI application.
 Provides Global Security Headers and Rate Limiting.
 """
 
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from fastapi import Request, Response
 from slowapi import Limiter
