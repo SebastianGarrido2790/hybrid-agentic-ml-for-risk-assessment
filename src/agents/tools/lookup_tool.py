@@ -4,6 +4,8 @@ Lookup Tools for the Agentic Reasoning Engine.
 This module provides tools for fetching raw company data from internal
 CSV databases (e.g., validation datasets) for agents to analyze.
 
+OpenTelemetry tracing is integrated to monitor tool execution.
+
 `@lru_cache(maxsize=1)` decorator ensures the validation dataset (CSV) is loaded into
 memory only once and reused across all subsequent tool calls within the same process.
 """
@@ -13,8 +15,11 @@ from pathlib import Path
 
 import pandas as pd
 from langchain_core.tools import tool
+from opentelemetry import trace
 
 from src.utils.logger import get_logger
+
+tracer = trace.get_tracer("acras")
 
 logger = get_logger(__name__)
 
@@ -40,31 +45,33 @@ def fetch_company_data(company_id: int) -> str:
     Returns a dictionary of financial metrics or an error message if not found.
     Useful for the Financial Analyst to get raw data before calculating ratios.
     """
-    try:
-        # Load data with caching
-        df = _get_database()
+    with tracer.start_as_current_span("tool_execution") as span:
+        span.set_attribute("gen_ai.tool.name", "fetch_company_data")
+        try:
+            # Load data with caching
+            df = _get_database()
 
-        # Ensure ID is int
-        record = df[df["id_empresa"] == company_id]
+            # Ensure ID is int
+            record = df[df["id_empresa"] == company_id]
 
-        if record.empty:
-            return f"Error: Company ID {company_id} not found."
+            if record.empty:
+                return f"Error: Company ID {company_id} not found."
 
-        # Convert to dict
-        data = record.iloc[0].to_dict()
+            # Convert to dict
+            data = record.iloc[0].to_dict()
 
-        # Clean up numpy types to native python types for JSON serialization
-        clean_data = {}
-        for k, v in data.items():
-            if k in ["target", "default_probability"]:
-                continue
-            if pd.isna(v):
-                clean_data[k] = None
-            else:
-                clean_data[k] = v
+            # Clean up numpy types to native python types for JSON serialization
+            clean_data = {}
+            for k, v in data.items():
+                if k in ["target", "default_probability"]:
+                    continue
+                if pd.isna(v):
+                    clean_data[k] = None
+                else:
+                    clean_data[k] = v
 
-        return str(clean_data)
+            return str(clean_data)
 
-    except Exception as e:
-        logger.error(f"Error fetching company data: {e}")
-        return f"Error: Failed to fetch data. {e}"
+        except Exception as e:
+            logger.error(f"Error fetching company data: {e}")
+            return f"Error: Failed to fetch data. {e}"

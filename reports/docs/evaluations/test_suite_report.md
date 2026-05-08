@@ -48,6 +48,9 @@ tests/
 | **Model Evaluation** | `test_model_evaluation.py` | - **Metrics Calculation**: Accuracy, Precision, Recall, F1, and ROC-AUC parity.<br>- **MLflow Integration**: Successful logging of metrics and parameters via mocked tracking server. |
 | **Model Registration** | `test_model_registration.py` | - **Threshold Enforcement**: Verification that models are registered ONLY when exceeding `min_roc_auc`.<br>- **Version Management**: Proper metadata and artifact registration names. |
 | **Model Trainer** | `test_model_trainer.py` | - **Training**: Verification of `RandomForestClassifier` fitting.<br>- **Persistence**: Ensures trained model is saved as `.joblib`.<br>- Hyperparameter parameter passing. |
+| **Error Handling** | `test_exception.py` | - **CustomException**: Verification of message and sys detail capture.<br>- **Logging**: Ensures traceback is correctly formatted for the logger. |
+| **MLflow Config** | `test_mlflow_config.py` | - **URI Validation**: Correct construction of local vs remote tracking URIs.<br>- **Artifact Pathing**: Ensures MLflow saves to the correct `.artifacts` directory. |
+| **Prompt Logic** | `test_prompts.py` | - **Loading**: Ensures system prompts are read correctly from external files.<br>- **Templating**: Validates that all variables are filled before agent invocation. |
 
 ### 3.2 Integration Tests
 
@@ -94,21 +97,24 @@ uv run pytest tests/ > tests/logs/test_output.txt
 
 **Output**:
 ```
-tests\app\test_api.py .......
-tests\integration\test_pipeline.py .
-tests\unit\test_agent_tools.py ..
-tests\unit\test_build_features.py ...
-tests\unit\test_config.py .
-tests\unit\test_data_ingestion.py ..
-tests\unit\test_data_transformation.py ..
-tests\unit\test_data_validation.py ..
-tests\unit\test_finance_tool.py ....
-tests\unit\test_lookup_tool.py ...
-tests\unit\test_model_evaluation.py .
-tests\unit\test_model_registration.py .
-tests\unit\test_model_trainer.py .
+tests\app\test_api.py .......                                            [ 17%]
+tests\integration\test_pipeline.py .                                     [ 20%]
+tests\unit\test_agent_tools.py ..                                        [ 25%]
+tests\unit\test_build_features.py ...                                    [ 33%]
+tests\unit\test_config.py .                                              [ 35%]
+tests\unit\test_data_ingestion.py ..                                     [ 41%]
+tests\unit\test_data_transformation.py ..                                [ 46%]
+tests\unit\test_data_validation.py ..                                    [ 51%]
+tests\unit\test_exception.py ...                                         [ 58%]
+tests\unit\test_finance_tool.py ....                                     [ 69%]
+tests\unit\test_lookup_tool.py ...                                       [ 76%]
+tests\unit\test_mlflow_config.py .....                                   [ 89%]
+tests\unit\test_model_evaluation.py .                                    [ 92%]
+tests\unit\test_model_registration.py .                                  [ 94%]
+tests\unit\test_model_trainer.py .                                       [ 97%]
+tests\unit\test_prompts.py .                                             [100%]
 
-================== 22 passed in 10.42s ==================
+======================= 39 passed, 2 warnings in 7.57s ========================
 ```
 
 ### 4.1 Coverage Analysis
@@ -138,9 +144,10 @@ We use **pytest-cov** to measure and enforce quality gates. If our code coverage
 
 ## 5. Test Suite Enhancements
 - **pytest-cov Integration**: Added quantitative coverage metrics with an initial CI gate of 40%.
-- **Docstrings**: All 22 test modules and component tests now follow the mandatory Google-style documentation standard.
+- **Docstrings**: All 39 test modules and component tests now follow the mandatory Google-style documentation standard.
 - **Model Serialization Mocking**: Refactored evaluation tests to use real-model fits (`LogisticRegression`) combined with `mock.patch` to avoid `mlflow` proxy serialization errors.
 - **CI Enforcement**: Updated `.github/workflows/ci.yml` to enforce the coverage gate on every PR.
+- **Test Infrastructure Hygiene**: Implemented `suppress_otel_export` in `conftest.py` to disable OpenTelemetry exports during test runs, ensuring CI stability and avoiding network overhead.
 
 ## 6. Coverage Goals
 Current tests cover the critical path of the application. Future work will focus on:

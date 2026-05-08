@@ -15,6 +15,13 @@ import pytest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 
+@pytest.fixture(autouse=True)
+def suppress_otel_export(monkeypatch):
+    """Suppress OTel export during tests per Test Infrastructure Hygiene Rule."""
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("OTEL_SDK_DISABLED", "true")
+
+
 @pytest.fixture
 def sample_financial_data():
     """Returns a sample dataframe mimicking financial data."""

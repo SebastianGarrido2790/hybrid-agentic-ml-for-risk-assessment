@@ -6,6 +6,8 @@ It handles:
 - Model Loading (via Lifespan events)
 - Health Checks
 - Prometheus Metrics Instrumentation
+- OpenTelemetry Tracing
+- Global Security Middleware & Rate Limiting
 - Prediction Requests
 
 Usage:
@@ -20,13 +22,20 @@ from contextlib import asynccontextmanager
 
 import joblib
 import uvicorn
+
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.app.api.endpoints import router as api_router
+from src.app.core.security import SecurityHeadersMiddleware, limiter
 from src.config.configuration import ConfigurationManager
 from src.utils.logger import get_logger
+from src.utils.telemetry import configure_tracer
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 logger = get_logger(__name__, headline="main.py")
 
@@ -52,6 +61,12 @@ async def lifespan(app: FastAPI):
         preprocessor_path = config.get_data_transformation_config().preprocessor_path
         app.state.preprocessor = joblib.load(preprocessor_path)
 
+        # Configure OpenTelemetry
+        configure_tracer()
+
+        # Store model version for health checks
+        app.state.model_version = config.get_model_trainer_config().model_name + "_v1.0"
+
         yield
     except Exception as e:
         logger.critical(f"CRITICAL ERROR loading artifacts: {e}", exc_info=True)
@@ -71,8 +86,16 @@ app = FastAPI(
 # Instrument Prometheus metrics
 Instrumentator().instrument(app).expose(app)
 
+# Instrument OpenTelemetry
+FastAPIInstrumentor.instrument_app(app)
+
+# Global Security Configuration
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Include Router
-app.include_router(api_router)
+app.include_router(api_router, prefix="/v1")
 
 
 @app.exception_handler(Exception)

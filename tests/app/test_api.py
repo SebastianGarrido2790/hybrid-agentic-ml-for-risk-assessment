@@ -11,9 +11,12 @@ from fastapi import status
 
 
 def test_health_check(client):
-    response = client.get("/health")
+    response = client.get("/v1/health")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"status": "ok", "service": "ACRAS-API"}
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["service"] == "ACRAS-API"
+    assert "model_version" in data
 
 
 def test_predict_success(client, mock_model):
@@ -44,7 +47,7 @@ def test_predict_success(client, mock_model):
     mock_model.predict.return_value = [0]
     mock_model.predict_proba.return_value = [[0.8, 0.2]]  # 0.2 < 0.3 -> Low Risk
 
-    response = client.post("/predict", json=payload)
+    response = client.post("/v1/predict", json=payload)
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -81,7 +84,7 @@ def test_predict_high_risk(client, mock_model):
     mock_model.predict.return_value = [1]
     mock_model.predict_proba.return_value = [[0.1, 0.9]]  # 0.9 > 0.7 -> High Risk
 
-    response = client.post("/predict", json=payload)
+    response = client.post("/v1/predict", json=payload)
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -118,7 +121,7 @@ def test_predict_medium_risk(client, mock_model):
     mock_model.predict.return_value = [0]
     mock_model.predict_proba.return_value = [[0.5, 0.5]]  # 0.5 -> Medium Risk
 
-    response = client.post("/predict", json=payload)
+    response = client.post("/v1/predict", json=payload)
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -130,7 +133,7 @@ def test_predict_medium_risk(client, mock_model):
 def test_predict_validation_error(client):
     # Invalid payload (missing required field 'ingresos')
     payload = {"ebitda": 1000000}
-    response = client.post("/predict", json=payload)
+    response = client.post("/v1/predict", json=payload)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
@@ -138,7 +141,7 @@ def test_health_service_not_ready(client):
     # Temporarily remove model to simulate uninitialized state during app start
     if hasattr(client.app.state, "model"):
         del client.app.state.model
-    response = client.get("/health")
+    response = client.get("/v1/health")
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
 

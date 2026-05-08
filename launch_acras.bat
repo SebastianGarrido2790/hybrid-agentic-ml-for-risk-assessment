@@ -11,8 +11,15 @@ echo.
 echo [SYSTEM] Initializing Antigravity Stack...
 echo.
 
+:: Step 0: Check for Observability (Optional)
+echo [0/4] Checking for Observability Stack (Jaeger)...
+echo      UI: http://localhost:16686
+echo      Note: Run 'docker run --rm -d -p 16686:16686 -p 4318:4318 jaegertracing/all-in-one:latest' 
+echo            to enable full distributed tracing.
+echo.
+
 :: Step 1: Check/Sync Dependencies
-echo [1/3] Verifying dependencies with UV...
+echo [1/4] Verifying dependencies with UV...
 uv sync --quiet
 if %ERRORLEVEL% NEQ 0 (
     echo.
@@ -50,6 +57,9 @@ echo    To stop EVERYTHING:
 echo    1. Close the "ACRAS-API" window.
 echo    2. Close the "ACRAS-MLflow" window.
 echo    3. Press Ctrl+C in this window.
+echo.
+echo 🔍 OBSERVABILITY: If you started Jaeger via Docker,
+echo    visit http://localhost:16686 to see live traces.
 echo ------------------------------------------------------------
 echo.
 

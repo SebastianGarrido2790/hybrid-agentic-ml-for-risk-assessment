@@ -33,6 +33,11 @@ dependencies = [
     "fpdf2>=2.8.6",
     "markdown>=3.10.2",
     "xhtml2pdf>=0.2.17",
+    "opentelemetry-api>=1.39.1",
+    "opentelemetry-sdk>=1.39.1",
+    "opentelemetry-instrumentation-fastapi>=0.60b1",
+    "opentelemetry-exporter-otlp>=1.39.1",
+    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]

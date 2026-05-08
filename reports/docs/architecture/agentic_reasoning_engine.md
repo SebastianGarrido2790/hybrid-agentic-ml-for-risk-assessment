@@ -2,9 +2,9 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 2.1
-**Date:** 2026-05-04
-**Status:** Production (Hardened)
+**Version:** 2.2
+**Date:** 2026-05-08
+**Status:** Production (Elite Infrastructure)
 
 ---
 
@@ -57,7 +57,7 @@ All LLM settings are managed via a **Pydantic Settings** class (`AgentSettings`)
 | `HF_MODEL` | `Qwen/Qwen2.5-7B-Instruct` | Hugging Face model for Tier 1 (if HF is primary) |
 | `GEMINI_POWER_MODEL` | `gemini-2.5-flash` | Gemini model for power tasks (Tier 1/2) |
 | `GEMINI_LITE_MODEL` | `gemini-2.5-flash-lite` | Gemini model for stability fallback (Tier 3) |
-| `ML_API_URL` | `http://localhost:8000/predict` | URL to the FastAPI Inference Service |
+| `ML_API_URL` | `http://localhost:8000/v1/predict` | Versioned URL to the FastAPI Inference Service (v1) |
 
 > **Hot-Swap Tip:** To enable live provider switching, remove `DEFAULT_LLM_PROVIDER` from `.env`. Control transfers to `config.py`, which is reloaded on every graph invocation via `importlib.reload(config_module)`.
 
@@ -98,6 +98,7 @@ This is the resilience backbone of the engine. Every agent node calls `get_dynam
 4. If Tier 2 fails, tries **Tier 3** (always a stable Gemini model).
 5. If all three tiers fail, returns a structured `SystemMessage("Error: All tiers failed.")` — allowing the downstream agent or UI to handle the failure gracefully instead of crashing.
 6. Gemini's list-format content responses are normalized to plain strings to prevent `operator.add` errors when concatenating messages in graph state.
+7. **OpenTelemetry (v2.2):** Each invocation is wrapped in a `llm_call` span with `gen_ai.agent.name`, `gen_ai.system`, and `gen_ai.request.tier` attributes, making every tier decision visible in the trace waterfall.
 
 ---
 
@@ -141,6 +142,7 @@ Following Brain vs. Hands design principles, all computation is delegated to det
 - **Performance (v2.0):** Uses `@functools.lru_cache(maxsize=1)` to memoize the validation set loading, reducing I/O latency for repeated queries.
 - **Output:** A string representation of a financial record dict, with `target` and `default_probability` fields excluded to prevent data leakage to the agent.
 - **Error Handling (v2.0):** Wraps data loading in `CustomException` with `sys` traceback capture. Returns a descriptive error string if the file is missing or the company ID is not found.
+- **OTel Tracing (v2.2):** Wrapped in a `tool_execution` span with `gen_ai.tool.name=fetch_company_data`.
 
 #### `finance_tool.py` — Financial Ratio Calculators
 
@@ -158,10 +160,11 @@ All tools guard against division by zero, returning a descriptive error string.
 #### `ml_api_tool.py` — `get_credit_risk_score`
 
 - **Input:** `company_id: int` (validated by `PredictionInput` Pydantic schema)
-- **Process:** Reads the company record from `val.csv`, assembles a 20-field structured payload, and POSTs it to the FastAPI service at `ML_API_URL` (`http://localhost:8000/predict`).
+- **Process:** Reads the company record from `val.csv`, assembles a 20-field structured payload, and POSTs it to the versioned FastAPI service at `ML_API_URL` (`http://localhost:8000/v1/predict`).
 - **Performance (v2.0):** Uses `@functools.lru_cache(maxsize=1)` for data loading to align with `lookup_tool` efficiency.
 - **Output:** `"Risk Level: {risk_level}, Probability of Default: {probability}"`
 - **Graceful Degradation (v2.0):** Replaced `print()` with structured logging (`get_logger`). Returns descriptive error strings on `ConnectionError`, `HTTPError`, or any unexpected exception (caught via `CustomException`) — allowing the Data Scientist agent to continue with qualitative analysis if the ML service is unavailable.
+- **OTel Tracing (v2.2):** Wrapped in a `tool_execution` span with `gen_ai.tool.name=get_credit_risk_score`, making ML API latency independently observable in the trace waterfall.
 
 ---
 
@@ -274,7 +277,8 @@ DEFAULT_LLM_PROVIDER=huggingface   # or "gemini"; omit for live hot-swapping
 - **Structured Logging (v2.0):** Replaced all `print()` statements in nodes and tools with `get_logger(__name__)`. This provides structured, searchable logs in `logs/running_logs.log` with correct module attribution.
 - **Fallback Validation:** Tier switches are logged as `🔄 Fallback` events and recorded as `WARNING` level events in the enterprise log stream.
 - **Agentic Evals:** Agent quality is assessed via LLM-as-a-Judge scoring on "Relevance," "Tool Usage Accuracy," "Schema Adherence," and "Business Value Alignment."
-- **Tracing:** All node invocations are instrumented with OpenTelemetry-compatible tracing for Chain-of-Thought visibility and token usage tracking.
+- **OpenTelemetry Tracing (v2.2):** Every `invoke_with_fallback()` call is wrapped in an `llm_call` span with `gen_ai.*` semantic convention attributes (`gen_ai.agent.name`, `gen_ai.system`, `gen_ai.request.tier`, `gen_ai.request.model`). All six tool functions are wrapped in `tool_execution` spans (`gen_ai.tool.name`). See `reports/docs/architecture/observability_tracing.md` for the full trace hierarchy and backend setup guide.
+- **CI Tracing Suppression:** An autouse pytest fixture (`suppress_otel_export`) sets `TESTING=1` and `OTEL_SDK_DISABLED=true` before every test run, preventing export attempts during CI.
 
 ---
 
@@ -291,3 +295,5 @@ DEFAULT_LLM_PROVIDER=huggingface   # or "gemini"; omit for live hot-swapping
 | Synthesis adherence | **High-Adherence Orchestration** | Isolates findings into a terminal high-authority message to prevent truncation |
 | Data leakage prevention | `target`/`default_probability` excluded in lookup tool | Prevents agent from seeing ground truth label during inference |
 | Operational Hardening (v2.0) | **Structured Logging & Memoization** | Migrated to `get_logger` and `@lru_cache` for production-grade telemetry and speed |
+| OTel Tracing (v2.2) | **`gen_ai.*` spans on LLM calls & tools** | CNCF-standard distributed tracing with semantic conventions; vendor-neutral backend compatibility |
+| ML API versioning (v2.2) | `ML_API_URL` → `/v1/predict` | Aligns agent tool calls with the versioned API contract to prevent silent routing mismatches |

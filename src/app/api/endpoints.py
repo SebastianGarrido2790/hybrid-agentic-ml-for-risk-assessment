@@ -2,12 +2,14 @@
 API Endpoints for ACRAS.
 
 Centralizes endpoint business logic for modular expansion.
+Includes rate-limiting configurations for request throttling.
 """
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Request, status
 
 from src.app.schemas import PredictionInput, PredictionOutput
+from src.app.core.security import limiter
 from src.config.configuration import ConfigurationManager
 from src.utils.logger import get_logger
 
@@ -16,6 +18,7 @@ logger = get_logger(__name__)
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
 async def health_check(request: Request):
     """
     Health check endpoint to verify service status.
@@ -27,12 +30,15 @@ async def health_check(request: Request):
         raise HTTPException(
             status_code=503, detail="Service not ready (artifacts not loaded)"
         )
-    return {"status": "ok", "service": "ACRAS-API"}
+
+    model_version = getattr(request.app.state, "model_version", "unknown")
+    return {"status": "ok", "service": "ACRAS-API", "model_version": model_version}
 
 
 @router.post(
     "/predict", response_model=PredictionOutput, status_code=status.HTTP_200_OK
 )
+@limiter.limit("50/minute")
 async def predict(input_data: PredictionInput, request: Request):
     """
     Predict credit risk for a given company profile.

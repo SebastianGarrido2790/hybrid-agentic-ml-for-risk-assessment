@@ -7,9 +7,9 @@ the task context to each other:
 2. Data Scientist: Predicts default probability using the ML API.
 3. Orchestrator (CRO): Synthesizes the final report.
 
-The architecture incorporates hot-swapping logic via dynamic imports and
-configuration factories, allowing for runtime model updates and tool
-re-binding without system downtime.
+The architecture incorporates hot-swapping logic via dynamic imports,
+configuration factories, and OpenTelemetry tracing for agent calls
+using gen_ai.* semantic conventions.
 """
 
 import importlib
@@ -20,6 +20,7 @@ from typing import Annotated, Any, TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
+from opentelemetry import trace
 
 from src.agents.tools.finance_tool import (
     calculate_current_ratio,
@@ -194,7 +195,11 @@ def invoke_with_fallback(
             else:
                 final_inputs = inputs
 
-            response = model.invoke(final_inputs)
+            with trace.get_tracer("acras").start_as_current_span("llm_call") as span:
+                span.set_attribute("gen_ai.system", model_info)
+                span.set_attribute("gen_ai.agent.name", agent_name)
+                span.set_attribute("gen_ai.request.tier", tier_name)
+                response = model.invoke(final_inputs)
 
             # Normalize Gemini's output where it returns list of dicts for message content.
             # This is essential to prevent breaking the concatenation in downstream agents.

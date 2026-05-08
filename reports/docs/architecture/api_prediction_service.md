@@ -2,9 +2,9 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 2.0
-**Date:** 2026-03-07
-**Status:** Production
+**Version:** 3.0
+**Date:** 2026-05-08
+**Status:** Production (Elite Infrastructure)
 
 ---
 
@@ -16,18 +16,21 @@ The **ACRAS Prediction Service** exposes the trained Random Forest credit risk m
 
 ## 2. Architecture Overview
 
-The service is built on **FastAPI** for high-performance async request handling and **Prometheus** for operational observability. Artifacts are loaded once at startup via an async lifespan context manager, not per-request.
+The service is built on **FastAPI** for high-performance async request handling, **Prometheus** for operational observability, and **OpenTelemetry** for distributed tracing. Artifacts are loaded once at startup via an async lifespan context manager, not per-request. All routes are versioned under `/v1/`.
 
 ```mermaid
 flowchart TD
     Agent["🤖 ACRAS Agent (ml_api_tool.py)"]
     Client["🖥 Streamlit UI / External Client"]
 
-    Agent -->|"POST /predict (English alias fields)"| API
-    Client -->|"POST /predict"| API
+    Agent -->|"POST /v1/predict"| API
+    Client -->|"POST /v1/predict"| API
 
     subgraph SVC["FastAPI Prediction Service (port 8000)"]
-        API["API Router (endpoints.py)"]
+        SEC["SecurityHeadersMiddleware\nHSTS · CSP · X-Frame-Options"]
+        RL["Rate Limiter (slowapi)\n/v1/predict: 50/min · /v1/health: 10/min"]
+        API["API Router /v1 (endpoints.py)"]
+        SEC --> RL --> API
         API -->|"422 on schema error"| Client
         API -->|"503 if artifacts not loaded"| Client
         API --> Schema["PredictionInput (schemas.py)\nBi-directional alias: Spanish ↔ English"]
@@ -35,20 +38,24 @@ flowchart TD
         Preproc --> Model["app.state.model\n(acras_rf_model.joblib)"]
         Model --> Logic["Risk Level Logic\n(Thresholds from params.yaml)"]
         Logic -->|"PredictionOutput JSON"| Agent
-        
-        API -.-> GEH["Global Exception Handler\n(Sanitized 500 Responses)"]
+
+        API -..-> GEH["Global Exception Handler\n(Sanitized 500 Responses)"]
     end
 
     subgraph BOOT["Lifespan Startup (one-time)"]
         CM["ConfigurationManager"]
         CM --> LoadModel["joblib.load(model_path)"]
         CM --> LoadPreproc["joblib.load(preprocessor_path)"]
+        CM --> ModelVer["app.state.model_version"]
         LoadModel --> State["app.state"]
         LoadPreproc --> State
+        ModelVer --> State
+        OTel["configure_tracer()\nOTLP + FastAPIInstrumentor"] --> State
     end
 
     subgraph OBS["Observability"]
         Prometheus["Prometheus Scraper"] -->|"GET /metrics"| API
+        OTELCollector["OTel Collector (Jaeger)"] -.->|"OTLP 4318"| SVC
     end
 ```
 
@@ -58,11 +65,14 @@ flowchart TD
 
 ```
 src/app/
-├── main.py          ← FastAPI app factory, lifespan, Prometheus setup
+├── main.py          ← FastAPI app factory, lifespan, OTel + Prometheus setup
 ├── schemas.py       ← Pydantic data contracts (PredictionInput, PredictionOutput)
+├── core/
+│   ├── __init__.py  ← Core package marker
+│   └── security.py  ← SecurityHeadersMiddleware + slowapi Limiter
 └── api/
     ├── __init__.py  ← Exposes api_router
-    └── endpoints.py ← Route definitions: /health, /predict
+    └── endpoints.py ← Route definitions: /v1/health, /v1/predict (rate-limited)
 ```
 
 ---
@@ -75,11 +85,14 @@ The application uses `@asynccontextmanager` for artifact loading. This ensures:
 - The model and preprocessor are loaded **exactly once** at startup, not per-request.
 - Artifact paths are resolved through `ConfigurationManager`, which reads `config/config.yaml` — the single source of truth for paths.
 - If artifacts are missing at startup, the application **raises immediately (Fail Fast)** rather than serving partial requests.
+- `configure_tracer()` is called during startup to bootstrap the OpenTelemetry `TracerProvider` and `FastAPIInstrumentor`.
+- `app.state.model_version` is set from `ConfigurationManager` and surfaced in the `/v1/health` response.
 
 ```python
 # Artifacts are accessed during inference via:
-model      = request.app.state.model
+model        = request.app.state.model
 preprocessor = request.app.state.preprocessor
+model_version = request.app.state.model_version   # exposed in /v1/health
 ```
 
 ### 4.2 Data Contracts — `schemas.py`
@@ -140,10 +153,20 @@ This decoupling allows risk policy changes to be applied instantly across both t
 5. The risk level is computed from the probability with the threshold logic above.
 6. A `PredictionOutput` JSON response is returned.
 
-### 4.5 Observability
+### 4.5 Observability (v3.0)
 
 - **Prometheus Instrumentator**: Automatically exposes request latency, request count, and error rate at `/metrics` via `prometheus_fastapi_instrumentator`.
-- **Health Check `/health`**: Verifies that `app.state.model` and `app.state.preprocessor` are both loaded. Returns `503` if not ready — compatible with Kubernetes/Docker liveness probes.
+- **Health Check `/v1/health`**: Verifies that `app.state.model` and `app.state.preprocessor` are both loaded. Returns `503` if not ready — compatible with Kubernetes/Docker liveness probes. Now includes `model_version` in the response body for traceability.
+- **OpenTelemetry Tracing**: `FastAPIInstrumentor.instrument_app(app)` auto-instruments all routes with OTLP-compatible spans (`http.method`, `http.url`, `http.status_code`, `http.route`). See `reports/docs/architecture/observability_tracing.md` for full span hierarchy.
+
+### 4.6 Security Middleware (v3.0)
+
+All requests pass through two global security layers before reaching any endpoint handler:
+
+| Layer | Implementation | Purpose |
+| :--- | :--- | :--- |
+| **SecurityHeadersMiddleware** | `src/app/core/security.py` | Injects HSTS, CSP, `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection` on every response |
+| **Rate Limiter** | `slowapi` (`src/app/core/security.py`) | `/v1/health`: 10 req/min · `/v1/predict`: 50 req/min · Global: 100 req/min |
 
 ---
 
@@ -151,8 +174,8 @@ This decoupling allows risk policy changes to be applied instantly across both t
 
 | Method | Path | Description | Input | Success | Error |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Service liveness check | None | `200 {"status": "ok"}` | `503` if artifacts missing |
-| `POST` | `/predict` | Credit risk prediction | `PredictionInput` JSON | `200 PredictionOutput` | `422` (Schema), `500` (Sanitized) |
+| `GET` | `/v1/health` | Service liveness check | None | `200 {"status": "ok", "model_version": "..."}` | `503` if artifacts missing |
+| `POST` | `/v1/predict` | Credit risk prediction | `PredictionInput` JSON | `200 PredictionOutput` | `422` (Schema), `500` (Sanitized) |
 | `GET` | `/metrics` | Prometheus metrics scrape | None | Text format | — |
 
 ---
@@ -260,15 +283,15 @@ If you want to run both components natively without Docker:
 
 ### Health Check
 ```bash
-curl -X GET http://localhost:8000/health
+curl -X GET http://localhost:8000/v1/health
 ```
 ```json
-{"status": "ok", "service": "ACRAS-API"}
+{"status": "ok", "service": "ACRAS-API", "model_version": "acras_rf_model_v1.0"}
 ```
 
 ### Prediction (using English aliases — as the Agent sends it)
 ```bash
-curl -X POST http://localhost:8000/predict \
+curl -X POST http://localhost:8000/v1/predict \
   -H "Content-Type: application/json" \
   -d '{
     "annual_revenue": 5000000,
