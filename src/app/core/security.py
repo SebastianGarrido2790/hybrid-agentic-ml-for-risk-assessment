@@ -4,7 +4,9 @@ Security configuration for the FastAPI application.
 Provides Global Security Headers and Rate Limiting.
 """
 
-from fastapi import Request
+from typing import Awaitable, Callable
+
+from fastapi import Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -18,7 +20,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     Middleware to inject standard security headers.
     """
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         response = await call_next(request)
         response.headers["Strict-Transport-Security"] = (
             "max-age=31536000; includeSubDomains"
