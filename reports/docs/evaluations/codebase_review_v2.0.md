@@ -363,13 +363,7 @@ CI workflow uses tag-based action references (`actions/checkout@v6`, `astral-sh/
 
 ## 6. Summary Scorecard
 
-**Overall: 8.4/10 → 8.9/10 (Operational Hardening Complete)**
-
----
-
-## 6. Summary Scorecard
-
-| Category | v1.1 | v3.0 | Key Evidence |
+| Category | v1.1 | v2.1 | Key Evidence |
 |:---|:---:|:---:|:---|
 | **Architecture** | 9.5/10 | 9.5/10 | FTI pattern, Brain/Brawn separation |
 | **Agentic Design** | 9/10 | 9/10 | 3-tier fallback, Strategy pattern factory |
