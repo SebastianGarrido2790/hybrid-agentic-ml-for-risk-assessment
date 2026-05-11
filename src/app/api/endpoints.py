@@ -80,6 +80,6 @@ async def predict(input_data: PredictionInput, request: Request):
     except Exception as e:
         logger.error(f"Prediction Error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Prediction failed due to an internal processing error.",
         )

@@ -149,3 +149,44 @@ def test_health_service_not_ready(client):
 def test_metrics_endpoint(client):
     response = client.get("/metrics")
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_predict_extra_fields(client):
+    """Test that extra fields are forbidden by the Pydantic schema."""
+    payload = {"annual_revenue": 5000000, "extra_field": "should_fail"}
+    response = client.post("/v1/predict", json=payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    # We can check the error message to ensure it's a 'forbid' error if needed
+    assert "extra_field" in response.text
+
+
+def test_global_exception_handler(client, mock_model):
+    """Test that unhandled exceptions are caught by the global handler."""
+    mock_model.predict.side_effect = Exception("Internal Crash")
+
+    payload = {
+        "ingresos": 5000000,
+        "ebitda": 1000000,
+        "activos_totales": 2000000,
+        "pasivos_totales": 800000,
+        "patrimonio": 1200000,
+        "caja": 200000,
+        "gastos_intereses": 50000,
+        "cuentas_cobrar": 150000,
+        "inventario": 100000,
+        "cuentas_pagar": 80000,
+        "sector_risk_score": 3.5,
+        "years_operating": 5,
+        "ratio_mora": 0.02,
+        "ratio_utilizacion": 0.4,
+        "revenue_growth": 0.1,
+        "margen_beneficio": 0.2,
+        "score_buro": 750,
+        "ebitda_margin": 0.2,
+        "debt_to_equity": 0.66,
+        "current_ratio": 2.0,
+    }
+
+    response = client.post("/v1/predict", json=payload)
+    assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+    assert "internal processing error" in response.json()["detail"].lower()

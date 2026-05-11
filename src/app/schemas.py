@@ -15,7 +15,7 @@ class PredictionInput(BaseModel):
     Ensures strict type validation before data reaches the model.
     """
 
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
     ingresos: float = Field(..., alias="annual_revenue", description="Annual Revenue")
     ebitda: float = Field(
@@ -68,6 +68,8 @@ class PredictionOutput(BaseModel):
     Schema for the model prediction output.
     Standardizes the response format for downstream agents.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     prediction: int = Field(
         ..., description="Predicted class (0: Non-Default, 1: Default)"

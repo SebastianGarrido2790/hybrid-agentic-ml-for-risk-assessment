@@ -60,6 +60,11 @@ packages = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "unit: Small-scale logic tests",
+    "integration: Multi-component workflow tests",
+    "eval: Agent qualitative evaluations",
+]
 
 [tool.pyright]
 pythonVersion = "3.11"

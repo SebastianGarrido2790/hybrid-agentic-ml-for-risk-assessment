@@ -33,8 +33,8 @@ echo.
 
 :: Pillar 2: Functional Logic & Coverage
 echo [2/4] Pillar 2: Functional Logic ^& Coverage...
-echo      - Running Pytest with Coverage Gate (40%%)...
-uv run pytest tests/unit/ -v --cov=src --cov-fail-under=40
+echo      - Running Pytest with Coverage Gate (65%%)...
+uv run pytest tests/ -v --cov=src --cov-fail-under=65
 if errorlevel 1 goto :FAILED
 
 echo.

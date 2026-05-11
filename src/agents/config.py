@@ -28,8 +28,20 @@ class AgentSettings(BaseSettings):
     # API Settings
     ML_API_URL: str = "http://localhost:8000/v1/predict"
 
+    # Project Settings
+    PROJECT_NAME: str = "ACRAS"
+    LOG_LEVEL: str = "INFO"
+    ENV: str = "local"
+
+    # MLflow Settings
+    MLFLOW_TRACKING_URI: str | None = None
+
+    # Telemetry Settings
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://localhost:4318"
+    DEBUG_TELEMETRY: int = 0
+
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", extra="forbid"
     )
 
 

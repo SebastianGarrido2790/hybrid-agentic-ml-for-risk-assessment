@@ -18,7 +18,7 @@ import pandas as pd
 import requests
 from langchain_core.tools import tool
 from opentelemetry import trace
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.agents.config import get_agent_settings
 from src.utils.logger import get_logger
@@ -42,6 +42,8 @@ def _get_database() -> pd.DataFrame:
 
 class PredictionInput(BaseModel):
     """Schema for the ML API Input to the tool."""
+
+    model_config = ConfigDict(extra="forbid")
 
     company_id: int = Field(..., description="ID of the company to evaluate")
 

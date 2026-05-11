@@ -10,17 +10,19 @@ OpenTelemetry tracing is integrated to monitor tool execution.
 
 from langchain_core.tools import tool
 from opentelemetry import trace
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 tracer = trace.get_tracer("acras")
 
 
 class DebtToEquityInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     total_liabilities: float = Field(..., description="Total Liabilities")
     shareholders_equity: float = Field(..., description="Shareholders Equity")
 
 
 class EBITDAMarginInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     ebitda: float = Field(
         ...,
         description="Earnings Before Interest, Taxes, Depreciation, and Amortization",
@@ -29,11 +31,13 @@ class EBITDAMarginInput(BaseModel):
 
 
 class CurrentRatioInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     current_assets: float = Field(..., description="Current Assets")
     current_liabilities: float = Field(..., description="Current Liabilities")
 
 
 class RevenueGrowthInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     current_revenue: float = Field(..., description="Current Period Revenue")
     previous_revenue: float = Field(..., description="Previous Period Revenue")
 
