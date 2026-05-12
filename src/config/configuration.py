@@ -1,12 +1,13 @@
 """
-Configuration Manager for the MLOps Pipeline.
+Configuration Manager for the ACRAS Agentic System.
 
-- This module serves as the 'Brain' of the system, responsible for coordinating configurations
-and parameters across the pipeline.
-- It centralizes the orchestration of configurations and parameters,
-integrating with DVC for data versioning.
-- It transforms raw YAML inputs into strictly-typed Configuration Entities,
-providing a robust and reproducible interface for all downstream pipeline components.
+Following Typed Configuration design pattern, this module orchestrates the system's
+configuration bridge. It performs a three-stage validation process:
+1. Raw I/O: Reads YAML files as standard dictionaries.
+2. Structural Validation: Parses dictionaries into Pydantic models (MasterConfig/MasterParams).
+3. Entity Mapping: Transforms validated models into immutable Dataclass entities for the pipeline.
+
+This ensures that any configuration error is caught at startup with a descriptive ValidationError.
 """
 
 from pathlib import Path
@@ -18,6 +19,9 @@ from src.entity.config_entity import (
     DataTransformationConfig,
     DataValidationConfig,
     FeatureParamsConfig,
+    MasterConfig,
+    MasterParams,
+    MasterSchema,
     ModelEvaluationConfig,
     ModelRegistrationConfig,
     ModelTrainerConfig,
@@ -34,9 +38,13 @@ class ConfigurationManager:
         params_filepath: str | Path = PARAMS_FILE_PATH,
         schema_filepath: str | Path = SCHEMA_FILE_PATH,
     ):
-        self.config = read_yaml(Path(config_filepath))
-        self.params = read_yaml(params_filepath)
-        self.schema = read_yaml(schema_filepath)
+        config_dict = read_yaml(config_filepath)
+        params_dict = read_yaml(params_filepath)
+        schema_dict = read_yaml(schema_filepath)
+
+        self.config = MasterConfig(**config_dict)
+        self.params = MasterParams(**params_dict)
+        self.schema = MasterSchema(**schema_dict)
 
         create_directories([self.config.artifacts_root])
 
@@ -139,7 +147,7 @@ class ConfigurationManager:
             root_dir=Path(config.root_dir),
             test_data_path=Path(config.test_data_path),
             model_path=Path(config.model_path),
-            all_params=params,
+            all_params=params.model_dump(),
             metric_file_name=Path(config.metric_file_name),
             target_column=target_column,
             mlflow_uri=get_mlflow_uri(),

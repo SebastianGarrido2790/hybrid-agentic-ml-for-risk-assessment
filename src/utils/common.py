@@ -1,8 +1,9 @@
 """
-Common utility functions for the MLOps pipeline.
+Common utility functions for the ACRAS MLOps pipeline.
 
-This module contains helper functions for recurring tasks such as reading YAML files
-and creating directories, ensuring a dry (Don't Repeat Yourself) architecture.
+This module provides deterministic helper functions for recurring tasks such as
+safe YAML reading and directory management. Following Typed Boundaries convention,
+it returns standard Python types (dict) to be validated by the configuration layer.
 """
 
 import json
@@ -11,26 +12,20 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from box import ConfigBox
-from box.exceptions import BoxValueError
-from ensure import ensure_annotations
 
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-@ensure_annotations
-def read_yaml(path_to_yaml: Path) -> ConfigBox:
-    """Reads a YAML file and returns its content as a ConfigBox.
-
-    ConfigBox allows accessing dictionary keys as attributes (e.g., config.key).
+def read_yaml(path_to_yaml: Path | str) -> dict[str, Any]:
+    """Reads a YAML file and returns its content as a dictionary.
 
     Args:
         path_to_yaml (Path): Path to the YAML file.
 
     Returns:
-        ConfigBox: ConfigBox containing the YAML data.
+        dict: Dictionary containing the YAML data.
 
     Raises:
         ValueError: If the YAML file is empty.
@@ -39,10 +34,10 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
     try:
         with open(path_to_yaml) as yaml_file:
             content = yaml.safe_load(yaml_file)
+            if content is None:
+                raise ValueError("yaml file is empty")
             logger.info(f"yaml file: {path_to_yaml} loaded successfully")
-            return ConfigBox(content)
-    except BoxValueError:
-        raise ValueError("yaml file is empty")
+            return content
     except Exception as e:
         raise e
 

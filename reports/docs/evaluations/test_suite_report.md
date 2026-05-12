@@ -33,6 +33,7 @@ tests/
 │   ├── test_model_registration.py
 │   ├── test_model_trainer.py
 │   ├── test_pdf_generator.py
+│   ├── test_pipeline.py
 │   ├── test_prompts.py
 │   ├── test_telemetry.py
 │   ├── test_ui_data_loader.py
@@ -137,7 +138,7 @@ tests\unit\test_ui_utils.py .....                                        [ 71%]
 ### 4.1 Coverage Analysis
 We use **pytest-cov** to measure and enforce quality gates. If our code coverage drops below this line, the CI pipeline will fail automatically.
 
-- **Current State**: After the Elite Infrastructure (v2.2) enhancements, our total coverage is **65.91%**.
+- **Current State**: After the Advanced Maturity (v2.3) hardening, our total coverage is **67.81%**.
 - **The Choice of 65**: We have raised the gate from 40% to 65% to reflect the increased maturity of the system. This satisfies the "Elite Infrastructure" requirement for production-ready agentic systems (Rule 4.1.3).
 - **Moving Forward**: The next target is the industry-standard **85%** for mission-critical credit risk logic.
 
@@ -145,11 +146,11 @@ We use **pytest-cov** to measure and enforce quality gates. If our code coverage
 
 | Module Group | Coverage | Status |
 | :--- | :--- | :--- |
-| **Agents (Tools & Logic)** | 85% | ✅ High |
+| **Agents (Tools & Logic)** | 86% | ✅ High |
 | **Logic Components (src/components)** | 88% | ✅ High |
-| **UI Components (src/ui)** | 86% | ✅ High |
+| **UI Components (src/ui)** | 88% | ✅ High |
 | **Orchestration Stages (src/pipeline)**| 67% | ✅ Improved |
-| **Total System** | **65.91%** | ✅ Pass |
+| **Total System** | **67.81%** | ✅ Pass |
 
 > **NOTE**
 > The **Orchestration Stages** (`src/pipeline/`) show 0% coverage because our unit tests target the underlying **Logic Components** directly. These stages are thin wrappers used by DVC; future integration tests will target these entry points to close this gap.

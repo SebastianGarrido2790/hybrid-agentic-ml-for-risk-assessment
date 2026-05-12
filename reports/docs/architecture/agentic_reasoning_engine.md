@@ -2,9 +2,9 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 2.2
-**Date:** 2026-05-08
-**Status:** Production (Elite Infrastructure)
+**Version:** 2.3
+**Date:** 2026-05-11
+**Status:** Production (Advanced Maturity)
 
 ---
 
@@ -28,7 +28,12 @@ src/agents/
 ├── config.py           ← Pydantic Settings: API keys, model names, fallback config
 ├── graph.py            ← LangGraph StateGraph: Nodes, edges, routing, fallback logic
 ├── model_factory.py    ← LLM Factory: Gemini & HuggingFace instantiation
-├── prompts.py          ← Centralized System Prompts (No Naked Prompts policy)
+├── prompts.py          ← Active Prompt Registry: Maps constants to versioned files (The Brain)
+├── prompt_loader.py    ← Prompt Loader Utility: Deterministic file I/O (The Brawn)
+├── prompts/            ← Externalized Prompts (No Naked Prompts policy)
+│   ├── system_prompts/ ← Versioned .txt files (v1, v2, etc.)
+│   ├── few_shot_examples/
+│   └── templates/
 └── tools/
     ├── __init__.py
     ├── finance_tool.py ← Deterministic financial ratio calculators
@@ -168,15 +173,23 @@ All tools guard against division by zero, returning a descriptive error string.
 
 ---
 
-### 3.6 System Prompts — `prompts.py`
+### 3.6 Prompt Management — Decoupled Architecture
 
-Following the **No Naked Prompts policy**, all system prompts are centralized in `prompts.py`, completely segregated from the execution logic in `graph.py`. This module is reloaded dynamically on each graph node invocation to support live prompt tuning without restarts.
+Following the **No Naked Prompts policy**, the engine implements a two-tier decoupled architecture to manage linguistic instructions. This allows for clean Git diffs, stakeholder review without touching code, and runtime hot-swapping.
 
-| Prompt Constant | Agent | Key Constraint |
+#### The "Brain" (Registry) — `prompts.py`
+This module acts as the **configuration registry**. It maps high-level constant names used in `graph.py` to specific versioned text files. To promote a new prompt (e.g., v2), a developer only needs to update the mapping in this file.
+
+#### The "Brawn" (Utility) — `prompt_loader.py`
+This module handles the **deterministic file I/O**. It resolves absolute paths and reads content from the `src/agents/prompts/` directory.
+
+| Prompt Constant | Source File | Key Constraint |
 | :--- | :--- | :--- |
-| `FINANCIAL_ANALYST_SYSTEM_PROMPT` | Financial Analyst | Mandates 4-section structured Markdown output with a KPI table |
-| `DATA_SCIENTIST_SYSTEM_PROMPT` | Risk Data Scientist | Forces tool call before any analysis text (CRITICAL STEP 1) |
-| `ORCHESTRATOR_SYSTEM_PROMPT` | CRO / Orchestrator | Mandates 6-section executive report and a terminal `SYSTEM FINAL RISK SCORE` |
+| `FINANCIAL_ANALYST_SYSTEM_PROMPT` | `financial_analyst_v1.txt` | Mandates 4-section structured Markdown output with a KPI table |
+| `DATA_SCIENTIST_SYSTEM_PROMPT` | `data_scientist_v1.txt` | Forces tool call before any analysis text (CRITICAL STEP 1) |
+| `ORCHESTRATOR_SYSTEM_PROMPT` | `orchestrator_v1.txt` | Mandates 6-section executive report and a terminal `SYSTEM FINAL RISK SCORE` |
+
+> **Audit Advantage:** System prompts are stored as plain `.txt` files, making it easy for non-technical risk officers or content analysts to review and edit the agent's "job description" in the repository.
 
 ---
 

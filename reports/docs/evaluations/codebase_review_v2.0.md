@@ -1,7 +1,7 @@
 # ACRAS Codebase Review — Production Readiness & Portfolio Assessment
 
 **Date:** 2026-05-06
-**Version:** 2.1 (Production-Elite Audit)
+**Version:** 2.3 (Advanced Maturity Audit)
 **Scope:** Full codebase — 54 Python source files, 17 test files, 3 CI workflows, 3 YAML configs, Dockerfile, docker-compose, `pyproject.toml`, and 28+ documentation files.
 
 ---
@@ -18,8 +18,10 @@ ACRAS is a **production-grade reference architecture** that successfully demonst
 
 **v2.2 Update (Infrastructure Elite):** The "Elite Infrastructure" phase (Sprint 2) is now 100% complete. Established a 65% coverage gate, strict Pydantic contracts (extra="forbid"), and unified orchestration via a root Makefile. System-wide coverage reached 66%.
 
+**v2.3 Update (Prompt Decoupling):** Phase 4 (Advanced Maturity) is now 20% complete. Successfully migrated system prompts from Python constants to versioned `.txt` files in `src/agents/prompts/system_prompts/`, implementing a unified `prompt_loader.py` utility.
+
 **Maturity Level: Elite Reference (9.4/10)**
-*The "Elite Infrastructure" phase is now 100% complete. The system has reached a critical maturity milestone with 66% test coverage, strict Pydantic data contracts, and unified developer orchestration via a root Makefile.*
+*The "Elite Infrastructure" phase is now 100% complete. The system has reached a critical maturity milestone with 66% test coverage, strict Pydantic data contracts, and unified developer orchestration via a root Makefile. Phase 4 (Advanced Maturity) has commenced with the successful decoupling of system prompts.*
 
 ---
 
@@ -45,7 +47,7 @@ ACRAS is a **production-grade reference architecture** that successfully demonst
 | **Tool Validation** | Finance tools use Pydantic `args_schema`; division-by-zero handled explicitly | 1.3 |
 | **Provider Factory** | `model_factory.py` abstracts Gemini/HuggingFace behind `get_llm()` (Strategy Pattern) | 1.8.1 |
 | **Gemini Normalization** | `invoke_with_fallback()` normalizes `list[dict]` content to plain strings — prevents downstream concatenation failures | 1.4 |
-| **Centralized Prompts** | All system prompts in `src/agents/prompts.py`, separated from execution logic | 1.5 |
+| **Centralized Prompts** | System prompts decoupled into versioned `.txt` files in `src/agents/prompts/` and loaded via unified `prompt_loader.py` | 1.5 |
 
 ### 1.3 MLOps & CI/CD (Rules 2.14, 6.1, 6.2)
 
@@ -172,16 +174,8 @@ These gaps distinguish a "production-ready" system from an "industry-reference" 
 
 > **UPDATE (v2.1):** Full distributed tracing is now operational. The system uses the CNCF OpenTelemetry standard, ensuring that agent reasoning, tool math, and API latency are visible in a single unified waterfall (e.g., via Jaeger).
 
-### 4.2 Prompts in Python Module, Not External Files (Rule 1.5)
+### 4.2 ~~Prompts in Python Module, Not External Files (Rule 1.5)~~ ✅ ADDRESSED (v2.3)
 
-Prompts are centralized in `src/agents/prompts.py` (good), but Rule 1.5 mandates prompts be stored in **external files** within a dedicated directory structure for clean versioning.
-
-**Current:**
-```
-src/agents/prompts.py  ← Python string constants
-```
-
-**Required (Rule 1.5):**
 ```
 src/agents/prompts/
 ├── system_prompts/
@@ -191,13 +185,13 @@ src/agents/prompts/
 └── prompt_loader.py
 ```
 
-**Impact:** Lower — functionally equivalent. But external files enable non-engineer stakeholders to review/edit prompts, and Git diffs on `.txt` files are cleaner than Python string diffs.
+~~Prompts are centralized in `src/agents/prompts.py` (good), but Rule 1.5 mandates prompts be stored in **external files** within a dedicated directory structure for clean versioning.~~
 
-### 4.3 `ConfigBox` — Untyped Config Access (Rule 2.3)
+> **UPDATE (v2.3):** System prompts have been migrated from Python constants to versioned `.txt` files within the `src/agents/prompts/system_prompts/` directory. A unified `prompt_loader.py` handles the retrieval, enabling clean Git diffs and stakeholder review without touching the execution logic.
 
-`read_yaml()` returns `ConfigBox` (python-box), which provides attribute-style access but **zero type safety**. A typo like `config.modl_trainer` silently returns `None` / `Box()` instead of raising an error.
+### 4.3 ~~`ConfigBox` — Untyped Config Access (Rule 2.3)~~ ✅ ADDRESSED (v2.3)
 
-**Impact:** Undermines the typed entity layer. `ConfigurationManager` bridges the gap by constructing typed `@dataclass` entities, but the intermediate `ConfigBox` layer is an untyped hole.
+~~`read_yaml()` returns `ConfigBox` (python-box), which provides attribute-style access but **zero type safety**. A typo like `config.modl_trainer` silently returns `None` / `Box()` instead of raising an error.~~
 
 **Recommended migration:**
 ```python
@@ -210,6 +204,8 @@ class PipelineConfig(BaseModel):
 
 config = PipelineConfig(**yaml.safe_load(f))
 ```
+
+> **UPDATE (v2.3):** `ConfigBox` has been completely removed from the configuration layer. YAML files are now parsed into strict Pydantic `BaseModel` schemas (`MasterConfig`, `MasterParams`, `MasterSchema`) with `extra="forbid"` enabled. This ensures that any schema mismatch or typo in the YAML configuration is caught immediately during system initialization with a descriptive `ValidationError`.
 
 ### 4.4 ~~No API Versioning (Rule 6.3)~~ ✅ ADDRESSED (v2.1)
 
@@ -363,8 +359,8 @@ CI workflow uses tag-based action references (`actions/checkout@v6`, `astral-sh/
 
 ### Phase 4: Sprint 3 — Advanced Maturity & Portfolio Differentiation 🟢
 
-- [ ] **Prompt Decoupling** (§1.5) — Migrate system prompts from Python modules to versioned `.txt` files in `src/agents/prompts/`.
-- [ ] **Typed Configuration Migration** (§2.3) — Replace `ConfigBox` with Pydantic `BaseModel` for YAML parsing to ensure compile-time type safety.
+- [x] **Prompt Decoupling** (§1.5) — Migrate system prompts from Python modules to versioned `.txt` files in `src/agents/prompts/`.
+- [x] **Typed Configuration Migration** (§2.3) — Replace `ConfigBox` with Pydantic `BaseModel` for YAML parsing to ensure compile-time type safety.
 - [ ] **Statistical Data Validation** (§2.11) — Integrate Great Expectations (GX) for distribution-based data contracts in the DVC pipeline.
 - [ ] **LLM-as-a-Judge Evaluation** (§4.1.4) — Build an automated qualitative scoring harness for risk reports using DeepEval.
 - [ ] **Supply Chain Hardening** (§6.6.3) — Pin Docker base images by digest and GitHub Actions by full commit SHA.
@@ -398,7 +394,7 @@ CI workflow uses tag-based action references (`actions/checkout@v6`, `astral-sh/
 | **1.2** | Brain vs. Brawn separation | ✅ | Agents reason; tools calculate |
 | **1.3** | Tools as Microservices (Pydantic inputs) | ✅ | Tool performance optimized via caching |
 | **1.4** | Structured Output Enforcement | ⚠️ | Guardrails exist but no JSON-mode output |
-| **1.5** | No Naked Prompts (external files) | ⚠️ | Centralized in `.py`, not external `.txt` |
+| **1.5** | No Naked Prompts (external files) | ✅ | Prompts decoupled into versioned `.txt` files |
 | **1.6** | State Persistence & HITL | ℹ️ | Not applicable for current scope |
 | **1.7** | Prompt Engineering as First-Line Debug | ✅ | Prompt versioning supports iteration |
 | **1.8** | Agent Patterns (Sequential/Strategy) | ✅ | Relay Team + Strategy factory |
