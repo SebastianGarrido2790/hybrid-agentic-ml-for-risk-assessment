@@ -71,10 +71,18 @@ def test_ingestion_validation_integration(
     train_path = ingestion_dir / "train.csv"
     assert train_path.exists()
 
+    # Create dummy expectations file
+    expectations_path = validation_dir / "expectations.json"
+    with open(expectations_path, "w") as f:
+        import json
+
+        json.dump({"expectation_suite_name": "test_suite", "expectations": []}, f)
+
     # 2. Run Data Validation using Ingestion Output
     validation_config = DataValidationConfig(
         root_dir=validation_dir,
-        STATUS_FILE=validation_dir / "status.txt",
+        STATUS_FILE=str(validation_dir / "status.txt"),
+        EXPECTATIONS_FILE=expectations_path,
         unzip_data_dir=ingestion_dir,  # Pointing to ingestion output
         all_schema={
             "target": "int",

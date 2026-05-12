@@ -20,17 +20,22 @@ def data_validation_config():
     return DataValidationConfig(
         root_dir=Path("artifacts/data_validation"),
         STATUS_FILE="artifacts/data_validation/status.txt",
+        EXPECTATIONS_FILE=Path("artifacts/data_validation/expectations.json"),
         unzip_data_dir=Path("artifacts/data_ingestion"),
         all_schema={"col1": "int", "col2": "float", "target": "int"},
     )
 
 
 @patch("src.components.data_validation.pd.read_csv")
-def test_validate_all_columns_success(mock_read_csv, data_validation_config):
+@patch("src.components.data_validation.DataValidation.validate_statistical_contracts")
+def test_validate_all_columns_success(
+    mock_stats, mock_read_csv, data_validation_config
+):
     # Setup
     # Data has all columns in schema
     mock_df = pd.DataFrame(columns=["col1", "col2", "target"])
     mock_read_csv.return_value = mock_df
+    mock_stats.return_value = True
 
     validation = DataValidation(config=data_validation_config)
 
@@ -47,13 +52,15 @@ def test_validate_all_columns_success(mock_read_csv, data_validation_config):
 
 
 @patch("src.components.data_validation.pd.read_csv")
+@patch("src.components.data_validation.DataValidation.validate_statistical_contracts")
 def test_validate_all_columns_failure_missing_col(
-    mock_read_csv, data_validation_config
+    mock_stats, mock_read_csv, data_validation_config
 ):
     # Setup
     # Data is missing 'col2'
     mock_df = pd.DataFrame(columns=["col1", "target"])
     mock_read_csv.return_value = mock_df
+    mock_stats.return_value = True
 
     validation = DataValidation(config=data_validation_config)
 

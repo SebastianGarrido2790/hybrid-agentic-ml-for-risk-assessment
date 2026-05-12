@@ -42,10 +42,10 @@ class ModelEvaluationTrainingPipeline:
 
 if __name__ == "__main__":
     try:
-        logger.info(f"🚀 {STAGE_NAME} started 🚀")
+        logger.info(f"STARTED: {STAGE_NAME}")
         obj = ModelEvaluationTrainingPipeline()
         obj.main()
-        logger.info(f"✅ {STAGE_NAME} completed ✅")
+        logger.info(f"COMPLETED: {STAGE_NAME}")
     except Exception as e:
         logger.error(CustomException(e, sys))
         raise e

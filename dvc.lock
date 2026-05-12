@@ -5,8 +5,8 @@ stages:
     deps:
     - path: config/config.yaml
       hash: md5
-      md5: e216735953fd0e170fc93809d8abb29b
-      size: 1531
+      md5: 2d67fbd767e148e505cf9698d43776d2
+      size: 1715
     - path: data/processed/financial_statements_training.csv
       hash: md5
       md5: efc203426083ddb7af979e6e6660c124
@@ -25,16 +25,16 @@ stages:
       size: 6792
     - path: src/components/data_ingestion.py
       hash: md5
-      md5: 13cb4597bdd3e6b7e58b92afeacaedfa
-      size: 9312
+      md5: 0f1931f2a58d7a38541ed50270c7becb
+      size: 9454
     - path: src/features/build_features.py
       hash: md5
-      md5: afc45517a7f33bc7f19e39326fa6020e
-      size: 2541
+      md5: 299d56cf7e7340972fc7b9a8e4c74772
+      size: 2648
     - path: src/pipeline/stage_01_data_ingestion.py
       hash: md5
-      md5: 793f9ba7188a111d56db31850ce88436
-      size: 1232
+      md5: e82d929b220b15fbe3fe52daa836dd4c
+      size: 1216
     params:
       config/params.yaml:
         data_split.random_state: 42
@@ -70,16 +70,16 @@ stages:
       size: 19722
     - path: config/config.yaml
       hash: md5
-      md5: e216735953fd0e170fc93809d8abb29b
-      size: 1531
+      md5: 2d67fbd767e148e505cf9698d43776d2
+      size: 1715
     - path: src/components/data_transformation.py
       hash: md5
-      md5: 5b1cdba7e1e9c72028b06e7423575b78
-      size: 6577
+      md5: 0947aa45453dabd252a96ca8de42c1cf
+      size: 6470
     - path: src/pipeline/stage_03_data_transformation.py
       hash: md5
-      md5: 502c243e2ee7af13f9021202c7d10454
-      size: 1333
+      md5: 20930c2d9f80db505241bbcb83ef650a
+      size: 1317
     outs:
     - path: artifacts/data_transformation/preprocessor.pkl
       hash: md5
@@ -104,18 +104,22 @@ stages:
       hash: md5
       md5: 49e89b227fc75acb230ea57e86a4f6b6
       size: 91810
+    - path: artifacts/data_validation/expectations.json
+      hash: md5
+      md5: 346f6ce7dd528f817772acb2f2240856
+      size: 1314
     - path: config/config.yaml
       hash: md5
-      md5: e216735953fd0e170fc93809d8abb29b
-      size: 1531
+      md5: 2d67fbd767e148e505cf9698d43776d2
+      size: 1715
     - path: config/schema.yaml
       hash: md5
       md5: f3df822164a8a6328ee685ece9fa29f9
       size: 600
     - path: src/pipeline/stage_02_data_validation.py
       hash: md5
-      md5: 55647ac504e7a798fa46b7f5e00cc7ec
-      size: 1227
+      md5: 1dfa21f74c60e8784668f404f08dbd4a
+      size: 1212
     outs:
     - path: artifacts/data_validation/status.txt
       hash: md5
@@ -134,16 +138,16 @@ stages:
       size: 20773
     - path: config/config.yaml
       hash: md5
-      md5: e216735953fd0e170fc93809d8abb29b
-      size: 1531
+      md5: 2d67fbd767e148e505cf9698d43776d2
+      size: 1715
     - path: src/components/model_trainer.py
       hash: md5
-      md5: 074e96884ea90f26d2899ef63150481d
-      size: 1969
+      md5: b5e8f37cb68234c6a30e82fa5cf2f97a
+      size: 1986
     - path: src/pipeline/stage_04_model_trainer.py
       hash: md5
-      md5: c83e9a0cd23ff61274c32cd4752b20c7
-      size: 1123
+      md5: d6aca0c75afb2cd8bba3a29202eff1b8
+      size: 1107
     params:
       config/params.yaml:
         data_split.random_state: 42
@@ -219,8 +223,8 @@ stages:
     deps:
     - path: config/config.yaml
       hash: md5
-      md5: e216735953fd0e170fc93809d8abb29b
-      size: 1531
+      md5: 2d67fbd767e148e505cf9698d43776d2
+      size: 1715
     - path: data/raw/financial_statements_training.csv
       hash: md5
       md5: c1e645eb51fc3c7534428690f235b908
@@ -239,16 +243,16 @@ stages:
       size: 6792
     - path: src/components/data_augmentation.py
       hash: md5
-      md5: 02845241c56da170a2da237f02c20924
-      size: 2930
+      md5: 8c0059553d4756d0582ca9185c3fc80e
+      size: 3009
     - path: src/pipeline/stage_00_data_augmentation.py
       hash: md5
-      md5: 454974190b858afb0d734143db1dafa0
-      size: 1202
+      md5: 00b7262aec7c66522088ce16cc15dd36
+      size: 1231
     - path: src/tools/synthetic_data_generator.py
       hash: md5
-      md5: 9ce0b4be155634bc7eb9f05c94ddea0a
-      size: 6012
+      md5: df9c9138aea14b3c7ba97e488cf5387f
+      size: 6172
     params:
       config/params.yaml:
         augmentation.n_samples: 100

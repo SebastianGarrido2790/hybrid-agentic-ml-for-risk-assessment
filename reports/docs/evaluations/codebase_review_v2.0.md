@@ -263,14 +263,17 @@ validate: lint typecheck test
 
 No `.pre-commit-config.yaml` exists. Pre-commit hooks prevent lint/type issues from reaching CI.
 
-### 4.10 No Great Expectations (GX) Data Validation (Rule 2.11)
+### ~~4.10 Data Validation Hardening via Great Expectations (Rule 2.11)~~ ✅ ADDRESSED (v2.3)
 
-`DataValidation` component (`data_validation.py`) only checks column presence and dtype matching. Production-grade validation requires:
-- Value range constraints (e.g., `revenue_growth ∈ [-1.0, 10.0]`)
-- Null percentage thresholds per column
-- Distribution drift detection (PSI — Rule 2.14.3)
+~~**Original Gap:** The `DataValidation` component (`data_validation.py`) initially only checked column presence and dtype matching. Production-grade validation requires:~~  
+~~- Value range constraints (e.g., `revenue_growth ∈ [-1.0, 10.0]`)~~  
+~~- Null percentage thresholds per column~~  
+~~- Distribution consistency (Rule 2.14.3)~~
 
-**Action:** Augment with GX expectation suites stored as versioned artifacts alongside the DVC pipeline.
+**Enhancement (v2.3):** This gap has been fully addressed by integrating **Great Expectations (GX 1.x)**:
+- **Statistical Data Contract**: Implemented `artifacts/data_validation/expectations.json` containing 11+ automated quality checks (range, nullity, categorical sets).
+- **Orchestrated Validation**: Updated the DVC pipeline to enforce the GX expectation suite as a mandatory gate between Ingestion and Transformation.
+- **Versioned Artifact Registry**: The expectation suite is stored and versioned within the `artifacts/` directory, ensuring strict data contract enforcement across environments.
 
 ### 4.11 No LLM-as-a-Judge Evaluation (Rule 4.1.4)
 
@@ -361,7 +364,7 @@ CI workflow uses tag-based action references (`actions/checkout@v6`, `astral-sh/
 
 - [x] **Prompt Decoupling** (§1.5) — Migrate system prompts from Python modules to versioned `.txt` files in `src/agents/prompts/`.
 - [x] **Typed Configuration Migration** (§2.3) — Replace `ConfigBox` with Pydantic `BaseModel` for YAML parsing to ensure compile-time type safety.
-- [ ] **Statistical Data Validation** (§2.11) — Integrate Great Expectations (GX) for distribution-based data contracts in the DVC pipeline.
+- [x] **Statistical Data Validation** (§2.11) — Integrate Great Expectations (GX) for distribution-based data contracts in the DVC pipeline.
 - [ ] **LLM-as-a-Judge Evaluation** (§4.1.4) — Build an automated qualitative scoring harness for risk reports using DeepEval.
 - [ ] **Supply Chain Hardening** (§6.6.3) — Pin Docker base images by digest and GitHub Actions by full commit SHA.
 - [ ] **Automated Vulnerability Scanning** (§6.6.3) — Integrate Trivy or Docker Scout into the CI/CD pipeline as a blocking gate.
@@ -399,7 +402,7 @@ CI workflow uses tag-based action references (`actions/checkout@v6`, `astral-sh/
 | **1.7** | Prompt Engineering as First-Line Debug | ✅ | Prompt versioning supports iteration |
 | **1.8** | Agent Patterns (Sequential/Strategy) | ✅ | Relay Team + Strategy factory |
 | **2.2** | Defensive Error Handling | ✅ | Bare `except` blocks eliminated |
-| **2.3** | Typed schemas everywhere | ⚠️ | Magic numbers moved to config |
+| **2.3** | Typed schemas everywhere | ✅ | Pydantic MasterConfig/MasterParams schemas enforced |
 | **2.14** | FTI Pipeline | ✅ | 7-stage DVC pipeline |
 | **4.1** | Testing Pyramid | ✅ | Unit + Integration + API layers |
 | **4.1.3** | Coverage ≥65% | ✅ | Currently at 66% system-wide |

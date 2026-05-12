@@ -90,7 +90,10 @@ target/
 .venv/
 
 # Project specific ignores
-artifacts/
+artifacts/**/*
+!artifacts/**/
+!artifacts/**/.gitkeep
+!artifacts/**/*.dvc
 logs/
 mlruns/
 mlruns_system/

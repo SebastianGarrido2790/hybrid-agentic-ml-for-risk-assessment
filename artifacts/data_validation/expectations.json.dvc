@@ -1,0 +1,5 @@
+outs:
+- md5: 346f6ce7dd528f817772acb2f2240856
+  size: 1314
+  hash: md5
+  path: expectations.json

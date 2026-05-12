@@ -54,6 +54,7 @@ class DataIngestionConfig:
 class DataValidationConfig:
     root_dir: Path
     STATUS_FILE: str
+    EXPECTATIONS_FILE: Path
     unzip_data_dir: Path
     all_schema: dict[str, str]
 
@@ -129,6 +130,7 @@ class DataValidationYamlConfig(BaseModel):
     root_dir: str
     unzip_data_dir: str
     STATUS_FILE: str
+    EXPECTATIONS_FILE: str
 
 
 class DataTransformationYamlConfig(BaseModel):

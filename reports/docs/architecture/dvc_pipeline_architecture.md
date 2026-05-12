@@ -2,9 +2,9 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 2.0
-**Date:** 2026-03-07
-**Status:** Production
+**Version:** 2.3
+**Date:** 2026-05-12
+**Status:** Production (Advanced Maturity)
 
 ---
 
@@ -65,11 +65,12 @@ flowchart TD
     end
 
     subgraph S02["Stage 02: Data Validation"]
-        VAL["src/pipeline/stage_02_data_validation.py\n→ Schema enforcement on train.csv"]
+        VAL["src/pipeline/stage_02_data_validation.py\n→ Structural & Statistical enforcement"]
     end
 
     subgraph ART_VAL["📁 artifacts/data_validation/"]
         ST["status.txt"]
+        exp["expectations.json\n(statistical contract)"]
     end
 
     subgraph S03["Stage 03: Data Transformation"]
@@ -114,7 +115,7 @@ flowchart TD
     S01 --> T1 & V1 & TE1
 
     T1 --> S02
-    schema --> S02
+    schema & exp --> S02
     S02 --> ST
 
     T1 & V1 & TE1 --> S03
@@ -163,10 +164,10 @@ flowchart TD
 | :--- | :--- |
 | **DVC Stage Name** | `data_validation` |
 | **Script** | `src/pipeline/stage_02_data_validation.py` |
-| **Input** | `artifacts/data_ingestion/train.csv`, `config/schema.yaml` |
+| **Input** | `artifacts/data_ingestion/train.csv`, `config/schema.yaml`, `artifacts/data_validation/expectations.json` |
 | **Output** | `artifacts/data_validation/status.txt` |
-| **Operational Hardening (v2.0)** | Integrated `CustomException` to ensure schema violations are logged with full traceback before pipeline termination. |
-| **Purpose** | Enforces the data contract defined in `schema.yaml`. Validates column names, types, and presence of required fields. Downstream Stage 03 depends on `status.txt` to prevent transformation of corrupt data. |
+| **Operational Hardening (v2.3)** | Integrated **Great Expectations (GX)** for distribution-based statistical validation, ensuring data integrity beyond simple schema checks. |
+| **Purpose** | Enforces both the **Structural Data Contract** (schema.yaml) and the **Statistical Data Contract** (expectations.json). Validates column names, types, and statistical ranges/distributions. Downstream Stage 03 depends on `status.txt` to prevent transformation of corrupt or anomalous data. |
 
 ### Stage 03: Data Transformation
 | Property | Value |

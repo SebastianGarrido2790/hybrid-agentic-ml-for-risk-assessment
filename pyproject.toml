@@ -38,6 +38,7 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.60b1",
     "opentelemetry-exporter-otlp>=1.39.1",
     "slowapi>=0.1.9",
+    "great-expectations>=1.17.1",
 ]
 
 [project.optional-dependencies]

@@ -33,6 +33,7 @@ def mock_config_dict():
             "root_dir": "artifacts/data_validation",
             "unzip_data_dir": "artifacts/data_ingestion",
             "STATUS_FILE": "artifacts/data_validation/status.txt",
+            "EXPECTATIONS_FILE": "artifacts/data_validation/expectations.json",
         },
         "data_transformation": {
             "root_dir": "artifacts/data_transformation",

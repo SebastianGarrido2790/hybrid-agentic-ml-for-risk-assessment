@@ -46,6 +46,7 @@ stages:
       - src/pipeline/stage_02_data_validation.py
       - config/config.yaml
       - config/schema.yaml
+      - artifacts/data_validation/expectations.json
       - artifacts/data_ingestion/train.csv
     outs:
       - artifacts/data_validation/status.txt
