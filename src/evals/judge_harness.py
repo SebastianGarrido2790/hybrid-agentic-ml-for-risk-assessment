@@ -49,7 +49,7 @@ logger = get_logger(__name__)
 GOLDEN_DATASET_PATH = Path(__file__).parent / "golden_dataset.json"
 DATASET_VERSION = "1.0.0"
 
-# Dimension thresholds mandated by Rule 4.1.4
+# Dimension thresholds
 _THRESHOLDS: dict[str, int] = {
     "relevance": 4,
     "faithfulness": 4,
@@ -257,7 +257,7 @@ def _invoke_judge(sample: GoldenSample, agent_response: str) -> JudgeVerdict:
 
 
 def _check_thresholds(verdict: JudgeVerdict) -> bool:
-    """Apply deterministic pass/fail logic against the Rule 4.1.4 thresholds.
+    """Apply deterministic pass/fail logic against the thresholds.
 
     This function is the Brawn of the eval pipeline: given a structured
     ``JudgeVerdict``, it applies simple integer comparisons — no LLM reasoning.

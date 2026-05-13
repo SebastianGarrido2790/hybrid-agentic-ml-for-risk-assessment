@@ -75,15 +75,13 @@ class DimensionScore(BaseModel):
 
     score: int = Field(..., ge=1, le=5, description="Score from 1 (worst) to 5 (best)")
     justification: str = Field(..., description="One-sentence rationale for the score")
-    pass_threshold: int = Field(
-        ..., description="Minimum acceptable score (per Rule 4.1.4)"
-    )
+    pass_threshold: int = Field(..., description="Minimum acceptable score")
 
 
 class JudgeVerdict(BaseModel):
     """Structured output produced by the LLM Judge for a single sample.
 
-    Mirrors the four axes mandated by Rule 4.1.4:
+    Mirrors the four axes:
     - Relevance        ≥ 4/5
     - Faithfulness     ≥ 4/5
     - Tool Usage       ≥ 4/5

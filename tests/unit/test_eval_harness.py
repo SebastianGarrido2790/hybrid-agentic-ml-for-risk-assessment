@@ -104,7 +104,7 @@ def test_golden_dataset_file_exists() -> None:
 
 @pytest.mark.unit
 def test_load_golden_dataset_returns_20_samples() -> None:
-    """Dataset must contain exactly 20 curated samples (Rule 4.1.4)."""
+    """Dataset must contain exactly 20 curated samples."""
     samples = load_golden_dataset()
     assert len(samples) == 20, f"Expected 20 samples, got {len(samples)}"
 
@@ -172,7 +172,7 @@ def test_check_thresholds_fails_on_low_relevance(failing_verdict: JudgeVerdict) 
 
 @pytest.mark.unit
 def test_check_thresholds_business_value_threshold_is_3() -> None:
-    """Business Value threshold must be 3/5 per Rule 4.1.4."""
+    """Business Value threshold must be 3/5."""
     verdict = JudgeVerdict(
         relevance=DimensionScore(score=4, justification="ok", pass_threshold=4),
         faithfulness=DimensionScore(score=4, justification="ok", pass_threshold=4),

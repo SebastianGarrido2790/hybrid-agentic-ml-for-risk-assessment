@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "description": "Golden dataset for ACRAS LLM-as-a-Judge evaluation (Rule 4.1.4). Contains 20 curated (input, expected_output) pairs covering Low, Medium, and High credit risk scenarios across diverse company profiles.",
+  "description": "Golden dataset for ACRAS LLM-as-a-Judge evaluation. Contains 20 curated (input, expected_output) pairs covering Low, Medium, and High credit risk scenarios across diverse company profiles.",
   "axes": {
     "relevance": {"threshold": 4, "description": "Does the response address the user's credit-risk intent?"},
     "faithfulness": {"threshold": 4, "description": "Are claims grounded in retrieved context with no hallucination?"},
