@@ -16,7 +16,7 @@ class AgentSettings(BaseSettings):
     # LLM Settings
     GOOGLE_API_KEY: str | None = None
     HUGGINGFACEHUB_API_TOKEN: str | None = None
-    DEFAULT_LLM_PROVIDER: Literal["gemini", "huggingface"] = "huggingface"
+    DEFAULT_LLM_PROVIDER: Literal["gemini", "huggingface"] = "gemini"
 
     # Model Names
     HF_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"  # Tier 1/2 Performance (7B is more reliable for Free API)
