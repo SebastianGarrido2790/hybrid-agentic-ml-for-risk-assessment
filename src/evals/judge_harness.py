@@ -22,6 +22,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -227,6 +228,9 @@ def _invoke_judge(sample: GoldenSample, agent_response: str) -> JudgeVerdict:
     user_message = _build_judge_user_prompt(sample, agent_response)
 
     # Use the Gemini flash model as the judge (no tools needed)
+    if not os.environ.get("GOOGLE_API_KEY"):
+        raise RuntimeError("GOOGLE_API_KEY missing from environment. Evaluation suite requires an API key.")
+
     try:
         judge_model = get_llm(provider="gemini")
     except Exception as e:
