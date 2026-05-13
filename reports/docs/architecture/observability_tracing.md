@@ -200,11 +200,21 @@ To visualize traces locally during development, you can deploy a Jaeger all-in-o
 
 ### **Option A: Persistent Setup (Recommended)**
 Recommended for active development. It names the container for easy management and explicitly enables OTLP.
+#### **Bash (Linux/macOS/Git Bash)**
 ```bash
 docker run -d --name jaeger \
   -e COLLECTOR_OTLP_ENABLED=true \
   -p 16686:16686 \
   -p 4318:4318 \
+  jaegertracing/all-in-one:latest
+```
+
+#### **PowerShell (Windows)**
+```powershell
+docker run -d --name jaeger `
+  -e COLLECTOR_OTLP_ENABLED=true `
+  -p 16686:16686 `
+  -p 4318:4318 `
   jaegertracing/all-in-one:latest
 ```
 *   **Pros**: You can stop and restart it (`docker stop/start jaeger`) without losing history.
