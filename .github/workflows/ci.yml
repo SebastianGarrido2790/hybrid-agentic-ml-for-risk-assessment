@@ -235,6 +235,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Set up Python
+        if: steps.check-key.outputs.has_key == 'true'
         run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install system dependencies (libcairo2 for xhtml2pdf)
