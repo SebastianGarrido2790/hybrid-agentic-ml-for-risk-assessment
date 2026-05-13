@@ -196,14 +196,35 @@ A complete ACRAS risk assessment trace has the following parent-child span struc
 
 ## 7. Local Collector Setup (Jaeger)
 
-To visualize traces locally during development, run a Jaeger all-in-one collector that accepts OTLP:
+To visualize traces locally during development, you can deploy a Jaeger all-in-one collector using one of the following strategies:
 
+### **Option A: Persistent Setup (Recommended)**
+Recommended for active development. It names the container for easy management and explicitly enables OTLP.
 ```bash
-docker run --rm -d \
-  -p 16686:16686 \  # Jaeger UI
-  -p 4318:4318   \  # OTLP HTTP receiver
+docker run -d --name jaeger \
+  -e COLLECTOR_OTLP_ENABLED=true \
+  -p 16686:16686 \
+  -p 4318:4318 \
   jaegertracing/all-in-one:latest
 ```
+*   **Pros**: You can stop and restart it (`docker stop/start jaeger`) without losing history.
+*   **Cons**: You must manually delete it when no longer needed (`docker rm -f jaeger`).
+
+### **Option B: Ephemeral Setup (Quick Look)**
+Good for one-off sessions. The container is deleted immediately after stopping.
+```bash
+docker run --rm -d \
+  -p 16686:16686 \
+  -p 4318:4318 \
+  jaegertracing/all-in-one:latest
+```
+
+### **Key Command Flag Differences**
+| Flag | Purpose | Recommendation |
+| :--- | :--- | :--- |
+| `--name jaeger` | Assigns a fixed ID for `docker stop/start`. | Use for persistent dev environments. |
+| `--rm` | Deletes the container on exit. | Use for one-off tests. |
+| `-e COLLECTOR_OTLP_ENABLED=true` | Explicitly enables the OTLP port (4318). | Ensures compatibility with ACRAS exporters. |
 
 Then set the environment variable to point the OTLP exporter at it:
 
