@@ -229,7 +229,9 @@ def _invoke_judge(sample: GoldenSample, agent_response: str) -> JudgeVerdict:
 
     # Use the Gemini flash model as the judge (no tools needed)
     if not os.environ.get("GOOGLE_API_KEY"):
-        raise RuntimeError("GOOGLE_API_KEY missing from environment. Evaluation suite requires an API key.")
+        raise RuntimeError(
+            "GOOGLE_API_KEY missing from environment. Evaluation suite requires an API key."
+        )
 
     try:
         judge_model = get_llm(provider="gemini")

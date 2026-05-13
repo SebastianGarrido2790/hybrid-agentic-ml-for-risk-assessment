@@ -49,7 +49,7 @@ def log_live_performance(
 
     with tracer.start_as_current_span("live_monitoring_judge") as span:
         span.set_attribute("acras.company_id", company_id)
-        
+
         # Check for API key before attempting to invoke judge
         if not os.environ.get("GOOGLE_API_KEY"):
             logger.warning("GOOGLE_API_KEY missing; skipping live monitoring judge.")
