@@ -40,6 +40,9 @@ class AgentSettings(BaseSettings):
     OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://localhost:4318"
     DEBUG_TELEMETRY: int = 0
 
+    # Evaluation Settings
+    LOG_EVALS_TO_MLFLOW: int = 0
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="forbid"
     )
