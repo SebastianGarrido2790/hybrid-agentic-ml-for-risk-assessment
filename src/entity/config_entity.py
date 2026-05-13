@@ -106,6 +106,12 @@ class ModelRegistrationConfig:
     min_roc_auc: float
 
 
+@dataclass(frozen=True)
+class EvalDatasetConfig:
+    root_dir: Path
+    status_file: Path
+
+
 # --- YAML Structure Models (Typed Boundaries) ---
 
 
@@ -168,6 +174,12 @@ class ModelRegistrationYamlConfig(BaseModel):
     model_name: str
 
 
+class EvalDatasetYamlConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    root_dir: str
+    status_file: str
+
+
 class MasterConfig(BaseModel):
     """Schema for config/config.yaml"""
 
@@ -180,6 +192,7 @@ class MasterConfig(BaseModel):
     model_trainer: ModelTrainerYamlConfig
     model_evaluation: ModelEvaluationYamlConfig
     model_registration: ModelRegistrationYamlConfig
+    eval_dataset_validation: EvalDatasetYamlConfig
 
 
 class DataSplitParams(BaseModel):

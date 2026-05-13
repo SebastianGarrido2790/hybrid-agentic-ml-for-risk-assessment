@@ -111,3 +111,13 @@ stages:
       - config/config.yaml
       - artifacts/model_trainer/acras_rf_model.joblib
       - artifacts/model_evaluation/metrics.json
+
+  eval_dataset_validation:
+    cmd: python src/pipeline/stage_07_eval_dataset_validation.py
+    deps:
+      - src/pipeline/stage_07_eval_dataset_validation.py
+      - src/components/eval_dataset_validation.py
+      - src/evals/golden_dataset.json
+      - src/evals/judge_harness.py
+    outs:
+      - artifacts/eval_dataset/status.txt

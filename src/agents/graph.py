@@ -22,6 +22,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 from opentelemetry import trace
 
+from src.agents.monitoring import log_live_performance
 from src.agents.tools.finance_tool import (
     calculate_current_ratio,
     calculate_debt_to_equity,
@@ -392,6 +393,60 @@ def orchestrator_node(state: AgentState):
     return {"messages": logs + invoke_logs + [response]}
 
 
+def monitor_node(state: AgentState):
+    """
+    Agent 4: Monitoring / Quality Assurance.
+    Focus: Scoring the final report using the LLM-as-a-Judge.
+    """
+    messages = state["messages"]
+    company_id = state.get("company_id", "Unknown")
+
+    # 1. Extract inputs and results
+    input_query = ""
+    for m in messages:
+        if isinstance(m, HumanMessage):
+            input_query = str(m.content)
+            break
+
+    final_report = str(messages[-1].content)
+
+    # 2. Extract context data (Tool outputs)
+    context_data = []
+    for m in messages:
+        # LangChain ToolMessages have 'content' and usually 'name' or 'tool_call_id'
+        if hasattr(m, "tool_call_id") or "ToolMessage" in str(type(m)):
+            name = getattr(m, "name", "Tool")
+            context_data.append(f"Source: {name}\nContent: {m.content}")
+
+    context_str = "\n\n".join(context_data)
+
+    # 3. Run Monitoring
+    try:
+        verdict_data = log_live_performance(
+            input_query=input_query,
+            agent_response=final_report,
+            context_data=context_str,
+            company_id=company_id,
+        )
+
+        # Inject a system message with the scores for traceability in the UI
+        score_summary = verdict_data.get("overall_summary", "No summary available.")
+        score_msg = (
+            f"✨ [MONITOR] Quality Scores: "
+            f"Relevance={verdict_data.get('relevance', {}).get('score', '?')}/5, "
+            f"Faithfulness={verdict_data.get('faithfulness', {}).get('score', '?')}/5\n"
+            f"Evaluation: {score_summary}"
+        )
+        return {"messages": [SystemMessage(content=score_msg)]}
+    except Exception as e:
+        logger.warning(f"Monitoring node failed: {e}")
+        return {
+            "messages": [
+                SystemMessage(content="⚠️ [MONITOR] Evaluation skipped due to error.")
+            ]
+        }
+
+
 # --- Conditional Logic ---
 
 
@@ -417,6 +472,7 @@ workflow.add_node("financial_tools", ToolNode(financial_tools_list))
 workflow.add_node("data_scientist", data_scientist_node)
 workflow.add_node("ml_tools", ToolNode(ml_tools_list))
 workflow.add_node("orchestrator", orchestrator_node)
+workflow.add_node("monitor", monitor_node)
 
 workflow.set_entry_point("financial_analyst")
 
@@ -432,6 +488,7 @@ workflow.add_conditional_edges(
 )
 workflow.add_edge("ml_tools", "data_scientist")  # Loop back
 
-workflow.add_edge("orchestrator", END)
+workflow.add_edge("orchestrator", "monitor")
+workflow.add_edge("monitor", END)
 
 app = workflow.compile()

@@ -273,3 +273,23 @@ stages:
       hash: md5
       md5: a84363aa050707001b097369c917e809
       size: 6792
+  eval_dataset_validation:
+    cmd: python src/pipeline/stage_07_eval_dataset_validation.py
+    deps:
+    - path: src/evals/golden_dataset.json
+      hash: md5
+      md5: 66c2a646dab9626b64f8baf0c1180edb
+      size: 14482
+    - path: src/evals/judge_harness.py
+      hash: md5
+      md5: fa8f4f7388e6830f4262616de43088cf
+      size: 15796
+    - path: src/pipeline/stage_07_eval_dataset_validation.py
+      hash: md5
+      md5: 7ae52c6f0a52016fe5e16812659ad6e5
+      size: 881
+    outs:
+    - path: artifacts/eval_dataset/status.txt
+      hash: md5
+      md5: 4d6154fe02ac9bf42fd2aacfa49310b0
+      size: 9

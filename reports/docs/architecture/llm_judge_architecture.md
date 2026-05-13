@@ -2,7 +2,7 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2026-05-13
 **Status:** Production (Advanced Maturity — Sprint 3)
 
@@ -24,7 +24,7 @@ The layer implements the **Brain vs. Brawn** philosophy at the evaluation level:
 | **Tool Usage** | Did the agent call the correct tools? | ≥ 4/5 |
 | **Business Value Alignment** | Does the directive (APPROVE/REJECT/REVIEW) move a KPI? | ≥ 3/5 |
 
-The layer is backed by a **20-sample golden dataset** (`golden_dataset.json`) covering all three risk tiers (LOW, MEDIUM, HIGH) and all three recommendation types (APPROVE, REJECT, REVIEW). Before any production deployment, the entire dataset MUST be evaluated and all samples MUST achieve passing scores on all four axes.
+The layer is backed by a **20-sample golden dataset** (`golden_dataset.json`) covering all three risk tiers (LOW, MEDIUM, HIGH) and all three recommendation types (APPROVE, REJECT, REVIEW). To ensure the integrity of this ground truth, a dedicated **Evaluation Dataset Validation** stage (Stage 07 in the DVC pipeline) enforces schema compliance and loadability before any evaluation begins.
 
 ---
 
@@ -41,9 +41,16 @@ src/
 │   └── golden_dataset.json      ← 20 curated (input, expected_output) golden samples
 │
 ├── agents/
-│   └── prompts/
-│       └── system_prompts/
-│           └── llm_judge_v1.txt ← Versioned judge system prompt (No Naked Prompts policy)
+│   ├── prompts/
+│   │   └── system_prompts/
+│   │       └── llm_judge_v1.txt ← Versioned judge system prompt (No Naked Prompts policy)
+│   └── monitoring.py            ← Live "Monitor-as-a-Node" implementation
+│
+├── components/
+│   └── eval_dataset_validation.py ← Standardized component for ground truth integrity
+│
+├── pipeline/
+│   └── stage_07_eval_dataset_validation.py ← DVC pipeline stage for dataset validation
 │
 scripts/
 └── run_evals.py                 ← CLI runner: full suite / dry-run / MLflow logging
@@ -276,3 +283,4 @@ This enables trend analysis: if a prompt change causes `eval/mean_faithfulness` 
 | LLM-as-a-Judge Technical Implementation | `reports/docs/workflows/llm_judge_workflow.md` | Step-by-step implementation guide for this layer |
 | Codebase Review v2.0 | `reports/docs/evaluations/codebase_review_v2.0.md` | Gap 4.11 resolution record |
 | Observability & Tracing | `reports/docs/architecture/observability_tracing.md` | OTel integration that complements eval observability |
+| Stage 07 Validation Report | `reports/docs/workflows/stage_07_eval_dataset_report.md` | Ground truth integrity validation details |

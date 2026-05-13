@@ -26,7 +26,7 @@ The ACRAS MLOps pipeline is orchestrated by **DVC (Data Version Control)** via `
 
 ## 2. Complete Pipeline DAG
 
-The pipeline has **7 DVC stages**. Stage 00 (`data_augmentation`) is a **pre-processing prerequisite** that generates class-balanced data before the core FTI (Feature → Training → Inference) pipeline starts.
+The pipeline has **8 DVC stages**. Stage 00 (`data_augmentation`) is a **pre-processing prerequisite** that generates class-balanced data before the core FTI (Feature → Training → Inference) pipeline starts. Stage 07 (`eval_dataset_validation`) is the **qualitative gate prerequisite**, ensuring the ground truth golden dataset is valid before evaluation.
 
 ```mermaid
 flowchart TD
@@ -104,6 +104,13 @@ flowchart TD
     subgraph S06["Stage 06: Model Registration"]
         REG["src/pipeline/stage_06_model_registration.py\n→ Threshold gate → MLflow Model Registry"]
     end
+    
+    subgraph S07["Stage 07: Evaluation Dataset Validation"]
+        EVALVAL["src/pipeline/stage_07_eval_dataset_validation.py\n→ Validates golden_dataset.json loadability"]
+    end
+
+    ART_EVALVAL["📁 artifacts/eval_dataset_validation/"]
+    GOLDEN["src/evals/golden_dataset.json"]
 
     MFREG[["☁️ MLflow Model Registry\n(acras_risk_model)"]]
 
@@ -132,6 +139,9 @@ flowchart TD
 
     MDL & MET --> S06
     S06 --> MFREG
+
+    GOLDEN --> S07
+    S07 --> ART_EVALVAL
 ```
 
 ---
@@ -216,6 +226,17 @@ flowchart TD
 | **Output** | MLflow Model Registry (registered as `acras_risk_model`) |
 | **Operational Hardening (v2.0)** | Registry events (success/skipping/connection failure) are fully documented in the structured log stream with module-level attribution. |
 | **Purpose** | The quality gate. Only promotes models that pass the performance threshold to the centralized MLflow Model Registry. Gracefully degrades to local artifact storage if the MLflow server is unreachable. |
+
+### Stage 07: Evaluation Dataset Validation
+| Property | Value |
+| :--- | :--- |
+| **DVC Stage Name** | `eval_dataset_validation` |
+| **Script** | `src/pipeline/stage_07_eval_dataset_validation.py` |
+| **Component** | `src/components/eval_dataset_validation.py` |
+| **Input** | `src/evals/golden_dataset.json` |
+| **Output** | `artifacts/eval_dataset_validation/status.txt` |
+| **Operational Hardening (v2.3)** | Standardized component structure with strict docstrings and validation signaling via artifacts. |
+| **Purpose** | Validates the integrity of the **Golden Dataset** before it is consumed by the qualitative evaluation harness. Ensures that all samples are loadable and comply with the versioned schema, preventing runtime crashes in the heavy evaluation suite. |
 
 ---
 

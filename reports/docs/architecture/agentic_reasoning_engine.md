@@ -2,8 +2,8 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 2.3
-**Date:** 2026-05-11
+**Version:** 2.4
+**Date:** 2026-05-13
 **Status:** Production (Advanced Maturity)
 
 ---
@@ -224,9 +224,10 @@ flowchart TD
         R2 -- Yes --> MT["🔧 ml_tools (ToolNode)"]
         MT -->|"ToolMessage appended"| DS
         R2 -- No --> ORC["👔 orchestrator_node"]
+        ORC --> MON["👁️ monitor_node\n(Qualitative Audit)"]
     end
 
-    ORC --> END["✅ END"]
+    MON --> END["✅ END"]
 
     subgraph FALLBACK["⚡ Per-Node 3-Tier Fallback"]
         T1["Tier 1: Primary (HF or Gemini)"]
@@ -247,7 +248,8 @@ flowchart TD
 2. **Financial Analyst Loop:** The agent uses bound financial tools to fetch raw data and compute ratios iteratively. It may call tools multiple times (loop back edge) until all ratios are calculated, then produces its structured Markdown report.
 3. **Hand-off to Data Scientist:** The full conversation history (including all tool outputs and the Analyst's report) is passed to the Data Scientist. It is forced to call `get_credit_risk_score` before generating its analysis. It then produces a Quantitative Risk Analysis section.
 4. **CRO Synthesis:** The Orchestrator receives the complete message history and generates the final Executive Credit Risk Assessment, including the terminal risk score.
-5. **Output Delivery:** The final assistant message is consumed by the UI for rendering and/or by the PDF generator.
+5. **Qualitative Monitoring:** The `monitor_node` intercepts the final report and invokes the Judge LLM to score it across four business axes, logging the result to MLflow for real-time observability.
+6. **Output Delivery:** The final assistant message is consumed by the UI for rendering and/or by the PDF generator.
 
 ---
 
@@ -260,6 +262,7 @@ The choice of LLM per role is deliberately strategic. See `decisions/gemini_mode
 | **Financial Analyst** | `gemini-2.5-flash` | High context window for large financial records; cost-efficient for text processing |
 | **Risk Data Scientist** | `Qwen2.5-7B-Instruct` (HF) | Exceptional strict JSON/tool-calling; no hallucination on `PredictionInput` schema |
 | **CRO / Orchestrator** | `gemini-2.5-flash` | Strong synthesis and report generation; superior structural adherence for complex outputs |
+| **Live Judge** | `gemini-2.5-flash` | Impartial qualitative auditor; isolated from agent tools |
 
 > **Validation Note (Co. 1090):** Qwen-7B exhibits a **conservative/optimistic bias** in high-stress scenarios (rating a severe risk profile as "Moderate"). `gemini-2.5-flash` is the verified production standard for analytical calibration.
 

@@ -25,7 +25,7 @@ The `Dockerfile` uses a two-stage build to decouple the **dependency resolution 
 ```mermaid
 flowchart LR
     subgraph Stage1["Stage 1 — builder"]
-        B1["Base: ghcr.io/astral-sh/uv:python3.10-bookworm-slim"]
+        B1["Base: ghcr.io/astral-sh/uv@sha256:f1f417..."]
         B2["Install system deps (build-essential, pkg-config, libcairo2-dev)"]
         B3["COPY pyproject.toml + uv.lock (cache layer)"]
         B4["uv sync --no-dev --no-install-project"]
@@ -34,7 +34,7 @@ flowchart LR
     end
 
     subgraph Stage2["Stage 2 — runtime"]
-        R1["Base: python:3.10-slim-bookworm"]
+        R1["Base: python@sha256:85521e..."]
         R2["Install runtime system deps (curl, libcairo2)"]
         R3["Create non-root appuser"]
         R4["COPY --from=builder /app/.venv"]
@@ -66,10 +66,43 @@ This pattern ensures the final image contains **no compiler toolchains, no build
 | :--- | :--- |
 | **Non-root user** | `groupadd appuser` + `useradd appuser`; container runs as `appuser` |
 | **COPY --chown** | Avoids creating extra intermediate layers for ownership changes |
-| **Pinned base images** | `python:3.10-slim-bookworm` — explicit tag, no `latest` |
+| **Pinned base images** | Base images are pinned by **SHA256 digest** for immutability |
 | **Minimal system packages** | Runtime stage only installs `curl` and `libcairo2` |
 | **No secrets in image** | No `.env` files, API keys, or credentials baked into the image |
 | **Non-writable root** | Application files owned by `appuser`; process runs with least privilege |
+
+### Why Pinned Digests?
+
+Using immutable **SHA256 digests** (for Docker images) and **Full Commit SHAs** (for GitHub Actions) is a critical practice for "Elite" production systems. It moves your infrastructure from "probable" to **"provable"** security.
+
+#### **1. Protection Against "Tag Drifting"**
+Tags like `:latest`, `:3.10-slim`, or `@v5` are **mutable**. 
+*   **The Risk**: A maintainer can update the image or action behind a tag at any time. If they push a version with a bug or a breaking change, your pipeline will suddenly fail without you having changed a single line of your own code.
+*   **The SHA Solution**: A SHA256 digest is a cryptographic hash of the content itself. If even one byte of the image changes, the SHA changes. Pinning to a SHA ensures you get the **exact same bits** every single time, forever.
+
+#### **2. Supply Chain Security (Anti-Hijacking)**
+This is the most critical reason for modern MLOps.
+*   **The Risk**: If a developer's account for a popular GitHub Action or Docker image is compromised, an attacker can push a "malicious" version of the software under the same version tag (e.g., hijacking `@v5` to include a credential-stealer).
+*   **The SHA Solution**: An attacker cannot forge a SHA256 digest that matches the original content. By pinning to a SHA, you ensure that even if the tag is hijacked, your pipeline will either continue using the original safe version or fail to find a match—preventing the execution of malicious code in your environment.
+
+#### **3. Absolute Reproducibility**
+In Machine Learning, reproducibility is everything.
+*   **The Risk**: You train a model today on a specific base image. Six months later, you try to retrain it, but the `:3.10-slim` image has been updated with a different version of a low-level C library that slightly alters how math is calculated. Your model's performance drifts, and you can't figure out why.
+*   **The SHA Solution**: Pinning the base image digest ensures that the environment used for training and inference is **byte-for-byte identical** across years and environments.
+
+#### **4. Faster Audits & Compliance**
+For regulated industries (like the Credit Risk sector ACRAS addresses), auditors require proof of what was running. 
+*   **Proving State**: "We were running `python:3.10`" is vague. 
+*   **Elite State**: "We were running image `sha256:85521e102...`" is a cryptographically verifiable fact that satisfies the highest levels of governance (SOC2, ISO 27001).
+
+### **Summary Comparison**
+
+| Feature | Version Tags (`:latest`, `@v5`) | Immutable SHAs (`@sha256:...`) |
+| :--- | :--- | :--- |
+| **Reliability** | ⚠️ Can break overnight | ✅ Guaranteed stable |
+| **Security** | ⚠️ Vulnerable to hijacking | ✅ Cryptographically secure |
+| **Reproducibility** | ⚠️ Approximate | ✅ Absolute |
+| **Maturity** | Basic / Development | **Elite / Production** |
 
 ---
 
@@ -256,7 +289,7 @@ GHCR packages are private by default for private repositories and can be made pu
 | Component | Decision | Rationale |
 | :--- | :--- | :--- |
 | **Build pattern** | Multi-stage (`builder` → `runtime`) | Minimal final image; build tools excluded |
-| **Base image** | `python:3.10-slim-bookworm` | Pinned, minimal, no `latest` |
+| **Base image** | `python:3.10.16@sha256:85521e...` | Pinned by digest for supply chain security |
 | **User** | Non-root `appuser` | Least-privilege security |
 | **Dependencies** | `uv sync` with frozen lockfile | Reproducible, deterministic builds |
 | **Local dev** | Docker Compose with bind mounts + `--reload` | No rebuilds for code changes |

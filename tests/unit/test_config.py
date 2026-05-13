@@ -62,6 +62,10 @@ def mock_config_dict():
             "metric_file_name": "artifacts/model_evaluation/metrics.json",
             "model_name": "ACRAS_RandomForest_v1",
         },
+        "eval_dataset_validation": {
+            "root_dir": "artifacts/eval_dataset",
+            "status_file": "artifacts/eval_dataset/status.txt",
+        },
     }
 
 

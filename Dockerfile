@@ -2,7 +2,7 @@
 # Stage 1: Dependency installer using the official uv image
 # ============================================================
 # Best Practice: Pin specific image versions (optionally with @sha256 digests) for reproducibility
-FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim AS builder
+FROM ghcr.io/astral-sh/uv:0.5.21-python3.10-bookworm-slim@sha256:f1f417f7663248888e223f03b070440375a2d64f7b494665487779774640960c AS builder
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN uv sync --no-dev --no-install-project
 # ============================================================
 # Stage 2: Production-ready runtime image
 # ============================================================
-FROM python:3.10-slim-bookworm AS runtime
+FROM python:3.10.16-slim-bookworm@sha256:85521e1026090f4a869811409f8992e07172ec43f497745778841050a4d65020 AS runtime
 
 # Metadata labels for container orchestration and compliance
 LABEL org.opencontainers.image.title="ACRAS - Agentic Credit Risk Assessment System" \

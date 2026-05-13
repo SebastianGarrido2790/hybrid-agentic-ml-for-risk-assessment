@@ -18,6 +18,7 @@ from src.entity.config_entity import (
     DataIngestionConfig,
     DataTransformationConfig,
     DataValidationConfig,
+    EvalDatasetConfig,
     FeatureParamsConfig,
     MasterConfig,
     MasterParams,
@@ -175,6 +176,18 @@ class ConfigurationManager:
         )
 
         return model_registration_config
+
+    def get_eval_dataset_config(self) -> EvalDatasetConfig:
+        config = self.config.eval_dataset_validation
+
+        create_directories([config.root_dir])
+
+        eval_dataset_config = EvalDatasetConfig(
+            root_dir=Path(config.root_dir),
+            status_file=Path(config.status_file),
+        )
+
+        return eval_dataset_config
 
     def get_risk_params_config(self) -> RiskParamsConfig:
         params = self.params.risk_thresholds

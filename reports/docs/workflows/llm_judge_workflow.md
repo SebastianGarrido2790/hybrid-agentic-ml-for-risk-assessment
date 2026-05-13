@@ -2,7 +2,7 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Workflow · The How
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2026-05-13
 **Status:** Production (Advanced Maturity — Sprint 3)
 
@@ -27,6 +27,9 @@ For the architectural overview and design rationale, see `reports/docs/architect
 | `src/agents/prompts/system_prompts/llm_judge_v1.txt` | Config | Versioned judge system prompt |
 | `scripts/run_evals.py` | CLI Entry Point | Argument parsing, report persistence, MLflow logging |
 | `tests/unit/test_eval_harness.py` | Test Layer | 22 deterministic unit tests (zero API cost) |
+| `src/components/eval_dataset_validation.py` | Component | Standardized validation logic for golden dataset |
+| `src/pipeline/stage_07_eval_dataset_validation.py` | Pipeline | DVC orchestration for the validation stage |
+| `src/agents/monitoring.py` | Runtime | Real-time monitoring judge node implementation |
 
 ---
 
@@ -477,7 +480,45 @@ evals:
 
 ---
 
-## 10. Related Documents
+## 10. Dataset Integrity Validation (Stage 07)
+
+Before any qualitative evaluation (batch or live), the ground truth integrity must be verified. This is handled by Stage 07 of the DVC pipeline.
+
+### 10.1 Configuration — `src/entity/config_entity.py`
+The validation stage uses `EvalDatasetConfig` (immutable dataclass) for internal access and `EvalDatasetYamlConfig` (Pydantic BaseModel) for YAML boundary validation.
+
+### 10.2 Component Logic — `src/components/eval_dataset_validation.py`
+The `EvalDatasetValidation` component:
+1. Loads the `golden_dataset.json` via the harness.
+2. Checks that the file is not empty and contains the required keys.
+3. Touches a `status.txt` artifact upon success to signal completion to DVC.
+
+### 10.3 Execution
+```bash
+uv run dvc repro eval_dataset_validation
+```
+
+## 11. Live Monitoring Integration
+
+The LLM-as-a-Judge system is extended into the runtime environment via the **"Monitor-as-a-Node"** pattern.
+
+### 11.1 Orchestration — `monitor_node`
+In `src/agents/graph.py`, the `monitor_node` is added as a terminal step:
+```python
+workflow.add_node("monitor_node", monitor_node)
+workflow.add_edge("orchestrator_node", "monitor_node")
+workflow.add_edge("monitor_node", END)
+```
+
+### 11.2 Operation
+1. The node extracts the CRO's final report.
+2. It invokes `_invoke_judge()` from the harness.
+3. It logs dimensions to the `acras_live_monitoring` experiment in MLflow.
+4. It suppresses failures to ensure the user receives the report even if the monitoring judge fails.
+
+---
+
+## 12. Related Documents
 
 | Document | Location | Relationship |
 | :--- | :--- | :--- |
@@ -485,3 +526,4 @@ evals:
 | Agentic Reasoning Engine Architecture | `reports/docs/architecture/agentic_reasoning_engine.md` | The ACRAS agent (system under test) |
 | Codebase Review v2.0 | `reports/docs/evaluations/codebase_review_v2.0.md` | Gap 4.11 resolution; maturity score update |
 | CI Pipeline Workflow | `reports/docs/workflows/ci_pipeline_report.md` | How to integrate `make evals` as a CI gate |
+| Stage 07 Validation Report | `reports/docs/workflows/stage_07_eval_dataset_report.md` | Ground truth integrity validation details |

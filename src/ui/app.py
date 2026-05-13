@@ -70,6 +70,7 @@ if submit_btn and selected_id:
                             "financial_analyst": "📊 **Analyst**",
                             "data_scientist": "🔬 **Scientist**",
                             "orchestrator": "👔 **Director**",
+                            "monitor": "✨ **Monitor**",
                         }
                         agent_label = agent_map.get(node_name, "🤖 Agent")
 

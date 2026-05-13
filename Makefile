@@ -1,6 +1,6 @@
 # ACRAS Unified Orchestration Makefile
 
-.PHONY: help install lint format test typecheck pipeline dev clean validate evals evals-dry-run
+.PHONY: help install lint format test typecheck pipeline dev clean validate evals evals-dry-run pre-commit security
 
 help:
 	@echo "ACRAS Orchestration Commands:"
@@ -14,6 +14,8 @@ help:
 	@echo "  validate       - Run the multi-point validation suite"
 	@echo "  evals-dry-run  - Validate eval harness wiring (no API calls)"
 	@echo "  evals          - Run full LLM-as-a-Judge suite (requires API keys)"
+	@echo "  pre-commit     - Run all pre-commit hooks on all files"
+	@echo "  security       - Run Trivy vulnerability scan"
 
 install:
 	uv sync
@@ -45,3 +47,9 @@ evals-dry-run:
 
 evals:
 	uv run python scripts/run_evals.py
+
+pre-commit:
+	uv run pre-commit run --all-files
+
+security:
+	trivy fs .

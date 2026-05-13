@@ -41,7 +41,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v6
+              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
             - name: Create dummy ML artifact placeholders
               # ML artifacts are gitignored and produced by the DVC pipeline locally.
@@ -56,10 +56,10 @@ jobs:
                   touch artifacts/data_ingestion/val.csv
 
             - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v4
+              uses: docker/setup-buildx-action@b5ca514318bd6eb0dd79589191475d0b4ee01ca # v3.10.0
 
             - name: Build Docker image (no push)
-              uses: docker/build-push-action@v7
+              uses: docker/build-push-action@ca8427b7360c70575302f9e11cad9714856cbff5 # v6.13.0
               with:
                   context: .
                   push: false

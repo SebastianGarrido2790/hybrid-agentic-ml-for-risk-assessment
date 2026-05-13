@@ -2,8 +2,8 @@
 
 **Project:** Hybrid Agentic ML for Risk Assessment (ACRAS)
 **Document Type:** Architecture · The Map
-**Version:** 1.0
-**Date:** 2026-05-08
+**Version:** 1.1
+**Date:** 2026-05-13
 **Status:** Production (Phase 3: Elite Infrastructure)
 
 ---
@@ -33,6 +33,7 @@ flowchart TD
         FA["financial_analyst_node\nSpan: llm_call\n gen_ai.agent.name=financial_analyst"]
         DS["data_scientist_node\nSpan: llm_call\n gen_ai.agent.name=data_scientist"]
         ORC["orchestrator_node\nSpan: llm_call\n gen_ai.agent.name=orchestrator"]
+        MON["monitor_node\nSpan: llm_call\n gen_ai.agent.name=live_monitoring_judge"]
     end
 
     subgraph TOOLS["Deterministic Tools"]
@@ -139,6 +140,9 @@ Every call to `invoke_with_fallback()` creates a child span named `llm_call` wit
 | `gen_ai.request.tier` | `"tier_1"` / `"tier_2"` / `"tier_3"` | Fallback tier used for the call |
 | `gen_ai.request.model` | `"gemini-2.5-flash"` | Resolved model name |
 
+**Special Agent: `live_monitoring_judge`**
+When the `monitor_node` executes, it creates a span with `gen_ai.agent.name=live_monitoring_judge`. This span encapsulates the qualitative scoring logic and is tagged with the final PASS/FAIL status in the span attributes if a threshold breach occurs.
+
 ---
 
 ### 4.4 Deterministic Tool Spans — `src/agents/tools/`
@@ -172,6 +176,7 @@ A complete ACRAS risk assessment trace has the following parent-child span struc
     └── [Agent] llm_call (data_scientist, tier_1)
         └── [Tool] tool_execution (get_credit_risk_score)
     └── [Agent] llm_call (orchestrator, tier_1)
+    └── [Agent] llm_call (live_monitoring_judge, tier_1)
 ```
 
 > **Fallback Visibility:** If a tier switch occurs, the span's `gen_ai.request.tier` attribute will reflect the actual tier used (e.g., `"tier_2"`), making provider degradation visible in dashboards without log-scraping.

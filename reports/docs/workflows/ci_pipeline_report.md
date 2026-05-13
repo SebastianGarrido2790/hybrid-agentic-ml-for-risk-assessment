@@ -1,5 +1,5 @@
 # CI Pipeline Report — ACRAS
-**Date:** 2026-03-08 | **Branch:** `master` | **Repository:** `SebastianGarrido2790/hybrid-agentic-ml-for-risk-assessment`
+**Date:** 2026-05-13 | **Branch:** `master` | **Repository:** `SebastianGarrido2790/hybrid-agentic-ml-for-risk-assessment`
 
 ---
 
@@ -37,6 +37,8 @@ flowchart LR
     A["🔍 Lint & Format\n(ruff)\n~59s"] --> B["✅ Unit Tests\n~1m 7s"]
     A --> C["✅ Integration Tests\n~1m 12s"]
     A --> D["✅ API Tests\n(Prediction Service)\n~1m 3s"]
+    A --> E["✅ Qualitative Eval\n(LLM-as-a-Judge)\n~1m 45s (Dry-run)"]
+    A --> F["🛡️ Security Scan\n(Trivy)\n~45s"]
 ```
 
 **Latest successful run:** Commit `7207666` · **Total duration: 2m 16s**
@@ -61,18 +63,33 @@ flowchart LR
 - Executes `uv run pytest tests/app/ -v`
 - Covers: FastAPI `/health` and `/predict` endpoints, including risk category mapping and service unavailability
 
+- Mandatory gate for merging agent-related code to `master`.
+
+**`security-scan` — Vulnerability Scanning (Trivy)**
+- Executes `aquasecurity/trivy-action` on the repository filesystem.
+- Scans for `CRITICAL` and `HIGH` severity vulnerabilities.
+- Mandatory blocking gate for supply chain security.
+
 ### 3.2 Caching Strategy
 
-Every job uses `astral-sh/setup-uv@v5` with `enable-cache: true` and a `uv.lock`-keyed cache. This means the ~3GB dependency graph only downloads on the first run after a lockfile change — subsequent runs resolve from cache in milliseconds.
-
-### 3.3 System Dependency Note
-
-`xhtml2pdf` (used for PDF report generation) pulls in `pycairo`, which requires the `libcairo2-dev` C library to compile. The `ubuntu-latest` GitHub Actions runner does not include this by default. Each job installs it explicitly before `uv sync`:
+Every job uses `astral-sh/setup-uv@88ce...` (pinned to SHA) with `enable-cache: true` and a `uv.lock`-keyed cache. This means the ~3GB dependency graph only downloads on the first run after a lockfile change — subsequent runs resolve from cache in milliseconds. All GitHub Actions are pinned to full commit SHAs to prevent supply chain attacks.
 
 ```yaml
 - name: Install system dependencies (libcairo2 for xhtml2pdf)
   run: sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config libcairo2-dev
 ```
+
+### 3.3 Local Quality Enforcement (Pre-commit)
+
+To reduce CI failure cycles, ACRAS uses **pre-commit hooks** (`.pre-commit-config.yaml`). This ensures that linting (`ruff`), formatting (`ruff-format`), and type checking (`pyright`) are performed locally before any code enters the remote pipeline.
+
+| Hook | Purpose |
+| :--- | :--- |
+| `ruff` | Static analysis & linting |
+| `ruff-format` | Code style enforcement |
+| `pyright` | Static type checking |
+| `trailing-whitespace` | Hygiene |
+| `check-yaml` | Configuration integrity | Standard |
 
 ---
 
@@ -153,6 +170,8 @@ The following ruleset is currently **Active** and enforced on the repository:
 - `Unit Tests`
 - `Integration Tests`
 - `API Tests (Prediction Service)`
+- `Qualitative Eval (LLM-as-a-Judge)`
+- `Security Scan (Trivy)`
 
 This workflow transforms the repository from a personal workspace into a **production-ready MLOps platform**, ensuring zero downtime and maximum reliability for the ACRAS service.
 
