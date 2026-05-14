@@ -255,7 +255,7 @@ This enables trend analysis: if a prompt change causes `eval/mean_faithfulness` 
 | :--- | :--- | :--- |
 | **Two-model architecture** | Separate judge LLM from agent LLM | Eliminates self-assessment bias; judge has zero shared state with the agent |
 | **JSON-only judge output** | Enforced via system prompt + Pydantic validation | Structured output is testable, schema-bound, and ML-pipeline-compatible |
-| **Deterministic threshold gate** | `_check_thresholds()` in Python, not LLM | PASS/FAIL decisions MUST NOT be probabilistic; rule 1.2 (Brain vs. Brawn) |
+| **Deterministic threshold gate** | `_check_thresholds()` in Python, not LLM | PASS/FAIL decisions MUST NOT be probabilistic; (Brain vs. Brawn) |
 | **Golden dataset as JSON** | `golden_dataset.json` in `src/evals/` | Version-controlled; DVC-trackable; human-readable; schema-validated at load time |
 | **Gemini Flash as judge model** | No tool binding, temperature=0 | Maximises output consistency; no side-effects possible from a tool-free judge |
 | **Dry-run mode** | `dry_run=True` flag in harness | Enables CI wiring validation with zero API cost |

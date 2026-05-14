@@ -141,7 +141,7 @@ tests\unit\test_ui_utils.py .....                                        [100%]
 We use **pytest-cov** to measure and enforce quality gates. If our code coverage drops below this line, the CI pipeline will fail automatically.
 
 - **Current State**: After the Advanced Maturity (v2.3) hardening, our total coverage is **68.69%**.
-- **The Choice of 65**: We have raised the gate from 40% to 65% to reflect the increased maturity of the system. This satisfies the "Elite Infrastructure" requirement for production-ready agentic systems (Rule 4.1.3).
+- **The Choice of 65**: We have raised the gate from 40% to 65% to reflect the increased maturity of the system. This satisfies the "Elite Infrastructure" requirement for production-ready agentic systems.
 - **Moving Forward**: The next target is the industry-standard **85%** for mission-critical credit risk logic.
 
 **Required Gate**: 65% (Elite Infrastructure Baseline)

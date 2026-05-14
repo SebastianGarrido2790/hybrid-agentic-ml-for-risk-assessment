@@ -220,7 +220,7 @@ def _invoke_judge(sample: GoldenSample, agent_response: str) -> JudgeVerdict:
     """Invoke the LLM Judge to score a single agent response.
 
     Uses the primary Gemini model (no tool binding). The judge prompt is loaded
-    from the versioned external file ``llm_judge_v1.txt`` following Rule 1.5.
+    from the versioned external file ``llm_judge_v1.txt`` following No "Naked" Prompts.
 
     Args:
         sample: The golden sample providing the ground truth evaluation context.

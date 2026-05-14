@@ -52,7 +52,7 @@ All artifacts are stored in `artifacts/eval_dataset_validation/`:
 This stage has been implemented using the project's most advanced design patterns:
 
 ### 1. Standardized Component Structure
-The validation logic is encapsulated in a dedicated class (`EvalDatasetValidation`) with Google-style docstrings, ensuring clarity for both developers and AI agents (Rule 1.1).
+The validation logic is encapsulated in a dedicated class (`EvalDatasetValidation`) with Google-style docstrings, ensuring clarity for both developers and AI agents.
 
 ### 2. Strict Configuration Typing
 Uses `EvalDatasetConfig` (dataclass) and `EvalDatasetYamlConfig` (Pydantic BaseModel) to enforce strict YAML-to-Python type safety at the boundary.

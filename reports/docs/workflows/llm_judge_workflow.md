@@ -295,7 +295,7 @@ Only samples with a non-`None` `judge_verdict` are included in the mean score co
 
 ## 5. Judge System Prompt — `llm_judge_v1.txt`
 
-The judge prompt follows the structured sectioning standard (Rule 12.1.3). It defines:
+The judge prompt follows the structured sectioning standard. It defines:
 
 1. **Role:** Impartial Credit Risk Report Evaluator.
 2. **Evaluation Axes:** Four axes with precise per-score descriptions (1–5 Likert scale definitions for each axis).
