@@ -39,7 +39,7 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-REPORTS_DIR = Path("reports") / "docs" / "evaluations"
+REPORTS_DIR = Path("artifacts") / "eval_dataset"
 
 
 def _parse_args() -> argparse.Namespace:

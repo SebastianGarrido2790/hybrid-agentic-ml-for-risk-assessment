@@ -127,10 +127,17 @@ def _invoke_acras_agent(sample: GoldenSample) -> str:
     if not messages:
         raise RuntimeError(f"Agent returned no messages for sample {sample.sample_id}")
 
-    # The last message is always the CRO's final report
-    last_msg = messages[-1]
-    content = str(last_msg.content) if hasattr(last_msg, "content") else str(last_msg)
-    return content
+    # The last message might be from the 'monitor' node (SystemMessage).
+    # We need the last AIMessage, which is the CRO's final report.
+    for m in reversed(messages):
+        # Skip system messages from the monitor node
+        if isinstance(m, SystemMessage) and "[MONITOR]" in str(m.content):
+            continue
+        # Skip other system messages or tool messages to find the final report
+        if hasattr(m, "content") and str(m.content).strip():
+            return str(m.content)
+
+    raise RuntimeError(f"Could not find a valid report in messages for sample {sample.sample_id}")
 
 
 # ---------------------------------------------------------------------------

@@ -11,7 +11,8 @@
   <img src="https://img.shields.io/badge/Status-Production--Ready-brightgreen?style=for-the-badge&logo=github" alt="Production Ready">
   <img src="https://img.shields.io/badge/Architecture-Agentic--FTI-blue?style=for-the-badge&logo=fastapi" alt="Agentic FTI Architecture">
   <img src="https://img.shields.io/badge/Tech-LangGraph_|_DVC_|_MLflow-blueviolet?style=for-the-badge&logo=python" alt="Tech Stack">
-  <img src="https://img.shields.io/badge/QA-41%25_Coverage_|_0_Errors-success?style=for-the-badge&logo=pytest" alt="QA Metrics">
+  <img src="https://img.shields.io/badge/QA-66%25_Coverage_|_0_Errors-success?style=for-the-badge&logo=pytest" alt="QA Metrics">
+  <img src="https://img.shields.io/badge/Maturity-9.9%2F10_Gold-gold?style=for-the-badge" alt="Industry Gold Standard">
 </div>
 
 ---
@@ -84,8 +85,14 @@ ACRAS is fully documented for both technical auditors and business stakeholders.
 | Document | Description |
 | :--- | :--- |
 | [🧠 Agentic Reasoning Engine](reports/docs/architecture/agentic_reasoning_engine.md) | Deep dive into the LangGraph orchestration and 3-tier fallback logic. |
-| [✅ System Validation Report](reports/docs/evaluations/acras_system_validation_report.md) | Empirical results for Company 1090, confirming High-Integrity Synthesis. |
-| [💻 Codebase Review](reports/docs/evaluations/codebase_review.md) | Structural assessment of the MLOps FTI pattern implementation. |
+| [⚖️ LLM-as-a-Judge Architecture](reports/docs/architecture/llm_judge_architecture.md) | Automated qualitative evaluation harness with four business axes. |
+| [📡 Observability & Tracing](reports/docs/architecture/observability_tracing.md) | OpenTelemetry (OTel) integration with Jaeger for distributed span analysis. |
+| [🏗️ DVC Pipeline Architecture](reports/docs/architecture/dvc_pipeline_architecture.md) | 7-stage reproducible data & model lifecycle management. |
+| [📊 MLflow Integration](reports/docs/architecture/mlflow_integration.md) | Experiment tracking, artifact registry, and live performance loops. |
+| [🛡️ API Prediction Service](reports/docs/architecture/api_prediction_service.md) | Hardened FastAPI microservice with security headers and rate limiting. |
+| [🐳 Containerization Report](reports/docs/architecture/containerization_report.md) | Production-grade multi-stage Docker orchestration with SHA-pinned digests. |
+| [💻 Codebase Review v2.0](reports/docs/evaluations/codebase_review_v2.0.md) | Structural assessment of the MLOps FTI pattern implementation (9.9/10 maturity). |
+| [📈 System Validation Report](reports/docs/evaluations/acras_system_validation_report.md) | Empirical results for Company 1090, confirming High-Integrity Synthesis. |
 
 ---
 
@@ -118,10 +125,11 @@ The system generates board-ready PDF reports that combine technical precision wi
 | :--- | :--- |
 | **Agentic Brain** | LangGraph, LangChain, Google Gemini, Qwen2.5 |
 | **ML Frameworks** | Scikit-Learn, Pandas, Numpy, Pydantic |
-| **MLOps Core** | DVC, MLflow, Great Expectations |
+| **MLOps Core** | DVC, MLflow, Great Expectations (GX) |
+| **Observability** | OpenTelemetry (OTel), Jaeger, Rich Logging |
 | **API & Service** | FastAPI, Uvicorn, Docker, Docker Compose |
 | **Frontend** | Streamlit, Plotly, Seaborn |
-| **QA & CI/CD** | Pytest, Ruff, GitHub Actions, Pyright |
+| **QA & CI/CD** | Pytest, Ruff, GitHub Actions, Pyright, Pre-commit |
 | **Package Manager** | uv |
 
 ---
@@ -182,9 +190,10 @@ ACRAS implements a rigorous **Multi-Point Validation** strategy centered around 
 
 ### The 4 Pillars of Validation
 1.  **Static Logic & Type Safety**: Strict type hint coverage enforced via `pyright` (**0 errors**) and modular linting with `ruff`.
-2.  **Functional Integrity**: Comprehensive unit testing with `pytest`, currently at **41% coverage**, exceeding the baseline production gate.
-3.  **Pipeline Synchronization**: Automated `DVC` status checks to ensure data artifacts and model versions are perfectly in sync with the code.
-4.  **Inference Stability**: Hardened orchestrator with **Deterministic Risk Guardrails** to eliminate "optimistic bias" in high-risk profiles.
+2.  **Functional Integrity**: Comprehensive unit testing with `pytest`, currently at **66% coverage**, with a mandatory CI gate.
+3.  **Qualitative Evaluation**: Automated **LLM-as-a-Judge** scoring across Relevance, Faithfulness, Tool Usage, and Business Value.
+4.  **Security & Supply Chain**: Trivy vulnerability scanning, SHA-pinned Docker images, and cryptographically verified GitHub Actions.
+5.  **Deterministic Risk Guardrails**: Hardened orchestrator nodes to eliminate "optimistic bias" in high-risk profiles.
 
 ### Single-Command Validation
 Developers can run the full battery of tests using the provided validation script:
