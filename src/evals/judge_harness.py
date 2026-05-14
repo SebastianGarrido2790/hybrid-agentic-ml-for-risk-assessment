@@ -137,7 +137,9 @@ def _invoke_acras_agent(sample: GoldenSample) -> str:
         if hasattr(m, "content") and str(m.content).strip():
             return str(m.content)
 
-    raise RuntimeError(f"Could not find a valid report in messages for sample {sample.sample_id}")
+    raise RuntimeError(
+        f"Could not find a valid report in messages for sample {sample.sample_id}"
+    )
 
 
 # ---------------------------------------------------------------------------
